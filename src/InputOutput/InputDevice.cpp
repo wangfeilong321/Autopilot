@@ -3,7 +3,7 @@
 
 using namespace std;
 
-InputDevice::InputDevice() {
+InputDevice::InputDevice() : ifConnected(false) {
 	String^ friendlyName;
 	Accel = MakeDevice(ADXL345_ADDRESS, friendlyName);
 	if ( !Accel )
@@ -235,7 +235,7 @@ I2cDevice^ InputDevice::MakeDevice(int slaveAddress, _In_opt_ String^ friendlyNa
 	if (dis->Size != 1) {
 		throw wexception(L"I2C bus not found");
 	}
-
+	
 	String^ id = dis->GetAt(0)->Id;
 	auto _device = concurrency::create_task(I2cDevice::FromIdAsync(id, ref new I2cConnectionSettings(slaveAddress))).get();
 
@@ -318,10 +318,10 @@ bool InputDevice::writeCommand(I2cDevice^ Device, uint8_t Register, uint8_t Comm
 			break;
 		}
 		case I2cTransferStatus::PartialTransfer:
-			std::wcout << L"Partial Transfer. Transferred " << result.BytesTransferred << L" bytes\n";
+			logFile << L"Partial Transfer. Transferred " << result.BytesTransferred << L" bytes\n";
 			break;
 		case I2cTransferStatus::SlaveAddressNotAcknowledged:
-			std::wcout << L"Slave address was not acknowledged\n";
+			logFile << L"Slave address was not acknowledged\n";
 			break;
 		default:
 			throw wexception(L"Invalid transfer status value");

@@ -1,6 +1,8 @@
 #ifndef BASE_H
 #define BASE_H
 
+#include <fstream>
+
 const double M_PI = 3.14159265358979323846;
 
 const double radtodeg = 57.295779513082320876798154814105;
@@ -26,5 +28,7 @@ enum {eNorth = 1, eEast,  eDown };
 enum {eLat = 1, eLong, eRad     };
 /// Conversion specifiers
 enum {inNone = 0, inDegrees, inRadians, inMeters, inFeet };
+
+static std::ofstream logFile;
 
 #endif

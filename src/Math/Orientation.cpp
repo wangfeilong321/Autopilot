@@ -113,7 +113,7 @@ std::vector<double> Orientation::GetAngles(double ax, double ay, double az, doub
 	roll = atan2(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
 	pitch *= 180.0f / M_PI;
 	yaw *= 180.0f / M_PI;
-	yaw += 10.266; // Declination at Danville, California is 13 degrees 48 minutes and 47 seconds on 2014-04-04
+	yaw += 10.266; // Declination at Moscow, Russia
 	roll *= 180.0f / M_PI;
 	
 	vector<double> angles;
