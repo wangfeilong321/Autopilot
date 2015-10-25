@@ -10,10 +10,12 @@ public:
 	std::vector<double> GetAngles(double ax, double ay, double az, double gx, double gy, double gz, double mx, double my, double mz);
 
 private:
-	void Update(double ax, double ay, double az, double gx, double gy, double gz, double mx, double my, double mz, const double deltat);
+	//void Update(double ax, double ay, double az, double gx, double gy, double gz, double mx, double my, double mz, const double deltat);
+	//void Update2(double ax, double ay, double az, double gx, double gy, double gz, double mx, double my, double mz, const double deltat);
 
 private:
 	double q[4] = { 1.0f, 0.0f, 0.0f, 0.0f }; // vector to hold quaternion
+	double eInt[3] = { 0.0f, 0.0f, 0.0f }; // vector to hold integral error for Mahony method
 	double roll, pitch, yaw;
 	
 	// global constants for 9 DoF fusion and AHRS (Attitude and Heading Reference System)
@@ -29,6 +31,9 @@ private:
 	// In any case, this is the free parameter in the Madgwick filtering and fusion scheme.
 	const double beta = sqrt(3.0f / 4.0f) * gyroMeasError;   // compute beta
 	const double zeta = sqrt(3.0f / 4.0f) * gyroMeasDrift;   // compute zeta, the other free parameter in the Madgwick scheme usually set to a small or zero value
+
+	const double Kp = 2.0f * 5.0f; // these are the free parameters in the Mahony filter and fusion scheme, Kp for proportional feedback, Ki for integral
+	const double Ki = 0.0f;
 };
 
 #endif

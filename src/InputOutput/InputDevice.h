@@ -22,7 +22,6 @@ public:
 	virtual bool Run();
 	virtual bool Connected();
 	virtual void Connect();
-	virtual bool IfGetData();
 
 	std::vector<double> GetSensorInput();
 
@@ -66,10 +65,6 @@ private:
 	double gxd, gyd, gzd;
 	double mxd, myd, mzd;
 	
-	double ax, ay, az;
-	double gx, gy, gz;
-	double mx, my, mz;
-
 	double accelXi, accelYi, accelZi;
 	double omegaXi, omegaYi, omegaZi;
 	

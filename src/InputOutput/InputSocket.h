@@ -3,9 +3,8 @@
 
 #include <string>
 #include <vector>
-#include <fstream>
-#include "Interface.h"
 #include <winsock2.h>
+#include "Interface.h"
 
 class InputSocket : public Interface {
 public:
@@ -15,12 +14,10 @@ public:
 	virtual bool Run();
 	virtual bool Connected();
 	virtual void Connect();
-	virtual bool IfGetData();
 	virtual std::vector<double> GetControlInput();
 
 protected:
 	virtual std::string Receive(void);
-	virtual void Debug(int from);
 
 private:
 	std::string data;

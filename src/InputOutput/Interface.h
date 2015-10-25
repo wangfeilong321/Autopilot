@@ -9,7 +9,6 @@ public:
   virtual bool Run();
   virtual bool Connected();
   virtual void Connect();
-  virtual bool IfGetData();
 };
 
 #endif

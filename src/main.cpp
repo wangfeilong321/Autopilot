@@ -5,140 +5,159 @@
 #include <fstream>
 #include <thread>
 #include "Interface.h"
-#include "InputSocketTCP.h"
 #include "InputSocketUDP.h"
+#include "OutputSocketUDP.h"
 #include "InputDevice.h"
 #include "Orientation.h"
 #include "PID.h"
+#include "Timer.h"
 
 using namespace std;
 
-class Timer {
-	typedef std::chrono::high_resolution_clock high_resolution_clock;
-	typedef std::chrono::seconds seconds;
-public:
-	explicit Timer(bool run = false) {
-		if (run)
-			Reset();
-	}
-	void Reset() {
-		_start = high_resolution_clock::now();
-	}
-	seconds Elapsed() const {
-		return std::chrono::duration_cast<seconds>(high_resolution_clock::now() - _start);
-	}
-private:
-	high_resolution_clock::time_point _start;
-};
+int deltaTmcs = 1000;
 
-int deltaTmcs = 2000;
+void Calibration(const unique_ptr<InputDevice>& IDevice, const unique_ptr<OutputSocket>& OSocket) {
+	{
+		const int calibrationDeltaTmcs = 2000;
+		const int calibrationTime = 3;
+		Timer timer(true);
+		auto start = chrono::high_resolution_clock::now();
+		while (timer.Elapsed().count() < calibrationTime) {
+			auto duration = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start);
+			if (duration.count() >= calibrationDeltaTmcs) {
+				IDevice->OnTick();
+				start = chrono::high_resolution_clock::now();
+			}
+		}
+	}
+	{
+		const int calibrationDeltaTmcs = 1000;
+		const int calibrationTime = 3;
+		Timer timer(true);
+		auto start = chrono::high_resolution_clock::now();
+		while (timer.Elapsed().count() < calibrationTime) {
+			auto duration = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start);
+			if (duration.count() >= calibrationDeltaTmcs) {
+				IDevice->OnTick();
+				start = chrono::high_resolution_clock::now();
+			}
+		}
+	}
+	vector<double> calibrationOutput;
+	calibrationOutput.push_back(0.0); //time;
+	calibrationOutput.push_back(1.0); //altitudeASL
+	calibrationOutput.push_back(0.0); //vNorth
+	calibrationOutput.push_back(0.0); //vEast
+	calibrationOutput.push_back(0.0); //vDown
+	calibrationOutput.push_back(0.0); //U
+	calibrationOutput.push_back(0.0); //V
+	calibrationOutput.push_back(0.0); //W
+	calibrationOutput.push_back(0.0); //Roll
+	calibrationOutput.push_back(0.0); //Pitch
+	calibrationOutput.push_back(0.0); //Yaw
+	calibrationOutput.push_back(0.0); //P
+	calibrationOutput.push_back(0.0); //Q
+	calibrationOutput.push_back(0.0); //R
+	calibrationOutput.push_back(0.0); //velDotX
+	calibrationOutput.push_back(0.0); //velDotY
+	calibrationOutput.push_back(0.0); //velDotZ
+	calibrationOutput.push_back(0.0); //vcas
+	OSocket->SetControlOutput(calibrationOutput);
+	OSocket->Run();
+}
 
-void rotationThread() {
-	shared_ptr<InputDevice> Device = shared_ptr<InputDevice>(new InputDevice());
-	auto start = std::chrono::high_resolution_clock::now();
+void PWDThread(const unique_ptr<InputDevice>& IDevice) {
+	auto start = chrono::high_resolution_clock::now();
 	while (true) {
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
+		auto duration = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start);
 		if (duration.count() >= deltaTmcs) {
-			Device->OnTick();
-			start = std::chrono::high_resolution_clock::now();
+			IDevice->OnTick();
+			start = chrono::high_resolution_clock::now();
 		}
 	}
 }
 
 int main(Platform::Array<Platform::String^>^ args) {
 	
-	logFile.open("log.txt");
-	if (!logFile.is_open())
-		return EXIT_FAILURE;
-	logFile << "Logfile has been initialized successfully" << endl;
-
-	logFile << "Initializing socket" << endl;
-	unique_ptr<InputSocketUDP> ISocket = unique_ptr<InputSocketUDP>(new InputSocketUDP(5555));
+	cout << "Connecting to socket for input" << endl;
+	unique_ptr<InputSocket> ISocket = unique_ptr<InputSocket>(new InputSocketUDP("192.168.88.150", 5502));
 	while (!ISocket->Connected()) {
 		ISocket->Connect();
 		Sleep(500);
 	}
-	logFile << "Socket has been initialized successfully" << endl;
+	cout << "Input socket has been connected successfully" << endl;
 
-	logFile << "Initializing sensor" << endl;
+	cout << "Connecting to socket for output" << endl;
+	unique_ptr<OutputSocket> OSocket = unique_ptr<OutputSocket>(new OutputSocketUDP("192.168.88.101", 5503));
+	while (!OSocket->Connected()) {
+		OSocket->Connect();
+		Sleep(500);
+	}
+	cout << "Output socket has been connected successfully" << endl;
+	
+	cout << "Connecting to sensor" << endl;
 	unique_ptr<InputDevice> IDevice = unique_ptr<InputDevice>(new InputDevice());
 	while (!IDevice->Connected()) {
 		IDevice->Connect();
 		Sleep(500);
 	}
-	logFile << "Sensor has been initialized successfully" << endl;
+	cout << "Sensor has been connected successfully" << endl;
 
 	Orientation Attitude;
 	vector<double> sensorInput;
 	vector<double> controlInput;
-	vector<double> currentAngles;
+	vector<double> sensorOutput;
+	vector<double> controlOutput;
+	controlOutput.reserve(18);
 
-	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+	Calibration(IDevice, OSocket);
 	
-	logFile << "Entering main loop" << endl;
+	cout << "Entering main loop" << endl;
 	
-	Timer timer(true);
-	//thread t(rotationThread);
+	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 
-	while ( IDevice->Run() ) {
-		sensorInput = IDevice->GetSensorInput();
-		currentAngles = Attitude.GetAngles(sensorInput[0], sensorInput[1], sensorInput[2], sensorInput[3], sensorInput[4], sensorInput[5], sensorInput[6], sensorInput[7], sensorInput[8]);
-		if ( ISocket->Run() ) {
-			controlInput = ISocket->GetControlInput();
-			if (timer.Elapsed().count() > 3) {
-				deltaTmcs = 1000 + static_cast<int>(controlInput[4] * 1000);
-			}
+	while ( true ) {
+		
+		if ( IDevice->Run() ) {
+			sensorInput = IDevice->GetSensorInput();
+			sensorOutput = Attitude.GetAngles(sensorInput[0], sensorInput[1], sensorInput[2], sensorInput[3], sensorInput[4], sensorInput[5], sensorInput[6], sensorInput[7], sensorInput[8]);
 		}
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
-		if (duration.count() > 50) {
-			logFile << "sensor roll: " << currentAngles[0] << endl;
-			logFile << "desired roll: " << controlInput[1] << endl;
-			logFile << "sensor pitch: " << currentAngles[1] << endl;
-			logFile << "desired pitch: " << controlInput[2] << endl;
-			logFile << "sensor yaw: " << currentAngles[2] << endl;
-			logFile << "desired yaw: " << controlInput[3] << endl;
-			logFile << "desired throttle: " << controlInput[4] << endl;
-			logFile << "desired deltaTmcs: " << deltaTmcs << endl;
-			logFile << endl;
-			start = std::chrono::high_resolution_clock::now();
+
+		auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::high_resolution_clock::now() - start);
+		if ( duration.count() > 33 ) {
+			
+			if (ISocket->Run()) {
+				controlInput = ISocket->GetControlInput();
+				deltaTmcs = 1000 + (controlInput[4] * 1000);
+			}
+			
+			controlOutput.push_back(0.0); //time;
+			controlOutput.push_back(1.0); //altitudeASL
+			controlOutput.push_back(0.0); //vNorth
+			controlOutput.push_back(0.0); //vEast
+			controlOutput.push_back(0.0); //vDown
+			controlOutput.push_back(0.0); //U
+			controlOutput.push_back(0.0); //V
+			controlOutput.push_back(0.0); //W
+			controlOutput.push_back(sensorOutput[0]*degtorad); //Roll
+			controlOutput.push_back(sensorOutput[1]*degtorad); //Pitch
+			controlOutput.push_back(sensorOutput[2]*degtorad); //Yaw
+			controlOutput.push_back(0.0); //P
+			controlOutput.push_back(0.0); //Q
+			controlOutput.push_back(0.0); //R
+			controlOutput.push_back(0.0); //velDotX
+			controlOutput.push_back(0.0); //velDotY
+			controlOutput.push_back(0.0); //velDotZ
+			controlOutput.push_back(0.0); //vcas
+
+			OSocket->SetControlOutput(controlOutput);
+			if ( OSocket->Run() )
+				controlOutput.clear();
+			start = chrono::high_resolution_clock::now();
 		}
 	}
 	
-	logFile << "Exit main loop" << endl;
-
-	//t.join();
-
+	cout << "Exit main loop" << endl;
+	
 	return EXIT_SUCCESS;
 }
-
-
-
-/*
-
-while (true) {
-if (timer.Elapsed().count() <= 3) {
-deltaTmcs = 2000;
-}
-if (timer.Elapsed().count() > 3 && timer.Elapsed().count() <= 8) {
-deltaTmcs = 1000;
-}
-if (timer.Elapsed().count() > 8 && timer.Elapsed().count() <= 18) {
-deltaTmcs = 1150;
-}
-if (timer.Elapsed().count() > 28 && timer.Elapsed().count() <= 38) {
-deltaTmcs = 1250;
-}
-if (timer.Elapsed().count() > 38 && timer.Elapsed().count() <= 48) {
-deltaTmcs = 1350;
-}
-if (timer.Elapsed().count() > 48 && timer.Elapsed().count() <= 58) {
-deltaTmcs = 1450;
-}
-if (timer.Elapsed().count() > 58 && timer.Elapsed().count() <= 68) {
-deltaTmcs = 1550;
-}
-if (timer.Elapsed().count() > 68) {
-deltaTmcs = 2000;
-}
-}
-*/

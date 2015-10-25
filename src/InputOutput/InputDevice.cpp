@@ -5,24 +5,27 @@ using namespace std;
 
 InputDevice::InputDevice() : ifConnected(false) {
 	String^ friendlyName;
+	
 	Accel = MakeDevice(ADXL345_ADDRESS, friendlyName);
-	if ( !Accel )
+	if (!Accel)
 		return;
+	
 	Gyro = MakeDevice(L3G4200D_ADDRESS, friendlyName);
 	if ( !Gyro )
 		return;
+	
 	Magnet = MakeDevice(HMC5883L_ADDRESS, friendlyName);
 	if ( !Magnet )
 		return;
 
 	auto gpio = GpioController::GetDefault();
-	if ( !gpio ) {
+	if ( !gpio )
 		return;
-	}
-
+	
 	pin = gpio->OpenPin(LED_PIN);
 	if ( !pin )
 		return;
+
 	pin->Write(pinValue);
 	pin->SetDriveMode(GpioPinDriveMode::Output);
 
@@ -59,9 +62,6 @@ InputDevice::InputDevice() : ifConnected(false) {
 			aRes = 16.0 / (4096.*8.);  // 13-bit 2s-complement
 			break;
 	}
-	ax = ay = az = 0.0;
-	gx = gy = gz = 0.0;
-	mx = my = mz = 0.0;
 }
 
 void InputDevice::OnTick() {
@@ -85,23 +85,11 @@ bool InputDevice::Run() {
 	ayd = (double)AccelData[1] * aRes;
 	azd = (double)AccelData[2] * aRes;
 
-	//const double alpha = 0.5;
-
-	//Low Pass Filter
-	//ax = axd * alpha - (ax * (1.0 - alpha));
-	//ay = ayd * alpha - (ay * (1.0 - alpha));
-	//az = azd * alpha - (az * (1.0 - alpha));
-
 	bool IfReadGyroOk = readGyroData(GyroData);
 
 	gxd = (double)GyroData[0] * gRes;  // get actual gyro value, this depends on scale being set
 	gyd = (double)GyroData[1] * gRes;
 	gzd = (double)GyroData[2] * gRes;
-
-	//Low Pass Filter
-	//gx = gxd * alpha - (gx * (1.0 - alpha));
-	//gy = gyd * alpha - (gy * (1.0 - alpha));
-	//gz = gzd * alpha - (gz * (1.0 - alpha));
 
 	bool IfReadMagnetOk = readMagnetData(MagnetData);
 
@@ -119,11 +107,6 @@ bool InputDevice::Run() {
 	mxd = (double)MagnetData[0] * mRes - magbias[0];
 	myd = (double)MagnetData[1] * mRes - magbias[1];
 	mzd = (double)MagnetData[2] * mRes - magbias[2];
-	
-	//Low Pass Filter
-	//mx = mxd * alpha - (mx * (1.0 - alpha));
-	//my = myd * alpha - (my * (1.0 - alpha));
-	//mz = mzd * alpha - (mz * (1.0 - alpha));
 
 	return IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk;
 }
@@ -223,20 +206,19 @@ void InputDevice::Connect() {
 }
 
 I2cDevice^ InputDevice::MakeDevice(int slaveAddress, _In_opt_ String^ friendlyName) {
-	using namespace Windows::Devices::Enumeration;
-
 	String^ aqs;
 	if (friendlyName)
 		aqs = I2cDevice::GetDeviceSelector(friendlyName);
 	else
 		aqs = I2cDevice::GetDeviceSelector();
-
+	
 	auto dis = concurrency::create_task(DeviceInformation::FindAllAsync(aqs)).get();
-	if (dis->Size != 1) {
+
+	if (dis->Size != 1)
 		throw wexception(L"I2C bus not found");
-	}
 	
 	String^ id = dis->GetAt(0)->Id;
+
 	auto _device = concurrency::create_task(I2cDevice::FromIdAsync(id, ref new I2cConnectionSettings(slaveAddress))).get();
 
 	if (!_device) {
@@ -245,10 +227,6 @@ I2cDevice^ InputDevice::MakeDevice(int slaveAddress, _In_opt_ String^ friendlyNa
 		throw wexception(msg.str());
 	}
 	return _device;
-}
-
-bool InputDevice::IfGetData() { 
-	return true;
 }
 
 bool InputDevice::Connected() {
@@ -318,10 +296,10 @@ bool InputDevice::writeCommand(I2cDevice^ Device, uint8_t Register, uint8_t Comm
 			break;
 		}
 		case I2cTransferStatus::PartialTransfer:
-			logFile << L"Partial Transfer. Transferred " << result.BytesTransferred << L" bytes\n";
+			cout << L"Partial Transfer. Transferred " << result.BytesTransferred << L" bytes\n";
 			break;
 		case I2cTransferStatus::SlaveAddressNotAcknowledged:
-			logFile << L"Slave address was not acknowledged\n";
+			cout << L"Slave address was not acknowledged\n";
 			break;
 		default:
 			throw wexception(L"Invalid transfer status value");

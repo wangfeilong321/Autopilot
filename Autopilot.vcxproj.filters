@@ -10,6 +10,11 @@
     <ClInclude Include="src\InputOutput\InputSocketTCP.h" />
     <ClInclude Include="src\InputOutput\InputSocketUDP.h" />
     <ClInclude Include="src\InputOutput\Interface.h" />
+    <ClInclude Include="src\Math\MadgwickAHRS.h" />
+    <ClInclude Include="src\InputOutput\OutputSocket.h" />
+    <ClInclude Include="src\InputOutput\OutputSocketUDP.h" />
+    <ClInclude Include="src\InputOutput\OutputSocketTCP.h" />
+    <ClInclude Include="src\Utilities\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -21,5 +26,9 @@
     <ClCompile Include="src\InputOutput\InputSocketTCP.cpp" />
     <ClCompile Include="src\InputOutput\InputSocketUDP.cpp" />
     <ClCompile Include="src\InputOutput\Interface.cpp" />
+    <ClCompile Include="src\Math\MadgwickAHRS.c" />
+    <ClCompile Include="src\InputOutput\OutputSocket.cpp" />
+    <ClCompile Include="src\InputOutput\OutputSocketUDP.cpp" />
+    <ClCompile Include="src\InputOutput\OutputSocketTCP.cpp" />
   </ItemGroup>
 </Project>

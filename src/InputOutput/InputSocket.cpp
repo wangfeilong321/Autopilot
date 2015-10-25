@@ -4,7 +4,7 @@
 using namespace std;
 
 InputSocket::InputSocket(u_short /*port*/) : data( string() ){
-	controlInput.reserve(5);
+	controlInput.reserve(8);
 }
 
 InputSocket::~InputSocket() {}
@@ -13,17 +13,14 @@ bool InputSocket::Connected() {
 	return false;
 }
 
-bool InputSocket::IfGetData() {
-	return false;
-}
-
 void InputSocket::Connect() {}
 
 bool InputSocket::Run() {
 	string line, token;
 	size_t start=0, string_start=0, string_end=0;
+	data.clear();
 
-	data.append(Receive());  // get socket transmission if present
+	data = data.append(Receive());  // get socket transmission if present
 
 	if (data.size() > 0) {
 		double time, aileron_cmd, elevator_cmd, rudder_cmd, throttle_cmd, rolltrim_cmd, pitchtrim_cmd, elevation;
@@ -47,7 +44,6 @@ bool InputSocket::Run() {
 				 (!is_number(tokens[5])) ||
 				 (!is_number(tokens[6])) ||
 				 (!is_number(tokens[7])) ) {
-			data.clear();
 			return false;
 		} else {
 			time = stod(trim(tokens[0]));
@@ -67,7 +63,7 @@ bool InputSocket::Run() {
 			controlInput.push_back(rolltrim_cmd);
 			controlInput.push_back(pitchtrim_cmd);
 			controlInput.push_back(elevation);
-			data = data.erase(string_start, string_end + 1);
+			//data = data.erase(string_start, string_end + 1);
 			return true;
 		}
 	}
@@ -81,5 +77,3 @@ std::vector<double> InputSocket::GetControlInput() {
 string InputSocket::Receive(void) {
 	return string();
 }
-
-void InputSocket::Debug(int /*from*/ ) {}

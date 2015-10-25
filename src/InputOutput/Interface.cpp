@@ -12,7 +12,3 @@ bool Interface::Connected() {
 }
 
 void Interface::Connect() {}
-
-bool Interface::IfGetData() {
-	return false;
-}

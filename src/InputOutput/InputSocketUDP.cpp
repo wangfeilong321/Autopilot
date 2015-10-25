@@ -1,27 +1,27 @@
 #include "InputSocketUDP.h"
-#include "Base.h"
+#include <iostream>
 
 using namespace std;
 
-InputSocketUDP::InputSocketUDP(u_short port) : InputSocket (port), connected(false) {
+InputSocketUDP::InputSocketUDP(const std::string& address, u_short port) : InputSocket (port), connected(false) {
 	sckt = 0;
 	WSADATA wsaData;
 	if ( !WSAStartup(MAKEWORD(1,1), &wsaData) ) 
-	  logFile << "Winsock DLL loaded" << endl;
+	  cout << "Winsock DLL loaded" << endl;
 	else 
-	  logFile << "Winsock DLL not initialized" << endl;
+		cout << "Winsock DLL not initialized" << endl;
 	
 	sckt = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	logFile << "Creating UDP socket on port " << port << endl;
+	cout << "Creating UDP socket on port " << port << endl;
 	
 	if ( sckt >= 0 ) {   //successfully created socket
 	  memset(&scktName, 0, sizeof(struct sockaddr_in));
 	  scktName.sin_family = AF_INET;
 	  scktName.sin_port = htons(port);
-		scktName.sin_addr.s_addr = htonl(INADDR_ANY);
-		logFile << "Successfully created socket for input on port " << port << endl;
+		scktName.sin_addr.s_addr = inet_addr(address.c_str());
+		cout << "Successfully created socket for input on port: " << port << endl;
 	} else   // unsuccessful creating of the socket
-	  logFile << "Could not create socket for FDM input. Error:" << WSAGetLastError() << endl;
+	  cout << "Could not create socket for FDM input. Error: " << WSAGetLastError() << endl;
 }
 
 InputSocketUDP::~InputSocketUDP() {
@@ -32,17 +32,13 @@ bool InputSocketUDP::Connected() {
 	return connected;
 }
 
-bool InputSocketUDP::IfGetData() {
-	return data != "";
-}
-
 void InputSocketUDP::Connect() {
 	int length = sizeof(struct sockaddr_in);
 	if( bind(sckt, (struct sockaddr*)&scktName, length) == 0 ) {   //successfull bind
-		logFile << "Successfully bound to socket for input" << endl;
+		cout << "Successfully bound to socket for input" << endl;
 		connected = true;
 	} else {   // unsuccessful bind 
-		logFile << "Could not bind to socket for input. Error:" << WSAGetLastError() << endl;
+		cout << "Could not bind to socket for input. Error: " << WSAGetLastError() << endl;
 		connected = false;
 	}
 }
@@ -58,12 +54,19 @@ std::vector<double> InputSocketUDP::GetControlInput() {
 string InputSocketUDP::Receive(void) {
 	char buf[128];
 	memset(buf, 0, 128);
-	int num_chars = 0;
+	//int num_chars = 0;
 	data.clear();
 
 	struct sockaddr_in inc_addr;
 	int inc_len = sizeof(inc_addr);
-
+	int recv_chars = recvfrom(sckt, buf, 128, 0, (struct sockaddr *)&inc_addr, &inc_len);
+	if (recv_chars > 0)
+		data = data.append(buf, recv_chars);
+	else {
+		int error = WSAGetLastError();
+		cout << "Could not read socket. Error: " << error << endl;
+	}
+	/*
 	while (num_chars <= 128) {
 		int recv_chars = recvfrom(sckt, buf, 128, 0, (struct sockaddr *)&inc_addr, &inc_len);
 		if (recv_chars > 0) {
@@ -71,9 +74,11 @@ string InputSocketUDP::Receive(void) {
 			num_chars += recv_chars;
 			memset(buf, 0, 128);
 		}
+		else {
+			int error = WSAGetLastError();
+			cout << "Could not read socket. Error: " << error << endl;
+		}
 	}
-	
+	*/
 	return data;
 }
-
-void InputSocketUDP::Debug(int /*from*/) {}

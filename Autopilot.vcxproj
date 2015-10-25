@@ -33,9 +33,14 @@
     <ClInclude Include="src\InputOutput\InputSocketTCP.h" />
     <ClInclude Include="src\InputOutput\InputSocketUDP.h" />
     <ClInclude Include="src\InputOutput\Interface.h" />
+    <ClInclude Include="src\InputOutput\OutputSocket.h" />
+    <ClInclude Include="src\InputOutput\OutputSocketTCP.h" />
+    <ClInclude Include="src\InputOutput\OutputSocketUDP.h" />
+    <ClInclude Include="src\Math\MadgwickAHRS.h" />
     <ClInclude Include="src\Math\Orientation.h" />
     <ClInclude Include="src\Math\PID.h" />
     <ClInclude Include="src\Utilities\StringUtilities.h" />
+    <ClInclude Include="src\Utilities\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\InputOutput\InputDevice.cpp" />
@@ -43,7 +48,13 @@
     <ClCompile Include="src\InputOutput\InputSocketTCP.cpp" />
     <ClCompile Include="src\InputOutput\InputSocketUDP.cpp" />
     <ClCompile Include="src\InputOutput\Interface.cpp" />
+    <ClCompile Include="src\InputOutput\OutputSocket.cpp" />
+    <ClCompile Include="src\InputOutput\OutputSocketTCP.cpp" />
+    <ClCompile Include="src\InputOutput\OutputSocketUDP.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Math\MadgwickAHRS.c">
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</CompileAsWinRT>
+    </ClCompile>
     <ClCompile Include="src\Math\Orientation.cpp" />
     <ClCompile Include="src\Math\PID.cpp" />
     <ClCompile Include="src\Utilities\StringUtilities.cpp" />
@@ -172,7 +183,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>

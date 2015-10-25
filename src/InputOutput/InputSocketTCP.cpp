@@ -1,26 +1,27 @@
 #include "InputSocketTCP.h"
-#include "Base.h"
+#include <iostream>
 
 using namespace std;
 
-InputSocketTCP::InputSocketTCP(u_short port) : InputSocket (port) {
+InputSocketTCP::InputSocketTCP(const std::string& address, u_short port) : InputSocket (port) {
 	sckt = sckt_in = 0;
 	WSADATA wsaData;
 	if ( !WSAStartup(MAKEWORD(1,1), &wsaData) ) 
-	  logFile << "Winsock DLL loaded" << endl;
+	  cout << "Winsock DLL loaded" << endl;
 	else 
-	  logFile << "Winsock DLL not initialized" << endl;
+	  cout << "Winsock DLL not initialized" << endl;
 	
 	sckt = socket(AF_INET, SOCK_STREAM, 0);
-	logFile << "Creating TCP socket on port " << port << endl;
+	cout << "Creating TCP socket on port " << port << endl;
 		
 	if ( sckt >= 0 ) {   //successfully created socket
-	    memset(&scktName, 0, sizeof(struct sockaddr_in));
-	    scktName.sin_family = AF_INET;
-	    scktName.sin_port = htons(port);
-		logFile << "Successfully created socket for input on port " << port << endl;
+		memset(&scktName, 0, sizeof(struct sockaddr_in));
+	  scktName.sin_family = AF_INET;
+	  scktName.sin_port = htons(port);
+		scktName.sin_addr.s_addr = inet_addr(address.c_str());
+		cout << "Successfully created socket for input on port " << port << endl;
 	} else   // unsuccessful creating of the socket
-	    logFile << "Could not create socket for FDM input. Error:" << WSAGetLastError() << endl;
+	  cout << "Could not create socket for FDM input. Error:" << WSAGetLastError() << endl;
 }
 
 InputSocketTCP::~InputSocketTCP() {
@@ -32,23 +33,19 @@ bool InputSocketTCP::Connected() {
 	return sckt_in != 0;
 }
 
-bool InputSocketTCP::IfGetData() {
-	return data != "";
-}
-
 void InputSocketTCP::Connect() {
 	unsigned long NoBlock = false;
 	int length = sizeof(struct sockaddr_in);
 	if ( bind(sckt, (struct sockaddr*)&scktName, length) == 0 ) {   //successfull bind
-		logFile << "Successfully bound to socket for input" << endl;
+		cout << "Successfully bound to socket for input" << endl;
 		if (listen(sckt, 5) >= 0 ) {  // successful listen
 			ioctlsocket(sckt, FIONBIO, &NoBlock);
 			sckt_in = accept(sckt, (struct sockaddr*)&scktName, &length);
 		} else {   // successful listen
-			logFile << "Could not listen. Error:" << WSAGetLastError() << endl;
+			cout << "Could not listen. Error:" << WSAGetLastError() << endl;
 		}
 	} else {  // unsuccessful bind 
-		logFile << "Could not bind to socket for input. Error:" << WSAGetLastError() << endl;
+		cout << "Could not bind to socket for input. Error:" << WSAGetLastError() << endl;
 	}
 }
 
@@ -84,7 +81,7 @@ string InputSocketTCP::Receive(void) {
 		if (num_chars == 0) {
 			DWORD err = WSAGetLastError();
 			if (err != WSAEWOULDBLOCK) {
-				logFile << "Socket Closed. back to listening" << endl;
+				cout << "Socket closed. back to listening" << endl;
 				closesocket (sckt_in);
 				sckt_in = 0;
 			}
@@ -93,5 +90,3 @@ string InputSocketTCP::Receive(void) {
 	
 	return data;
 }
-
-void InputSocketTCP::Debug(int /*from*/) {}
