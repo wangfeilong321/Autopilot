@@ -3,8 +3,7 @@
 
 using namespace std;
 
-InputSocketUDP::InputSocketUDP(const std::string& address, u_short port) : InputSocket (port), connected(false) {
-	sckt = 0;
+InputSocketUDP::InputSocketUDP(const std::string& address, u_short port) : InputSocket (port), connected(false), sckt(0) {
 	WSADATA wsaData;
 	if ( !WSAStartup(MAKEWORD(1,1), &wsaData) ) 
 	  cout << "Winsock DLL loaded" << endl;
@@ -52,33 +51,17 @@ std::vector<double> InputSocketUDP::GetControlInput() {
 }
 
 string InputSocketUDP::Receive(void) {
-	char buf[128];
-	memset(buf, 0, 128);
-	//int num_chars = 0;
-	data.clear();
+	char buf[BUFFER_SIZE];
+	memset(buf, 0, BUFFER_SIZE);
 
 	struct sockaddr_in inc_addr;
 	int inc_len = sizeof(inc_addr);
-	int recv_chars = recvfrom(sckt, buf, 128, 0, (struct sockaddr *)&inc_addr, &inc_len);
+	int recv_chars = recvfrom(sckt, buf, BUFFER_SIZE, 0, (struct sockaddr *)&inc_addr, &inc_len);
 	if (recv_chars > 0)
-		data = data.append(buf, recv_chars);
+		data.assign(buf, recv_chars);
 	else {
 		int error = WSAGetLastError();
 		cout << "Could not read socket. Error: " << error << endl;
 	}
-	/*
-	while (num_chars <= 128) {
-		int recv_chars = recvfrom(sckt, buf, 128, 0, (struct sockaddr *)&inc_addr, &inc_len);
-		if (recv_chars > 0) {
-			data = data.append(buf, recv_chars);		
-			num_chars += recv_chars;
-			memset(buf, 0, 128);
-		}
-		else {
-			int error = WSAGetLastError();
-			cout << "Could not read socket. Error: " << error << endl;
-		}
-	}
-	*/
 	return data;
 }

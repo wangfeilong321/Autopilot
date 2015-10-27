@@ -14,9 +14,11 @@ public:
 	virtual void Connect();
 	virtual std::vector<double> GetControlInput();
 
-private:
+protected:
 	virtual std::string Receive(void);
 
+private:
+	static const size_t BUFFER_SIZE = 128;
 	std::string data;
   SOCKET sckt, sckt_in;
 	struct sockaddr_in scktName;

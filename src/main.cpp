@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <thread>
+#include <atomic>
 #include "Interface.h"
 #include "InputSocketUDP.h"
 #include "OutputSocketUDP.h"
@@ -14,7 +15,7 @@
 
 using namespace std;
 
-int deltaTmcs = 1000;
+atomic<int> deltaTmcs = 1000;
 
 void Calibration(const unique_ptr<InputDevice>& IDevice, const unique_ptr<OutputSocket>& OSocket) {
 	{
@@ -108,12 +109,13 @@ int main(Platform::Array<Platform::String^>^ args) {
 	vector<double> controlInput;
 	vector<double> sensorOutput;
 	vector<double> controlOutput;
-	controlOutput.reserve(18);
 
 	Calibration(IDevice, OSocket);
 	
 	cout << "Entering main loop" << endl;
 	
+	thread t(PWDThread, ref(IDevice));
+
 	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 
 	while ( true ) {
@@ -157,6 +159,8 @@ int main(Platform::Array<Platform::String^>^ args) {
 		}
 	}
 	
+	t.join();
+
 	cout << "Exit main loop" << endl;
 	
 	return EXIT_SUCCESS;

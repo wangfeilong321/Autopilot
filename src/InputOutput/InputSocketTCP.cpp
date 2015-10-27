@@ -3,8 +3,7 @@
 
 using namespace std;
 
-InputSocketTCP::InputSocketTCP(const std::string& address, u_short port) : InputSocket (port) {
-	sckt = sckt_in = 0;
+InputSocketTCP::InputSocketTCP(const std::string& address, u_short port) : InputSocket (port), sckt(0), sckt_in(0) {
 	WSADATA wsaData;
 	if ( !WSAStartup(MAKEWORD(1,1), &wsaData) ) 
 	  cout << "Winsock DLL loaded" << endl;
@@ -58,11 +57,8 @@ std::vector<double> InputSocketTCP::GetControlInput() {
 }
 
 string InputSocketTCP::Receive(void) {
-	char buf[128];
 	int len = sizeof(struct sockaddr_in);
-	int num_chars = 0;
 	unsigned long NoBlock = true;
-	data.clear();
 
 	if (sckt_in <= 0) {
 		sckt_in = accept(sckt, (struct sockaddr*)&scktName, &len);
@@ -72,8 +68,13 @@ string InputSocketTCP::Receive(void) {
 	}
 
 	if (sckt_in > 0) {
-		while ((num_chars = recv(sckt_in, buf, sizeof buf, 0)) > 0) {
-		  data.append(buf, num_chars);
+		char buf[BUFFER_SIZE];
+		int num_chars = recv(sckt_in, buf, sizeof buf, 0);
+		if (num_chars > 0)
+			data.assign(buf, num_chars);
+		else {
+			int error = WSAGetLastError();
+			cout << "Could not read socket. Error: " << error << endl;
 		}
 			
 		// when nothing received and the error isn't "would block"

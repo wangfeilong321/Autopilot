@@ -3,8 +3,7 @@
 
 using namespace std;
 
-OutputSocketTCP::OutputSocketTCP(const std::string& address, u_short port) : OutputSocket(port) {
-	sckt = 0;
+OutputSocketTCP::OutputSocketTCP(const std::string& address, u_short port) : OutputSocket(port), sckt(0) {
 	WSADATA wsaData;
 	if (!WSAStartup(MAKEWORD(1, 1), &wsaData))
 		cout << "Winsock DLL loaded" << endl;

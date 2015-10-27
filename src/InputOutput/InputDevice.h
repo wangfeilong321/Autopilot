@@ -207,19 +207,11 @@ private:
 		MRT_75,       // 75 Hz ODR    
 	};
 
-	enum OSS {  // BMP-085 sampling rate
-		OSS_0 = 0,  // 4.5 ms conversion time
-		OSS_1,      // 7.5
-		OSS_2,      // 13.5
-		OSS_3       // 25.5
-	};
-
-	uint8_t Gscale = GFS_250DPS;
-	uint8_t Ascale = AFS_2G;
-	uint8_t Arate = ARTBW_200_100; // 200 Hz ODR, 100 Hz bandwidth
-	uint8_t Grate = GRTBW_200_50;  // 200 Hz ODR,  50 Hz bandwidth
+	uint8_t Ascale = AFS_16G;
+	uint8_t Arate = ARTBW_3200_1600; // 200 Hz ODR, 100 Hz bandwidth
+	uint8_t Gscale = GFS_2000DPS;
+	uint8_t Grate = GRTBW_800_110;  // 200 Hz ODR,  50 Hz bandwidth
 	uint8_t Mrate = MRT_75;        //  75 Hz ODR 
-	uint8_t OSS = OSS_3;           // maximum pressure resolution
 	double aRes, gRes, mRes;       // scale resolutions per LSB for the sensors
 	
 	int16_t AccelData[3];

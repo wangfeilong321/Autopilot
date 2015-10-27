@@ -3,9 +3,7 @@
 
 using namespace std;
 
-InputSocket::InputSocket(u_short /*port*/) : data( string() ){
-	controlInput.reserve(8);
-}
+InputSocket::InputSocket(u_short /*port*/) : data( string() ){}
 
 InputSocket::~InputSocket() {}
 
@@ -16,15 +14,14 @@ bool InputSocket::Connected() {
 void InputSocket::Connect() {}
 
 bool InputSocket::Run() {
-	string line, token;
-	size_t start=0, string_start=0, string_end=0;
-	data.clear();
-
-	data = data.append(Receive());  // get socket transmission if present
+	data.assign(Receive());
 
 	if (data.size() > 0) {
 		double time, aileron_cmd, elevator_cmd, rudder_cmd, throttle_cmd, rolltrim_cmd, pitchtrim_cmd, elevation;
 		
+		string line, token;
+		size_t start = 0, string_start = 0, string_end = 0;
+
 		string_start = data.find_first_not_of("\r\n", start);
 		if (string_start == string::npos) return false;
 		string_end = data.find_first_of("\r\n", string_start);
@@ -46,6 +43,8 @@ bool InputSocket::Run() {
 				 (!is_number(tokens[7])) ) {
 			return false;
 		} else {
+			controlInput.clear();
+
 			time = stod(trim(tokens[0]));
 			aileron_cmd = stod(trim(tokens[1]));
 			elevator_cmd = stod(trim(tokens[2]));
@@ -54,7 +53,7 @@ bool InputSocket::Run() {
 			rolltrim_cmd = stod(trim(tokens[5]));
 			pitchtrim_cmd = stod(trim(tokens[6]));
 			elevation = stod(trim(tokens[7]));
-			controlInput.clear();
+			
 			controlInput.push_back(time);
 			controlInput.push_back(aileron_cmd);
 			controlInput.push_back(elevator_cmd);
@@ -63,7 +62,6 @@ bool InputSocket::Run() {
 			controlInput.push_back(rolltrim_cmd);
 			controlInput.push_back(pitchtrim_cmd);
 			controlInput.push_back(elevation);
-			//data = data.erase(string_start, string_end + 1);
 			return true;
 		}
 	}
