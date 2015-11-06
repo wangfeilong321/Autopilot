@@ -216,7 +216,7 @@ void QuaternionToEuler(double* roll, double* pitch, double* yaw) {
 
 	//double M_PI_? = 3.1415926;
 
-	*pitch *= 180.0f / 3.14159265358979323846;
+	*pitch *= -180.0f / 3.14159265358979323846;
 	*yaw *= 180.0f / 3.14159265358979323846;
 	*yaw += 10.266; // Declination at Moscow, Russia
 	*roll *= 180.0f / 3.14159265358979323846;
