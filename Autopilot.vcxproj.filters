@@ -6,15 +6,10 @@
     <ClInclude Include="src\Math\Orientation.h" />
     <ClInclude Include="src\Math\PID.h" />
     <ClInclude Include="src\InputOutput\InputDevice.h" />
-    <ClInclude Include="src\InputOutput\InputSocket.h" />
-    <ClInclude Include="src\InputOutput\InputSocketTCP.h" />
-    <ClInclude Include="src\InputOutput\InputSocketUDP.h" />
     <ClInclude Include="src\InputOutput\Interface.h" />
     <ClInclude Include="src\Math\MadgwickAHRS.h" />
-    <ClInclude Include="src\InputOutput\OutputSocket.h" />
-    <ClInclude Include="src\InputOutput\OutputSocketUDP.h" />
-    <ClInclude Include="src\InputOutput\OutputSocketTCP.h" />
     <ClInclude Include="src\Utilities\Timer.h" />
+    <ClInclude Include="src\InputOutput\TCPSocket.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -22,13 +17,8 @@
     <ClCompile Include="src\Math\Orientation.cpp" />
     <ClCompile Include="src\Math\PID.cpp" />
     <ClCompile Include="src\InputOutput\InputDevice.cpp" />
-    <ClCompile Include="src\InputOutput\InputSocket.cpp" />
-    <ClCompile Include="src\InputOutput\InputSocketTCP.cpp" />
-    <ClCompile Include="src\InputOutput\InputSocketUDP.cpp" />
     <ClCompile Include="src\InputOutput\Interface.cpp" />
     <ClCompile Include="src\Math\MadgwickAHRS.c" />
-    <ClCompile Include="src\InputOutput\OutputSocket.cpp" />
-    <ClCompile Include="src\InputOutput\OutputSocketUDP.cpp" />
-    <ClCompile Include="src\InputOutput\OutputSocketTCP.cpp" />
+    <ClCompile Include="src\InputOutput\TCPSocket.cpp" />
   </ItemGroup>
 </Project>

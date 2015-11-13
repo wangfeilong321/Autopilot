@@ -6,8 +6,7 @@
 #include <thread>
 #include <atomic>
 #include "Interface.h"
-#include "InputSocketUDP.h"
-#include "OutputSocketUDP.h"
+#include "TCPSocket.h"
 #include "InputDevice.h"
 #include "Orientation.h"
 #include "PID.h"
@@ -17,7 +16,7 @@ using namespace std;
 
 atomic<int> deltaTmcs = 1000;
 
-void Calibration(const unique_ptr<InputDevice>& IDevice, const unique_ptr<OutputSocket>& OSocket) {
+void Calibration(const unique_ptr<InputDevice>& IDevice, const unique_ptr<TCPSocket>& Socket) {
 	{
 		const int calibrationDeltaTmcs = 2000;
 		const int calibrationTime = 3;
@@ -63,8 +62,7 @@ void Calibration(const unique_ptr<InputDevice>& IDevice, const unique_ptr<Output
 	calibrationOutput.push_back(0.0); //velDotY
 	calibrationOutput.push_back(0.0); //velDotZ
 	calibrationOutput.push_back(0.0); //vcas
-	OSocket->SetControlOutput(calibrationOutput);
-	OSocket->Run();
+	Socket->SetControlOutput(calibrationOutput);
 }
 
 void PWDThread(const unique_ptr<InputDevice>& IDevice) {
@@ -80,21 +78,13 @@ void PWDThread(const unique_ptr<InputDevice>& IDevice) {
 
 int main(Platform::Array<Platform::String^>^ args) {
 	
-	cout << "Connecting to socket for input" << endl;
-	unique_ptr<InputSocket> ISocket = unique_ptr<InputSocket>(new InputSocketUDP("192.168.88.150", 5502));
-	while (!ISocket->Connected()) {
-		ISocket->Connect();
+	cout << "Connecting to socket" << endl;
+	unique_ptr<TCPSocket> Socket = unique_ptr<TCPSocket>(new TCPSocket("192.168.0.10", 3001));
+	while (!Socket->Connected()) {
+		Socket->Connect();
 		Sleep(500);
 	}
-	cout << "Input socket has been connected successfully" << endl;
-
-	cout << "Connecting to socket for output" << endl;
-	unique_ptr<OutputSocket> OSocket = unique_ptr<OutputSocket>(new OutputSocketUDP("192.168.88.101", 5503));
-	while (!OSocket->Connected()) {
-		OSocket->Connect();
-		Sleep(500);
-	}
-	cout << "Output socket has been connected successfully" << endl;
+	cout << "Socket has been connected successfully" << endl;
 	
 	cout << "Connecting to sensor" << endl;
 	unique_ptr<InputDevice> IDevice = unique_ptr<InputDevice>(new InputDevice());
@@ -110,13 +100,13 @@ int main(Platform::Array<Platform::String^>^ args) {
 	vector<double> sensorOutput;
 	vector<double> controlOutput;
 
-	Calibration(IDevice, OSocket);
+	Calibration(IDevice, Socket);
 	
 	cout << "Entering main loop" << endl;
 	
-	thread t(PWDThread, ref(IDevice));
+	//thread t(PWDThread, ref(IDevice));
 
-	chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+	auto start = chrono::high_resolution_clock::now();
 
 	while ( true ) {
 		
@@ -125,25 +115,21 @@ int main(Platform::Array<Platform::String^>^ args) {
 			sensorOutput = Attitude.GetAngles(sensorInput[0], sensorInput[1], sensorInput[2], sensorInput[3], sensorInput[4], sensorInput[5], sensorInput[6], sensorInput[7], sensorInput[8]);
 		}
 
-		auto duration = chrono::duration_cast<std::chrono::milliseconds>(chrono::high_resolution_clock::now() - start);
-		if ( duration.count() > 33 ) {
-			
-			if (ISocket->Run()) {
-				controlInput = ISocket->GetControlInput();
-				deltaTmcs = 1000 + (controlInput[4] * 1000);
-			}
-			
+		auto duration = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - start);
+		if (duration.count() >= 20) {
+			controlInput = Socket->GetControlInput();
+
 			controlOutput.push_back(0.0); //time;
-			controlOutput.push_back(1.0); //altitudeASL
+			controlOutput.push_back(128.0 / 0.3028); //altitudeASL
 			controlOutput.push_back(0.0); //vNorth
 			controlOutput.push_back(0.0); //vEast
 			controlOutput.push_back(0.0); //vDown
 			controlOutput.push_back(0.0); //U
 			controlOutput.push_back(0.0); //V
 			controlOutput.push_back(0.0); //W
-			controlOutput.push_back(sensorOutput[0]*degtorad); //Roll
-			controlOutput.push_back(sensorOutput[1]*degtorad); //Pitch
-			controlOutput.push_back(sensorOutput[2]*degtorad); //Yaw
+			controlOutput.push_back(sensorOutput[0] * degtorad); //Roll
+			controlOutput.push_back(sensorOutput[1] * degtorad); //Pitch
+			controlOutput.push_back(sensorOutput[2] * degtorad); //Yaw
 			controlOutput.push_back(0.0); //P
 			controlOutput.push_back(0.0); //Q
 			controlOutput.push_back(0.0); //R
@@ -152,14 +138,14 @@ int main(Platform::Array<Platform::String^>^ args) {
 			controlOutput.push_back(0.0); //velDotZ
 			controlOutput.push_back(0.0); //vcas
 
-			OSocket->SetControlOutput(controlOutput);
-			if ( OSocket->Run() )
-				controlOutput.clear();
+			Socket->SetControlOutput(controlOutput);
+
+			controlOutput.clear();
 			start = chrono::high_resolution_clock::now();
 		}
 	}
 	
-	t.join();
+	//t.join();
 
 	cout << "Exit main loop" << endl;
 	

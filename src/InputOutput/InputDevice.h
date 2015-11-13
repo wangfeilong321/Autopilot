@@ -56,9 +56,15 @@ private:
 	I2cDevice^ Magnet;
 
 	GpioPinValue pinValue = GpioPinValue::Low;
-	const int LED_PIN = 5;
-	GpioPin ^pin;
-
+	const int PIN5 = 5;
+	GpioPin ^pin5;
+	const int PIN6 = 6;
+	GpioPin ^pin6;
+	const int PIN13 = 13;
+	GpioPin ^pin13;
+	const int PIN22 = 22;
+	GpioPin ^pin22;
+	
 	bool ifConnected;
 
 	double axd, ayd, azd;
