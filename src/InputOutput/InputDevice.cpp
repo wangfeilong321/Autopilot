@@ -22,33 +22,33 @@ InputDevice::InputDevice() : ifConnected(false) {
 	if ( !gpio )
 		return;
 	
-	//pin5 = gpio->OpenPin(PIN5);
-	//if ( !pin5 )
-		//return;
+	pin5 = gpio->OpenPin(PIN5);
+	if ( !pin5 )
+		return;
 
-	//pin6 = gpio->OpenPin(PIN6);
-	//if (!pin6)
-		//return;
+	pin6 = gpio->OpenPin(PIN6);
+	if (!pin6)
+		return;
 
-	//pin13 = gpio->OpenPin(PIN13);
-	//if (!pin13)
-		//return;
+	pin13 = gpio->OpenPin(PIN13);
+	if (!pin13)
+		return;
 
-	//pin22 = gpio->OpenPin(PIN22);
-	//if (!pin22)
-		//return;
+	pin22 = gpio->OpenPin(PIN22);
+	if (!pin22)
+		return;
 
-	//pin5->Write(pinValue);
-	//pin5->SetDriveMode(GpioPinDriveMode::Output);
+	pin5->Write(pinValue);
+	pin5->SetDriveMode(GpioPinDriveMode::Output);
 
-	//pin6->Write(pinValue);
-	//pin6->SetDriveMode(GpioPinDriveMode::Output);
+	pin6->Write(pinValue);
+	pin6->SetDriveMode(GpioPinDriveMode::Output);
 
-	//pin13->Write(pinValue);
-	//pin13->SetDriveMode(GpioPinDriveMode::Output);
+	pin13->Write(pinValue);
+	pin13->SetDriveMode(GpioPinDriveMode::Output);
 
-	//pin22->Write(pinValue);
-	//pin22->SetDriveMode(GpioPinDriveMode::Output);
+	pin22->Write(pinValue);
+	pin22->SetDriveMode(GpioPinDriveMode::Output);
 	
 	// Possible gyro scales (and their register bit settings) are:
 	// 250 DPS (00), 500 DPS (01), 1000 DPS (10), and 2000 DPS  (11). 
@@ -88,17 +88,17 @@ InputDevice::InputDevice() : ifConnected(false) {
 void InputDevice::OnTick() {
 	if (pinValue == GpioPinValue::High) {
 		pinValue = GpioPinValue::Low;
-		//pin5->Write(pinValue);
-		//pin6->Write(pinValue);
-		//pin13->Write(pinValue);
-		//pin22->Write(pinValue);
+		pin5->Write(pinValue);
+		pin6->Write(pinValue);
+		pin13->Write(pinValue);
+		pin22->Write(pinValue);
 	}
 	else {
 		pinValue = GpioPinValue::High;
-		//pin5->Write(pinValue);
-		//pin6->Write(pinValue);
-		//pin13->Write(pinValue);
-		//pin22->Write(pinValue);
+		pin5->Write(pinValue);
+		pin6->Write(pinValue);
+		pin13->Write(pinValue);
+		pin22->Write(pinValue);
 	}
 }
 

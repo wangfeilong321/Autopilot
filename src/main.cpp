@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <thread>
+#include <mutex>
 #include <atomic>
 #include "Interface.h"
 #include "TCPSocket.h"
@@ -67,6 +68,8 @@ void Calibration(const unique_ptr<InputDevice>& IDevice, const unique_ptr<TCPSoc
 
 void PWDThread(const unique_ptr<InputDevice>& IDevice) {
 	auto start = chrono::high_resolution_clock::now();
+	mutex some_mutex;
+	lock_guard<mutex> guard(some_mutex);
 	while (true) {
 		auto duration = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start);
 		if (duration.count() >= deltaTmcs) {
@@ -78,21 +81,17 @@ void PWDThread(const unique_ptr<InputDevice>& IDevice) {
 
 int main(Platform::Array<Platform::String^>^ args) {
 	
-	cout << "Connecting to socket" << endl;
 	unique_ptr<TCPSocket> Socket = unique_ptr<TCPSocket>(new TCPSocket("192.168.0.10", 3001));
 	while (!Socket->Connected()) {
 		Socket->Connect();
 		Sleep(500);
 	}
-	cout << "Socket has been connected successfully" << endl;
 	
-	cout << "Connecting to sensor" << endl;
 	unique_ptr<InputDevice> IDevice = unique_ptr<InputDevice>(new InputDevice());
 	while (!IDevice->Connected()) {
 		IDevice->Connect();
 		Sleep(500);
 	}
-	cout << "Sensor has been connected successfully" << endl;
 
 	Orientation Attitude;
 	vector<double> sensorInput;
@@ -102,9 +101,7 @@ int main(Platform::Array<Platform::String^>^ args) {
 
 	Calibration(IDevice, Socket);
 	
-	cout << "Entering main loop" << endl;
-	
-	//thread t(PWDThread, ref(IDevice));
+	thread t(PWDThread, ref(IDevice));
 
 	auto start = chrono::high_resolution_clock::now();
 
@@ -118,6 +115,9 @@ int main(Platform::Array<Platform::String^>^ args) {
 		auto duration = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - start);
 		if (duration.count() >= 20) {
 			controlInput = Socket->GetControlInput();
+
+			if (!controlInput.empty())
+				deltaTmcs = static_cast<int>(1000 + controlInput[3]*1000);
 
 			controlOutput.push_back(0.0); //time;
 			controlOutput.push_back(128.0 / 0.3028); //altitudeASL
@@ -145,9 +145,7 @@ int main(Platform::Array<Platform::String^>^ args) {
 		}
 	}
 	
-	//t.join();
-
-	cout << "Exit main loop" << endl;
+	t.join();
 	
 	return EXIT_SUCCESS;
 }
