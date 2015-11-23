@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClInclude Include="src\Base.h" />
     <ClInclude Include="src\Utilities\StringUtilities.h" />
-    <ClInclude Include="src\Math\Orientation.h" />
     <ClInclude Include="src\Math\PID.h" />
     <ClInclude Include="src\InputOutput\InputDevice.h" />
     <ClInclude Include="src\InputOutput\Interface.h" />
@@ -14,7 +13,6 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Utilities\StringUtilities.cpp" />
-    <ClCompile Include="src\Math\Orientation.cpp" />
     <ClCompile Include="src\Math\PID.cpp" />
     <ClCompile Include="src\InputOutput\InputDevice.cpp" />
     <ClCompile Include="src\InputOutput\Interface.cpp" />

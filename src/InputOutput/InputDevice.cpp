@@ -1,5 +1,6 @@
 #include "InputDevice.h"
-#include <iostream>
+#include "Timer.h"
+#include "MadgwickAHRS.h"
 
 using namespace std;
 
@@ -85,42 +86,74 @@ InputDevice::InputDevice() : ifConnected(false) {
 	}
 }
 
-void InputDevice::OnTick() {
-	if (pinValue == GpioPinValue::High) {
+void InputDevice::OnTick(GpioPin ^pin) {
+	if (pinValue == GpioPinValue::High)
 		pinValue = GpioPinValue::Low;
-		pin5->Write(pinValue);
-		pin6->Write(pinValue);
-		pin13->Write(pinValue);
-		pin22->Write(pinValue);
-	}
-	else {
+	else
 		pinValue = GpioPinValue::High;
-		pin5->Write(pinValue);
-		pin6->Write(pinValue);
-		pin13->Write(pinValue);
-		pin22->Write(pinValue);
-	}
+	pin->Write(pinValue);
 }
 
 InputDevice::~InputDevice() {}
+
+void InputDevice::ProcessPin(GpioPin ^pin) {
+	{
+		const int calibrationDeltaTmcs = 2000;
+		const int calibrationTime = 3;
+		Timer timer(true);
+		auto start = chrono::high_resolution_clock::now();
+		while (timer.Elapsed().count() < calibrationTime) {
+			auto duration = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start);
+			if (duration.count() >= calibrationDeltaTmcs) {
+				OnTick(pin);
+				start = chrono::high_resolution_clock::now();
+			}
+		}
+	}
+	{
+		const int calibrationDeltaTmcs = 1000;
+		const int calibrationTime = 3;
+		Timer timer(true);
+		auto start = chrono::high_resolution_clock::now();
+		while (timer.Elapsed().count() < calibrationTime) {
+			auto duration = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start);
+			if (duration.count() >= calibrationDeltaTmcs) {
+				OnTick(pin);
+				start = chrono::high_resolution_clock::now();
+			}
+		}
+	}
+	{
+		auto start = chrono::high_resolution_clock::now();
+		while (true) {
+			auto duration = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start);
+			if (duration.count() >= deltaTmcs) {
+				OnTick(pin);
+				start = chrono::high_resolution_clock::now();
+			}
+		}
+	}
+}
+
+void InputDevice::SetPWM(int dt) { deltaTmcs = dt; }
 
 bool InputDevice::Run() { 
 	
 	bool IfReadAccelOk = readAccelData(AccelData);
 		
-	axd = (double)AccelData[0] * aRes;  // get actual g value, this depends on scale being set
-	ayd = (double)AccelData[1] * aRes;
-	azd = (double)AccelData[2] * aRes;
+	axd = AccelData[0] * aRes;  // get actual g value, this depends on scale being set
+	ayd = AccelData[1] * aRes;
+	azd = AccelData[2] * aRes;
 
 	bool IfReadGyroOk = readGyroData(GyroData);
 
-	gxd = (double)GyroData[0] * gRes;  // get actual gyro value, this depends on scale being set
-	gyd = (double)GyroData[1] * gRes;
-	gzd = (double)GyroData[2] * gRes;
+	gxd = GyroData[0] * gRes;  // get actual gyro value, this depends on scale being set
+	gyd = GyroData[1] * gRes;
+	gzd = GyroData[2] * gRes;
 
 	bool IfReadMagnetOk = readMagnetData(MagnetData);
 
-	mRes = 0.73; 
+	mRes = 0.73f; 
 	// Conversion to milliGauss, 0.73 mG/LSB in hihgest resolution mode
 	// So far, magnetometer bias is calculated and subtracted here manually, should construct an algorithm to do it automatically
 	// like the gyro and accelerometer biases
@@ -131,30 +164,11 @@ bool InputDevice::Run() {
 	// Calculate the magnetometer values in milliGauss
 	// Include factory calibration per data sheet and user environmental corrections
 	// get actual magnetometer value, this depends on scale being set
-	mxd = (double)MagnetData[0] * mRes - magbias[0];
-	myd = (double)MagnetData[1] * mRes - magbias[1];
-	mzd = (double)MagnetData[2] * mRes - magbias[2];
+	mxd = MagnetData[0] * mRes - magbias[0];
+	myd = MagnetData[1] * mRes - magbias[1];
+	mzd = MagnetData[2] * mRes - magbias[2];
 
 	return IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk;
-}
-
-std::vector<double> InputDevice::GetSensorInput() {
-
-	vector<double> sensorInput;
-
-	sensorInput.push_back(axd);
-	sensorInput.push_back(ayd);
-	sensorInput.push_back(azd);
-
-	sensorInput.push_back(gxd);
-	sensorInput.push_back(gyd);
-	sensorInput.push_back(gzd);
-
-	sensorInput.push_back(mxd);
-	sensorInput.push_back(myd);
-	sensorInput.push_back(mzd);
-
-	return sensorInput;
 }
 
 void InputDevice::Connect() {
@@ -302,11 +316,10 @@ bool InputDevice::readBytes(I2cDevice^ Device, uint8_t Register, uint8_t numByte
 			ifOk = true;
 			break;
 		}
-		case I2cTransferStatus::PartialTransfer: {
+		case I2cTransferStatus::PartialTransfer:
 			break;
-		}
 		case I2cTransferStatus::SlaveAddressNotAcknowledged:
-			break;
+			throw wexception(L"Slave address was not acknowledged");
 		default:
 			throw wexception(L"Invalid transfer status value");
 	}
@@ -323,11 +336,9 @@ bool InputDevice::writeCommand(I2cDevice^ Device, uint8_t Register, uint8_t Comm
 			break;
 		}
 		case I2cTransferStatus::PartialTransfer:
-			cout << L"Partial Transfer. Transferred " << result.BytesTransferred << L" bytes\n";
 			break;
 		case I2cTransferStatus::SlaveAddressNotAcknowledged:
-			cout << L"Slave address was not acknowledged\n";
-			break;
+			throw wexception(L"Slave address was not acknowledged");
 		default:
 			throw wexception(L"Invalid transfer status value");
 	}
@@ -344,13 +355,24 @@ uint8_t InputDevice::readByte(I2cDevice^ Device, uint8_t Register) {
 			data = ReadBuf[0];
 			break;
 		}
-		case I2cTransferStatus::PartialTransfer: {
+		case I2cTransferStatus::PartialTransfer:
 			break;
-		}
 		case I2cTransferStatus::SlaveAddressNotAcknowledged:
-			break;
+			throw wexception(L"Slave address was not acknowledged");
 		default:
 			throw wexception(L"Invalid transfer status value");
 	}
 	return data;
+}
+
+std::vector<float> InputDevice::GetAngles() {
+	MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);
+	QuaternionToEuler(&roll, &pitch, &yaw);
+
+	vector<float> angles;
+	angles.push_back(roll);
+	angles.push_back(pitch);
+	angles.push_back(yaw);
+
+	return angles;
 }

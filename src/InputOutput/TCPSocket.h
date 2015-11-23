@@ -14,16 +14,16 @@ public:
 	virtual bool Run();
 	virtual bool Connected();
 	virtual void Connect();
-	virtual bool SetControlOutput(const std::vector<double>& output);
-	virtual std::vector<double> GetControlInput();
+	virtual bool SetControlOutput(const std::vector<float>& output);
+	virtual std::vector<float> GetControlInput();
 
 protected:
 	virtual bool Send();
 	virtual bool Recv();
 
 private:
-	std::vector<double> controlOutput;
-	std::vector<double> controlInput;
+	std::vector<float> controlOutput;
+	std::vector<float> controlInput;
 	SOCKET sckt;
 	struct sockaddr_in scktName;
 	bool connected;

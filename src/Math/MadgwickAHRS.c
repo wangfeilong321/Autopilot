@@ -16,6 +16,7 @@
 // Header files
 
 #include "MadgwickAHRS.h"
+#include "Base.h"
 #include <math.h>
 
 //---------------------------------------------------------------------------------------------------
@@ -100,7 +101,7 @@ void MadgwickAHRSupdate(float gx, float gy, float gz, float ax, float ay, float 
 		// Reference direction of Earth's magnetic field
 		hx = mx * q0q0 - _2q0my * q3 + _2q0mz * q2 + mx * q1q1 + _2q1 * my * q2 + _2q1 * mz * q3 - mx * q2q2 - mx * q3q3;
 		hy = _2q0mx * q3 + my * q0q0 - _2q0mz * q1 + _2q1mx * q2 - my * q1q1 + my * q2q2 + _2q2 * mz * q3 - my * q3q3;
-		_2bx = sqrt(hx * hx + hy * hy);
+		_2bx = sqrtf(hx * hx + hy * hy);
 		_2bz = -_2q0mx * q2 + _2q0my * q1 + mz * q0q0 + _2q1mx * q3 - mz * q1q1 + _2q2 * my * q3 - mz * q2q2 + mz * q3q3;
 		_4bx = 2.0f * _2bx;
 		_4bz = 2.0f * _2bz;
@@ -209,17 +210,15 @@ void MadgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, flo
 }
 
 
-void QuaternionToEuler(double* roll, double* pitch, double* yaw) {
-	*yaw = atan2(2.0f * (q1 * q2 + q0 * q3), q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3);
-	*pitch = -asin(2.0f * (q1 * q3 - q0 * q2));
-	*roll = atan2(2.0f * (q0 * q1 + q2 * q3), q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3);
+void QuaternionToEuler(float* roll, float* pitch, float* yaw) {
+	*yaw = atan2f(2.0f * (q1 * q2 + q0 * q3), q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3);
+	*pitch = -asinf(2.0f * (q1 * q3 - q0 * q2));
+	*roll = atan2f(2.0f * (q0 * q1 + q2 * q3), q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3);
 
-	//double M_PI_? = 3.1415926;
-
-	*pitch *= -180.0f / 3.14159265358979323846;
-	*yaw *= 180.0f / 3.14159265358979323846;
+	*pitch *= -180.0f / M_PI;
+	*yaw *= 180.0f / M_PI;
 	//*yaw += 10.266; // Declination at Moscow, Russia
-	*roll *= 180.0f / 3.14159265358979323846;
+	*roll *= 180.0f / M_PI;
 }
 
 //---------------------------------------------------------------------------------------------------

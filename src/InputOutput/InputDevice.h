@@ -5,6 +5,7 @@
 #include <ppltasks.h>
 #include <vector>
 #include <sstream>
+#include <atomic>
 #include "Interface.h"
 #include "Base.h"
 
@@ -23,20 +24,20 @@ public:
 	virtual bool Connected();
 	virtual void Connect();
 
-	std::vector<double> GetSensorInput();
+	std::vector<float> GetAngles();
 
-	void OnTick();
+	void SetPWM(int dt);
 
 protected:
 	I2cDevice^ MakeDevice(int slaveAddress, _In_opt_ String^ friendlyName);
+	void OnTick(GpioPin ^pin);
+	void ProcessPin(GpioPin ^pin);
 
 	class wexception {
 	public:
 		explicit wexception(const std::wstring &msg) : msg_(msg) {}
 		virtual ~wexception() {}
-		virtual const wchar_t *wwhat() const {
-			return msg_.c_str();
-		}
+		virtual const wchar_t *wwhat() const { return msg_.c_str(); }
 	private:
 		std::wstring msg_;
 	};
@@ -65,14 +66,21 @@ private:
 	const int PIN22 = 22;
 	GpioPin ^pin22;
 	
+	std::atomic<int> deltaTmcs = 1000;
+
+	std::thread engine1;
+	std::thread engine2;
+	std::thread engine3;
+	std::thread engine4;
+
 	bool ifConnected;
 
-	double axd, ayd, azd;
-	double gxd, gyd, gzd;
-	double mxd, myd, mzd;
+	float axd, ayd, azd;
+	float gxd, gyd, gzd;
+	float mxd, myd, mzd;
 	
-	double accelXi, accelYi, accelZi;
-	double omegaXi, omegaYi, omegaZi;
+	float accelXi, accelYi, accelZi;
+	float omegaXi, omegaYi, omegaZi;
 	
 	const byte WHO_AM_I_ADXL345        = 0x00;   // Should return 0xE5
 	const byte ADXL345_THRESH_TAP      = 0x1D;   // Tap threshold
@@ -148,9 +156,7 @@ private:
 	const byte HMC5883L_IDA       = 0x0A;  // should return 0x48
 	const byte HMC5883L_IDB       = 0x0B;  // should return 0x34
 	const byte HMC5883L_IDC       = 0x0C;  // should return 0x33
-
-	const byte BMP085_ADDRESS     = 0x77;  // I2C address of BMP085
-	
+		
 	enum Ascale {
 		AFS_2G = 0,
 		AFS_4G,
@@ -218,12 +224,34 @@ private:
 	uint8_t Gscale = GFS_2000DPS;
 	uint8_t Grate = GRTBW_800_110;  // 200 Hz ODR,  50 Hz bandwidth
 	uint8_t Mrate = MRT_75;        //  75 Hz ODR 
-	double aRes, gRes, mRes;       // scale resolutions per LSB for the sensors
+	float aRes, gRes, mRes;       // scale resolutions per LSB for the sensors
 	
 	int16_t AccelData[3];
 	int16_t GyroData[3];
 	int16_t MagnetData[3];
-	double magbias[3];
+	float magbias[3];
+
+	float q[4] = { 1.0f, 0.0f, 0.0f, 0.0f }; // vector to hold quaternion
+	float eInt[3] = { 0.0f, 0.0f, 0.0f }; // vector to hold integral error for Mahony method
+	float roll, pitch, yaw;
+
+	// global constants for 9 DoF fusion and AHRS (Attitude and Heading Reference System)
+	const float gyroMeasError = M_PI * (40.0f / 180.0f);       // gyroscope measurement error in rads/s (shown as 40 deg/s)
+	const float gyroMeasDrift = M_PI * (0.0f / 180.0f);      // gyroscope measurement drift in rad/s/s (shown as 0.0 deg/s/s)
+																														// There is a tradeoff in the beta parameter between accuracy and response speed.
+																														// In the original Madgwick study, beta of 0.041 (corresponding to GyroMeasError of 2.7 degrees/s) was found to give optimal accuracy.
+																														// However, with this value, the LSM9SD0 response time is about 10 seconds to a stable initial quaternion.
+																														// Subsequent changes also require a longish lag time to a stable output, not fast enough for a quadcopter or robot car!
+																														// By increasing beta (GyroMeasError) by about a factor of fifteen, the response time constant is reduced to ~2 sec
+																														// I haven't noticed any reduction in solution accuracy. This is essentially the I coefficient in a PID control sense; 
+																														// the bigger the feedback coefficient, the faster the solution converges, usually at the expense of accuracy. 
+																														// In any case, this is the free parameter in the Madgwick filtering and fusion scheme.
+	const float beta = sqrtf(3.0f / 4.0f) * gyroMeasError;   // compute beta
+	const float zeta = sqrtf(3.0f / 4.0f) * gyroMeasDrift;   // compute zeta, the other free parameter in the Madgwick scheme usually set to a small or zero value
+
+	const float Kp = 2.0f * 5.0f; // these are the free parameters in the Mahony filter and fusion scheme, Kp for proportional feedback, Ki for integral
+	const float Ki = 0.0f;
+	const float deltat = 0.001953f;
 };
 
 #endif

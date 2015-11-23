@@ -1,10 +1,10 @@
 #ifndef BASE_H
 #define BASE_H
 
-const double M_PI = 3.14159265358979323846;
+const float M_PI = 3.14159265358979323846f;
 
-const double radtodeg = 57.295779513082320876798154814105;
-const double degtorad = 0.017453292519943295769236907684886;
+const float radtodeg = 57.295779513082320876798154814105f;
+const float degtorad = 0.017453292519943295769236907684886f;
 
 /// Moments L, M, N
 enum {eL     = 1, eM,     eN    };

@@ -37,9 +37,6 @@ void TCPSocket::Connect() {
 		if (connect(sckt, (struct sockaddr*)&scktName, len) == 0) {   // successful
 			connected = true;
 		}
-		else {
-			int error = WSAGetLastError();
-		}
 	}
 }
 
@@ -47,13 +44,13 @@ bool TCPSocket::Run() {
 	return true;
 }
 
-bool TCPSocket::SetControlOutput(const vector<double>& output) {
+bool TCPSocket::SetControlOutput(const vector<float>& output) {
 	controlOutput.assign(output.begin(), output.end());
 	return Send();
 }
 
-std::vector<double> TCPSocket::GetControlInput() {
-	return Recv() ? controlInput : vector<double>();
+std::vector<float> TCPSocket::GetControlInput() {
+	return Recv() ? controlInput : vector<float>();
 }
 
 bool TCPSocket::Send() {
@@ -65,7 +62,6 @@ bool TCPSocket::Send() {
 	}
 	buf.append("\r\n");
 	if (send(sckt, buf.c_str(), buf.length(), 0) == SOCKET_ERROR) {
-		int error = WSAGetLastError();
 		return false;
 	}
 	return true;
@@ -77,14 +73,13 @@ bool TCPSocket::Recv() {
 
 	auto recv_chars = recv(sckt, buf, BUFFER_SIZE, 0);
 	if (recv_chars == SOCKET_ERROR) {
-		int error = WSAGetLastError();
 		return false;
 	}
 	else if( recv_chars > 0 && recv_chars <= BUFFER_SIZE ) {
 		data.assign(buf, recv_chars);
 	}
 
-	double aileron_cmd, elevator_cmd, rudder_cmd, throttle_cmd;
+	float aileron_cmd, elevator_cmd, rudder_cmd, throttle_cmd;
 	
 	string line, token;
 	size_t start = 0, string_start = 0, string_end = 0;
@@ -112,10 +107,10 @@ bool TCPSocket::Recv() {
 	else {
 		controlInput.clear();
 
-		aileron_cmd = stod(trim(tokens[0]));
-		elevator_cmd = stod(trim(tokens[1]));
-		rudder_cmd = stod(trim(tokens[2]));
-		throttle_cmd = stod(trim(tokens[3]));
+		aileron_cmd = stof(trim(tokens[0]));
+		elevator_cmd = stof(trim(tokens[1]));
+		rudder_cmd = stof(trim(tokens[2]));
+		throttle_cmd = stof(trim(tokens[3]));
 		
 		controlInput.push_back(aileron_cmd);
 		controlInput.push_back(elevator_cmd);
