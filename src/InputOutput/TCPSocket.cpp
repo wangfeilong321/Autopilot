@@ -1,48 +1,38 @@
-#include "TCPSocket.h"
-#include "StringUtilities.h"
-#include <iostream>
+#include <TCPSocket.h>
+#include <StringUtilities.h>
 
 using namespace std;
 
 TCPSocket::TCPSocket(const std::string& address, u_short port) : sckt(0) {
 	WSADATA wsaData;
-	if ( !WSAStartup(MAKEWORD(1, 1), &wsaData) )
-		cout << "Winsock DLL loaded" << endl;
-	else
-		cout << "Winsock DLL not initialized" << endl;
-
+	if (WSAStartup(MAKEWORD(1, 1), &wsaData))
+		exit(1);
+	
 	sckt = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (sckt >= 0) {   //successfully created socket
+	if ( sckt >= 0 ) {   //successfully created socket
 		memset(&scktName, 0, sizeof(struct sockaddr_in));
 		scktName.sin_family = AF_INET;
 		scktName.sin_port = htons(port);
 		scktName.sin_addr.s_addr = inet_addr(address.c_str());
 	}
-	else   // unsuccessful creating of the socket
-		cout << "Could not create socket for FDM output. Error: " << WSAGetLastError() << endl;
+	else exit(2);  // unsuccessful creating of the socket
 }
 
-TCPSocket::~TCPSocket() {
-	if (sckt) closesocket(sckt);
-}
+TCPSocket::~TCPSocket() {	if (sckt) closesocket(sckt); }
 
-bool TCPSocket::Connected() {
-	return connected;
-}
+bool TCPSocket::Connected() { return connected; }
 
 void TCPSocket::Connect() {
 	if (sckt > 0) {
 		int len = sizeof(struct sockaddr_in);
-		if (connect(sckt, (struct sockaddr*)&scktName, len) == 0) {   // successful
+		if (connect(sckt, (struct sockaddr*)&scktName, len) == 0) // successful
 			connected = true;
-		}
+		else exit(3);
 	}
 }
 
-bool TCPSocket::Run() {
-	return true;
-}
+bool TCPSocket::Run() { return true; }
 
 bool TCPSocket::SetControlOutput(const vector<float>& output) {
 	controlOutput.assign(output.begin(), output.end());

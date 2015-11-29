@@ -1,8 +1,8 @@
 #ifndef TCPSOCKET_H
 #define TCPSOCKET_H
 
-#include "Interface.h"
-#include <winsock2.h>
+#include <Interface.h>
+#include <windows.h>
 #include <vector>
 #include <string>
 
