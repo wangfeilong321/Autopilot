@@ -1,33 +1,37 @@
-#include <future>
+#include <thread>
 #include <memory>
 #include <string>
 #include <Interface.h>
 #include <TCPSocket.h>
 #include <SensorBoard.h>
+#include <EngineBoard.h>
 #include <PID.h>
 #include <Timer.h>
 
 using namespace std;
 
-void deviceRun(const unique_ptr<SensorBoard>& IDevice) {
-	while (IDevice->Run());
+void deviceRun(const unique_ptr<SensorBoard>& ISensor) {
+	while (ISensor->Run());
 }
 
 int main(Platform::Array<Platform::String^>^ args) {
 	
-	unique_ptr<TCPSocket> Socket = unique_ptr<TCPSocket>(new TCPSocket("192.168.0.100", 3001));
+	unique_ptr<TCPSocket> Socket = unique_ptr<TCPSocket>(new TCPSocket("192.168.0.10", 3001));
 	while (!Socket->Connected()) {
 		Socket->Connect();
 		Sleep(500);
 	}
 	
-	unique_ptr<SensorBoard> IDevice = unique_ptr<SensorBoard>(new SensorBoard());
-	while (!IDevice->Connected()) {
-		IDevice->Connect();
+	unique_ptr<SensorBoard> ISensor = unique_ptr<SensorBoard>(new SensorBoard());
+	while (!ISensor->Connected()) {
+		ISensor->Connect();
 		Sleep(500);
 	}
 
-	async(launch::async,deviceRun, ref(IDevice));
+	unique_ptr<EngineBoard> IEngine = unique_ptr<EngineBoard>(new EngineBoard);
+	IEngine->StartEngines();
+
+	thread sensorRun(deviceRun, ref(ISensor));
 	
 	vector<float> sensorInput(3, 0.0);
 	vector<float> controlInput(4, 0.0);
@@ -37,7 +41,7 @@ int main(Platform::Array<Platform::String^>^ args) {
 	
 	while ( true ) {
 		
-		sensorInput = IDevice->GetAngles();
+		sensorInput = ISensor->GetAngles();
 			
 		controlInput = Socket->GetControlInput();
 
@@ -64,6 +68,6 @@ int main(Platform::Array<Platform::String^>^ args) {
 
 		controlOutput.clear();
 	}
-	
+
 	return EXIT_SUCCESS;
 }

@@ -3,6 +3,9 @@
 
 using namespace std;
 
+atomic<int>Engine::counter = 0;
+bool Engine::canContinue = false;
+
 Engine::Engine(const int PIN) {
 	auto gpio = GpioController::GetDefault();
 	if (!gpio)
@@ -24,25 +27,28 @@ void Engine::OnTick() {
 	pin->Write(pinValue);
 }
 
-void Engine::imReady() {
-	lock_guard<mutex> lk(mut);
-	static auto count = 0;
-	count++;
-	if (count == 4) {
-		data_cond.notify_all();
-	}
+void Engine::StartEngine() {
+	engineThread = unique_ptr<thread>( new thread(&Engine::ProcessPin, this));
+	engineThread->detach();
+}
+
+void Engine::SetContinue(bool ifContinue) {
+	canContinue = ifContinue;
+}
+
+bool Engine::GetReadyAll() {
+	return counter == 4;
+}
+
+void Engine::OneIsReady() {
+	counter++;
 }
 
 void Engine::ProcessPin() {
-	//waiting for all threads to be launched
 	{
-		imReady();
-		unique_lock<mutex> lk(mut);
-		data_cond.wait(lk);
-	}
-	//waiting for 5 sec 
-	{
-
+		OneIsReady();
+		unique_lock<mutex> lk(lockEngine);
+		threadReadiness.wait(lk, []() {return canContinue;});
 	}
 	{
 		const int calibrationDeltaTmcs = 2000;
