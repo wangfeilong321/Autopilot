@@ -28,7 +28,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Base.h" />
-    <ClInclude Include="src\InputOutput\Engine.h" />
     <ClInclude Include="src\InputOutput\EngineBoard.h" />
     <ClInclude Include="src\InputOutput\SensorBoard.h" />
     <ClInclude Include="src\InputOutput\Interface.h" />
@@ -39,7 +38,6 @@
     <ClInclude Include="src\Utilities\Timer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\InputOutput\Engine.cpp" />
     <ClCompile Include="src\InputOutput\EngineBoard.cpp" />
     <ClCompile Include="src\InputOutput\SensorBoard.cpp" />
     <ClCompile Include="src\InputOutput\Interface.cpp" />

@@ -11,25 +11,4 @@ const int ENGINE_PIN_2 = 6;
 const int ENGINE_PIN_3 = 13;
 const int ENGINE_PIN_4 = 22;
 
-/// Moments L, M, N
-enum {eL     = 1, eM,     eN    };
-/// Rates P, Q, R
-enum {eP     = 1, eQ,     eR    };
-/// Velocities U, V, W
-enum {eU     = 1, eV,     eW    };
-/// Positions X, Y, Z
-enum {eX     = 1, eY,     eZ    };
-/// Euler angles Phi, Theta, Psi
-enum {ePhi   = 1, eTht,   ePsi  };
-/// Stability axis forces, Drag, Side force, Lift
-enum {eDrag  = 1, eSide,  eLift };
-/// Local frame orientation Roll, Pitch, Yaw
-enum {eRoll  = 1, ePitch, eYaw  };
-/// Local frame position North, East, Down
-enum {eNorth = 1, eEast,  eDown };
-/// Locations Radius, Latitude, Longitude
-enum {eLat = 1, eLong, eRad     };
-/// Conversion specifiers
-enum {inNone = 0, inDegrees, inRadians, inMeters, inFeet };
-
 #endif

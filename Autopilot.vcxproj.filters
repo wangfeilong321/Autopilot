@@ -8,7 +8,6 @@
     <ClInclude Include="src\Math\MadgwickAHRS.h" />
     <ClInclude Include="src\Utilities\Timer.h" />
     <ClInclude Include="src\InputOutput\TCPSocket.h" />
-    <ClInclude Include="src\InputOutput\Engine.h" />
     <ClInclude Include="src\InputOutput\SensorBoard.h" />
     <ClInclude Include="src\InputOutput\EngineBoard.h" />
   </ItemGroup>
@@ -19,7 +18,6 @@
     <ClCompile Include="src\InputOutput\Interface.cpp" />
     <ClCompile Include="src\Math\MadgwickAHRS.c" />
     <ClCompile Include="src\InputOutput\TCPSocket.cpp" />
-    <ClCompile Include="src\InputOutput\Engine.cpp" />
     <ClCompile Include="src\InputOutput\SensorBoard.cpp" />
     <ClCompile Include="src\InputOutput\EngineBoard.cpp" />
   </ItemGroup>
