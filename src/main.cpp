@@ -33,43 +33,43 @@ void Calibrate(const unique_ptr<TCPSocket>& ISocket, const unique_ptr<EngineBoar
 		int timer = 15;
 
 		vector<float> controlOutput(18, 0.0);
-		ISocket->SetControlOutput(controlOutput);
 
 		auto start = chrono::high_resolution_clock::now();
 		while (timer >= 0) {
 
 			auto duration = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start);
 			if (duration.count() >= 1) {
-				ISocket->GetControlInput();
-
-				controlOutput.push_back(timer*1.0f); //time;
-				controlOutput.push_back(128.0f / 0.3028f); //altitudeASL
-				controlOutput.push_back(0.0); //vNorth
-				controlOutput.push_back(0.0); //vEast
-				controlOutput.push_back(0.0); //vDown
-				controlOutput.push_back(0.0); //U
-				controlOutput.push_back(0.0); //V
-				controlOutput.push_back(0.0); //W
-				controlOutput.push_back(0.0); //Roll
-				controlOutput.push_back(0.0); //Pitch
-				controlOutput.push_back(0.0); //Yaw
-				controlOutput.push_back(0.0); //P
-				controlOutput.push_back(0.0); //Q
-				controlOutput.push_back(0.0); //R
-				controlOutput.push_back(0.0); //velDotX
-				controlOutput.push_back(0.0); //velDotY
-				controlOutput.push_back(0.0); //velDotZ
-				controlOutput.push_back(0.0); //vcas
+				
+				controlOutput[0] = timer*1.0f; //time;
+				controlOutput[1] = 128.0f / 0.3028f; //altitudeASL
+				controlOutput[2] = 0.0; //vNorth
+				controlOutput[3] = 0.0; //vEast
+				controlOutput[4] = 0.0; //vDown
+				controlOutput[5] = 0.0; //U
+				controlOutput[6] = 0.0; //V
+				controlOutput[7] = 0.0; //W
+				controlOutput[8] = 0.0; //Roll
+				controlOutput[9] = 0.0; //Pitch
+				controlOutput[10] = 0.0; //Yaw
+				controlOutput[11] = 0.0; //P
+				controlOutput[12] = 0.0; //Q
+				controlOutput[13] = 0.0; //R
+				controlOutput[14] = 0.0; //velDotX
+				controlOutput[15] = 0.0; //velDotY
+				controlOutput[16] = 0.0; //velDotZ
+				controlOutput[17] = 0.0; //vcas
 				ISocket->SetControlOutput(controlOutput);
-				controlOutput.clear();
+
 				timer--; //minus 1 second each pass
+								
+				ISocket->GetControlInput();
 				start = chrono::high_resolution_clock::now();
 			}
 		}
 	}
 	{
 		const int calibrationDeltaTmcs = 2000;
-		const int calibrationTime = 3;
+		const int calibrationTime = 5;
 		Timer timer(true);
 		auto start = chrono::high_resolution_clock::now();
 		while (timer.Elapsed().count() < calibrationTime) {
@@ -82,7 +82,7 @@ void Calibrate(const unique_ptr<TCPSocket>& ISocket, const unique_ptr<EngineBoar
 	}
 	{
 		const int calibrationDeltaTmcs = 1000;
-		const int calibrationTime = 3;
+		const int calibrationTime = 5;
 		Timer timer(true);
 		auto start = chrono::high_resolution_clock::now();
 		while (timer.Elapsed().count() < calibrationTime) {
@@ -124,32 +124,29 @@ int main(Platform::Array<Platform::String^>^ args) {
 		
 		sensorInput = ISensor->GetAngles();
 			
-		controlInput = ISocket->GetControlInput();
-		if(controlInput.size()==4)
-			deltaTmcs = static_cast<int>(1000 + controlInput[3] * 1000);
-
-		controlOutput.push_back(0.0); //time;
-		controlOutput.push_back(128.0f / 0.3028f); //altitudeASL
-		controlOutput.push_back(0.0); //vNorth
-		controlOutput.push_back(0.0); //vEast
-		controlOutput.push_back(0.0); //vDown
-		controlOutput.push_back(0.0); //U
-		controlOutput.push_back(0.0); //V
-		controlOutput.push_back(0.0); //W
-		controlOutput.push_back(sensorInput[0] * degtorad); //Roll
-		controlOutput.push_back(sensorInput[1] * degtorad); //Pitch
-		controlOutput.push_back(sensorInput[2] * degtorad); //Yaw
-		controlOutput.push_back(0.0); //P
-		controlOutput.push_back(0.0); //Q
-		controlOutput.push_back(0.0); //R
-		controlOutput.push_back(0.0); //velDotX
-		controlOutput.push_back(0.0); //velDotY
-		controlOutput.push_back(0.0); //velDotZ
-		controlOutput.push_back(0.0); //vcas
-
+		controlOutput[0] = 0.0; //time;
+		controlOutput[1] = 128.0f / 0.3028f; //altitudeASL
+		controlOutput[2] = 0.0; //vNorth
+		controlOutput[3] = 0.0; //vEast
+		controlOutput[4] = 0.0; //vDown
+		controlOutput[5] = 0.0; //U
+		controlOutput[6] = 0.0; //V
+		controlOutput[7] = 0.0; //W
+		controlOutput[8] = sensorInput[0] * degtorad; //Roll
+		controlOutput[9] = sensorInput[1] * degtorad; //Pitch
+		controlOutput[10] = sensorInput[2] * degtorad; //Yaw
+		controlOutput[11] = 0.0; //P
+		controlOutput[12] = 0.0; //Q
+		controlOutput[13] = 0.0; //R
+		controlOutput[14] = 0.0; //velDotX
+		controlOutput[15] = 0.0; //velDotY
+		controlOutput[16] = 0.0; //velDotZ
+		controlOutput[17] = 0.0; //vcas
 		ISocket->SetControlOutput(controlOutput);
 
-		controlOutput.clear();
+		controlInput = ISocket->GetControlInput();
+		if (controlInput.size() == 4)
+			deltaTmcs = static_cast<int>(1000 + controlInput[3] * 1000);
 	}
 
 	return EXIT_SUCCESS;

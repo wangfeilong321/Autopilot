@@ -37,6 +37,7 @@ EngineBoard::EngineBoard(const int PIN1, const int PIN2, const int PIN3, const i
 }
 
 void EngineBoard::OnTick() {
+	lock_guard<mutex> lk(m);
 	if (pinValue == GpioPinValue::High)
 		pinValue = GpioPinValue::Low;
 	else

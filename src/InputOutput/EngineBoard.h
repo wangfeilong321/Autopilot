@@ -2,6 +2,7 @@
 #define ENGINE_BOARD_H
 
 using namespace Windows::Devices::Gpio;
+#include <mutex>
 
 class EngineBoard {
 public:
@@ -15,6 +16,7 @@ private:
 	GpioPin ^pin2;
 	GpioPin ^pin3;
 	GpioPin ^pin4;
+	std::mutex m;
 };
 
 #endif
