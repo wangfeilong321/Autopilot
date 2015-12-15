@@ -8,7 +8,10 @@ class EngineBoard {
 public:
 	EngineBoard(const int PIN1, const int PIN2, const int PIN3, const int PIN4);
 
-	void OnTick();
+	void Engine1OnTick();
+	void Engine2OnTick();
+	void Engine3OnTick();
+	void Engine4OnTick();
 
 private:
 	GpioPinValue pinValue = GpioPinValue::Low;
@@ -16,7 +19,6 @@ private:
 	GpioPin ^pin2;
 	GpioPin ^pin3;
 	GpioPin ^pin4;
-	std::mutex m;
 };
 
 #endif

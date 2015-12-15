@@ -23,7 +23,7 @@
 // Definitions
 
 #define sampleFreq	120.0f		// sample frequency in Hz
-#define betaDef		0.1f		// 2 * proportional gain
+#define betaDef		  0.1f		// 2 * proportional gain
 
 //---------------------------------------------------------------------------------------------------
 // Variable definitions
@@ -217,7 +217,7 @@ void QuaternionToEuler(float* roll, float* pitch, float* yaw) {
 
 	*pitch *= -180.0f / M_PI;
 	*yaw *= 180.0f / M_PI;
-	//*yaw += 10.266; // Declination at Moscow, Russia
+	*yaw += 10.266f; // Declination at Moscow, Russia
 	*roll *= 180.0f / M_PI;
 }
 

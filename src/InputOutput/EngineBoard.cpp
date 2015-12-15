@@ -36,14 +36,34 @@ EngineBoard::EngineBoard(const int PIN1, const int PIN2, const int PIN3, const i
 	pin4->SetDriveMode(GpioPinDriveMode::Output);
 }
 
-void EngineBoard::OnTick() {
-	lock_guard<mutex> lk(m);
+void EngineBoard::Engine1OnTick() {
 	if (pinValue == GpioPinValue::High)
 		pinValue = GpioPinValue::Low;
 	else
 		pinValue = GpioPinValue::High;
 	pin1->Write(pinValue);
+}
+
+void EngineBoard::Engine2OnTick() {
+	if (pinValue == GpioPinValue::High)
+		pinValue = GpioPinValue::Low;
+	else
+		pinValue = GpioPinValue::High;
 	pin2->Write(pinValue);
+}
+
+void EngineBoard::Engine3OnTick() {
+	if (pinValue == GpioPinValue::High)
+		pinValue = GpioPinValue::Low;
+	else
+		pinValue = GpioPinValue::High;
 	pin3->Write(pinValue);
+}
+
+void EngineBoard::Engine4OnTick() {
+	if (pinValue == GpioPinValue::High)
+		pinValue = GpioPinValue::Low;
+	else
+		pinValue = GpioPinValue::High;
 	pin4->Write(pinValue);
 }
