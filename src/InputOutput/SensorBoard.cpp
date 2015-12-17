@@ -292,14 +292,14 @@ uint8_t SensorBoard::readByte(I2cDevice^ Device, uint8_t Register) {
 }
 
 
-std::vector<float> SensorBoard::GetAngles() {
+std::array<float, NUMBER_OF_ANGLES> SensorBoard::GetAngles() {
 	MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);
 	QuaternionToEuler(&roll, &pitch, &yaw);
 
-	vector<float> angles;
-	angles.push_back(roll);
-	angles.push_back(pitch);
-	angles.push_back(yaw);
+	array<float, NUMBER_OF_ANGLES> angles;
+	angles[0] = roll;
+	angles[1] = pitch;
+	angles[2] = yaw;
 
 	return angles;
 }

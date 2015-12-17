@@ -3,7 +3,7 @@
 
 #include <string>
 #include <ppltasks.h>
-#include <vector>
+#include <array>
 #include <sstream>
 #include <Interface.h>
 #include <Base.h>
@@ -22,7 +22,7 @@ public:
 	virtual bool Connected();
 	virtual void Connect();
 
-	std::vector<float> GetAngles();
+	std::array<float, NUMBER_OF_ANGLES> GetAngles();
 	
 protected:
 	I2cDevice^ MakeDevice(int slaveAddress, _In_opt_ String^ friendlyName);
