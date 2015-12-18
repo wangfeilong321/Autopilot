@@ -7,7 +7,6 @@ using namespace Windows::Devices::Gpio;
 class EngineBoard {
 public:
 	EngineBoard(const int PIN1, const int PIN2, const int PIN3, const int PIN4);
-
 	void Engine1OnTick();
 	void Engine2OnTick();
 	void Engine3OnTick();

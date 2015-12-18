@@ -1,4 +1,5 @@
 #include <asio/deadline_timer.hpp>
+#include <asio/basic_deadline_timer.hpp>
 #include <asio/error_code.hpp>
 #include <asio/system_error.hpp>
 #include <asio/io_service.hpp>
@@ -6,6 +7,7 @@
 #include <asio/read_until.hpp>
 #include <asio/streambuf.hpp>
 #include <asio/write.hpp>
+#include <asio.hpp>
 
 #include <SensorBoard.h>
 #include <EngineBoard.h>
@@ -25,39 +27,14 @@ atomic<int> deltaTmcs = 2000;
 
 class client {
 public:
-
-	static const size_t MAX_SIZE = 128;
-
-	client(asio::io_service& io_service, const shared_ptr<SensorBoard>& Sensor) : socket(io_service), ISensor(Sensor), TimerClock(10) {}
 	
-	// Called by the user of the client class to initiate the connection process.
-	// The endpoint iterator will have been obtained using a tcp::resolver.
+	client(asio::io_service& io_service, const shared_ptr<SensorBoard>& Sensor) : socket(io_service), TimerClock(10), ISensor(Sensor) {}
+	
 	void start(asio::ip::tcp::endpoint endpoint) {
-		start_connect(endpoint);
-	}
-
-	void timer() {
-		auto start = high_resolution_clock::now();
-		while (TimerClock >= 0) {
-			auto duration = duration_cast<seconds>(high_resolution_clock::now() - start);
-			if (duration.count() >= 1) {
-				do_write();
-				TimerClock--; //minus 1 second each pass
-				do_read();
-				start = high_resolution_clock::now();
-			}
-		}
-	}
-
-private:
-	void start_connect(asio::ip::tcp::endpoint endpoint) {
-		// Start the asynchronous connect operation.
 		socket.async_connect(endpoint, [this](asio::error_code ec) {
-			// The async_connect() function automatically opens the socket at the start
-			// of the asynchronous operation. If the socket is closed at this time then
-			// the timeout handler must have run first.
 			if (!ec) {
 				if (socket.is_open()) {
+					timer();
 					do_write();
 					do_read();
 				}
@@ -68,13 +45,12 @@ private:
 		});
 	}
 
-	// This function terminates all the actors to shut down the connection. It
-	// may be called by the user of the client class, or by the class itself in
-	// response to graceful termination or an unrecoverable error.
 	void stop() {
 		socket.close();
 	}
-
+	
+private:
+	
 	void do_read() {
 		asio::async_read_until(socket, input_buffer, string("\r\n"), [this](const asio::error_code& ec, size_t length) {
 			if (!ec) {
@@ -155,6 +131,17 @@ private:
 		});
 	}
 
+	void timer() {
+		auto start = high_resolution_clock::now();
+		while (TimerClock > 0) {
+			auto duration = duration_cast<seconds>(high_resolution_clock::now() - start);
+			if (duration.count() >= 1) {
+				TimerClock--;
+				start = high_resolution_clock::now();
+			}
+		}
+	}
+
 private:
 	asio::ip::tcp::socket socket;
 	asio::streambuf input_buffer;
@@ -165,61 +152,58 @@ private:
 	int TimerClock;
 };
 
-void socketRun(const shared_ptr<SensorBoard>& ISensor) {
+int main(Platform::Array<Platform::String^>^ args) {
 	try {
+		shared_ptr<SensorBoard> ISensor = shared_ptr<SensorBoard>(new SensorBoard);
+		ISensor->Connect();
+		if(!ISensor->Connected())
+			return EXIT_FAILURE;
+
+		unique_ptr<EngineBoard> IEngine = unique_ptr<EngineBoard>(new EngineBoard(ENGINE_PIN_1, ENGINE_PIN_2, ENGINE_PIN_3, ENGINE_PIN_4));
+
 		asio::io_service service;
 		asio::ip::tcp::endpoint endpoint(asio::ip::address::from_string("192.168.0.10"), 3001);
 		client c(service, ISensor);
 		c.start(endpoint);
-		service.run();
+
+		thread t([&service]() { service.run(); });
+		
+		auto start1 = high_resolution_clock::now();
+		auto start2 = high_resolution_clock::now();
+		auto start3 = high_resolution_clock::now();
+		auto start4 = high_resolution_clock::now();
+
+		while (ISensor->Run()) {
+
+			auto duration1 = duration_cast<microseconds>(high_resolution_clock::now() - start1);
+			if (duration1.count() >= deltaTmcs) {
+				IEngine->Engine1OnTick();
+				start1 = high_resolution_clock::now();
+			}
+			auto duration2 = duration_cast<microseconds>(high_resolution_clock::now() - start2);
+			if (duration2.count() >= deltaTmcs) {
+				IEngine->Engine2OnTick();
+				start2 = high_resolution_clock::now();
+			}
+			auto duration3 = duration_cast<microseconds>(high_resolution_clock::now() - start3);
+			if (duration3.count() >= deltaTmcs) {
+				IEngine->Engine3OnTick();
+				start3 = high_resolution_clock::now();
+			}
+			auto duration4 = duration_cast<microseconds>(high_resolution_clock::now() - start4);
+			if (duration4.count() >= deltaTmcs) {
+				IEngine->Engine4OnTick();
+				start4 = high_resolution_clock::now();
+			}
+		}
+
+		c.stop();
+		t.join();
+
 	}
 	catch (std::exception& e) {
 		string what = e.what();
 	}
-}
-
-int main(Platform::Array<Platform::String^>^ args) {
 	
-	shared_ptr<SensorBoard> ISensor = shared_ptr<SensorBoard>(new SensorBoard);
-	while (!ISensor->Connected()) {
-		ISensor->Connect();
-		Sleep(500);
-	}
-	
-	thread t(socketRun, ref(ISensor));
-
-	unique_ptr<EngineBoard> IEngine = unique_ptr<EngineBoard>(new EngineBoard(ENGINE_PIN_1, ENGINE_PIN_2, ENGINE_PIN_3, ENGINE_PIN_4));
-	
-	auto start1 = high_resolution_clock::now();
-	auto start2 = high_resolution_clock::now();
-	auto start3 = high_resolution_clock::now();
-	auto start4 = high_resolution_clock::now();
-
-	while (ISensor->Run()) {
-		
-		auto duration1 = duration_cast<microseconds>(high_resolution_clock::now() - start1);
-		if (duration1.count() >= deltaTmcs) {
-			IEngine->Engine1OnTick();
-			start1 = high_resolution_clock::now();
-		}
-		auto duration2 = duration_cast<microseconds>(high_resolution_clock::now() - start2);
-		if (duration2.count() >= deltaTmcs) {
-			IEngine->Engine2OnTick();
-			start2 = high_resolution_clock::now();
-		}
-		auto duration3 = duration_cast<microseconds>(high_resolution_clock::now() - start3);
-		if (duration3.count() >= deltaTmcs) {
-			IEngine->Engine3OnTick();
-			start3 = high_resolution_clock::now();
-		}
-		auto duration4 = duration_cast<microseconds>(high_resolution_clock::now() - start4);
-		if (duration4.count() >= deltaTmcs) {
-			IEngine->Engine4OnTick();
-			start4 = high_resolution_clock::now();
-		}
-	}
-	
-	t.join();
-
 	return EXIT_SUCCESS;
 }
