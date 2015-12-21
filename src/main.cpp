@@ -28,7 +28,7 @@ atomic<int> deltaTmcs = 2000;
 class client {
 public:
 	
-	client(asio::io_service& io_service, const shared_ptr<SensorBoard>& Sensor) : socket(io_service), TimerClock(10), ISensor(Sensor) {}
+	client(asio::io_service& io_service, const shared_ptr<SensorBoard>& Sensor) : socket(io_service), ISensor(Sensor) {}
 	
 	void start(asio::ip::tcp::endpoint endpoint) {
 		socket.async_connect(endpoint, [this](asio::error_code ec) {
@@ -94,7 +94,7 @@ private:
 		
 		sensorInput = ISensor->GetAngles();
 
-		controlOutput[0] = TimerClock*1.0f; //timer;
+		controlOutput[0] = 0.0f; //timer;
 		controlOutput[1] = 38.0477f / 0.3028f; //altitudeASL ft
 		controlOutput[2] = 0.0; //vNorth
 		controlOutput[3] = 0.0; //vEast
@@ -131,15 +131,17 @@ private:
 		});
 	}
 
-	void timer() {
-		auto start = high_resolution_clock::now();
-		while (TimerClock > 0) {
+	int timer() {
+		static auto start = high_resolution_clock::now();
+		static auto timer = 10;
+		if (timer > 0) {
 			auto duration = duration_cast<seconds>(high_resolution_clock::now() - start);
 			if (duration.count() >= 1) {
-				TimerClock--;
+				timer--;
 				start = high_resolution_clock::now();
 			}
 		}
+		return timer;
 	}
 
 private:
@@ -149,7 +151,6 @@ private:
 	array<float, 18> controlOutput;
 	array<float, 3> sensorInput;
 	shared_ptr<SensorBoard> ISensor;
-	int TimerClock;
 };
 
 int main(Platform::Array<Platform::String^>^ args) {
