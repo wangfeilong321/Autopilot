@@ -54,41 +54,6 @@ SensorBoard::SensorBoard() : ifConnected(false) {
 	}
 }
 
-bool SensorBoard::Run() { 
-	
-	bool IfReadAccelOk = readAccelData(AccelData);
-		
-	axd = AccelData[0] * aRes;  // get actual g value, this depends on scale being set
-	ayd = AccelData[1] * aRes;
-	azd = AccelData[2] * aRes;
-
-	bool IfReadGyroOk = readGyroData(GyroData);
-
-	gxd = GyroData[0] * gRes;  // get actual gyro value, this depends on scale being set
-	gyd = GyroData[1] * gRes;
-	gzd = GyroData[2] * gRes;
-
-	bool IfReadMagnetOk = readMagnetData(MagnetData);
-
-	mRes = 0.73f; 
-	// Conversion to milliGauss, 0.73 mG/LSB in hihgest resolution mode
-	// So far, magnetometer bias is calculated and subtracted here manually, should construct an algorithm to do it automatically
-	// like the gyro and accelerometer biases
-	magbias[0] = -30.;  // User environmental x-axis correction in milliGauss
-	magbias[1] = +85.;  // User environmental y-axis correction in milliGauss
-	magbias[2] = -78.;  // User environmental z-axis correction in milliGauss
-
-	// Calculate the magnetometer values in milliGauss
-	// Include factory calibration per data sheet and user environmental corrections
-	// get actual magnetometer value, this depends on scale being set
-	mxd = MagnetData[0] * mRes - magbias[0];
-	myd = MagnetData[1] * mRes - magbias[1];
-	mzd = MagnetData[2] * mRes - magbias[2];
-
-	return IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk;
-}
-
-
 void SensorBoard::Connect() {
 
 	uint8_t c = readByte(Accel, WHO_AM_I_ADXL345);
@@ -111,7 +76,7 @@ void SensorBoard::Connect() {
 	bool ifOkPowerControl2 = writeCommand(Accel, ADXL345_POWER_CTL, 0x08);             /* 0x08 puts the accelerometer into measurement (normal) mode */
 																																										 // Set accelerometer configuration; interrupt active high, left justify MSB
 	bool ifOkDataFormat = writeCommand(Accel, ADXL345_DATA_FORMAT, 0x04 | Ascale);  // Set full scale range for the accelerometer 
-																																										 // Choose ODR and bandwidth
+																																									// Choose ODR and bandwidth
 	bool ifOkBWRate = writeCommand(Accel, ADXL345_BW_RATE, Arate);              // Select normal power operation, and ODR and bandwidth
 	bool ifOkEnableINTA = writeCommand(Accel, ADXL345_INT_ENABLE, 0x80);            // Enable data ready interrupt
 	bool ifOkEnableINTMap = writeCommand(Accel, ADXL345_INT_MAP, 0x00);                // Enable data ready interrupt on INT_1
@@ -164,6 +129,43 @@ void SensorBoard::Connect() {
 		ifOkSelfTest;
 }
 
+bool SensorBoard::Connected() {
+	return ifConnected;
+}
+
+bool SensorBoard::Run() { 
+	
+	bool IfReadAccelOk = readAccelData(AccelData);
+		
+	axd = AccelData[0] * aRes;  // get actual g value, this depends on scale being set
+	ayd = AccelData[1] * aRes;
+	azd = AccelData[2] * aRes;
+
+	bool IfReadGyroOk = readGyroData(GyroData);
+
+	gxd = GyroData[0] * gRes;  // get actual gyro value, this depends on scale being set
+	gyd = GyroData[1] * gRes;
+	gzd = GyroData[2] * gRes;
+
+	bool IfReadMagnetOk = readMagnetData(MagnetData);
+
+	mRes = 0.73f; 
+	// Conversion to milliGauss, 0.73 mG/LSB in hihgest resolution mode
+	// So far, magnetometer bias is calculated and subtracted here manually, should construct an algorithm to do it automatically
+	// like the gyro and accelerometer biases
+	magbias[0] = -30.;  // User environmental x-axis correction in milliGauss
+	magbias[1] = +85.;  // User environmental y-axis correction in milliGauss
+	magbias[2] = -78.;  // User environmental z-axis correction in milliGauss
+
+	// Calculate the magnetometer values in milliGauss
+	// Include factory calibration per data sheet and user environmental corrections
+	// get actual magnetometer value, this depends on scale being set
+	mxd = MagnetData[0] * mRes - magbias[0];
+	myd = MagnetData[1] * mRes - magbias[1];
+	mzd = MagnetData[2] * mRes - magbias[2];
+
+	return IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk;
+}
 
 I2cDevice^ SensorBoard::MakeDevice(int slaveAddress, _In_opt_ String^ friendlyName) {
 	String^ aqs;
@@ -189,12 +191,6 @@ I2cDevice^ SensorBoard::MakeDevice(int slaveAddress, _In_opt_ String^ friendlyNa
 	return _device;
 }
 
-
-bool SensorBoard::Connected() {
-	return ifConnected;
-}
-
-
 bool SensorBoard::readAccelData(int16_t * Destination) {
 	uint8_t data[6] = { 0, 0, 0, 0, 0, 0 };
 	bool IfReadOk = readBytes(Accel, ADXL345_DATAX0, 6, data);
@@ -204,7 +200,6 @@ bool SensorBoard::readAccelData(int16_t * Destination) {
 	Destination[2] = ((int16_t)data[5] << 8) | data[4];
 	return IfReadOk;
 }
-
 
 bool SensorBoard::readGyroData(int16_t * Destination) {
 	uint8_t data[6] = { 0, 0, 0, 0, 0, 0 };
@@ -216,7 +211,6 @@ bool SensorBoard::readGyroData(int16_t * Destination) {
 	return IfReadOk;
 }
 
-
 bool SensorBoard::readMagnetData(int16_t * destination) {
 	uint8_t data[6];																		// x/y/z gyro register data stored here
 	bool IfReadOk = readBytes(Magnet, HMC5883L_OUT_X_H, 6, data);				// Read the six raw data registers sequentially into data array
@@ -226,7 +220,6 @@ bool SensorBoard::readMagnetData(int16_t * destination) {
 	destination[2] = ((int16_t)data[2] << 8) | data[3];
 	return IfReadOk;
 }
-
 
 bool SensorBoard::readBytes(I2cDevice^ Device, uint8_t Register, uint8_t numBytesToRead, uint8_t * DestBuffer) {
 	std::vector<BYTE> WriteBuf = { Register };
@@ -250,7 +243,6 @@ bool SensorBoard::readBytes(I2cDevice^ Device, uint8_t Register, uint8_t numByte
 	return ifOk;
 }
 
-
 bool SensorBoard::writeCommand(I2cDevice^ Device, uint8_t Register, uint8_t Command) {
 	std::vector<BYTE> WriteBuf = { Register, Command };
 	I2cTransferResult result = Device->WritePartial( ArrayReference<BYTE>( WriteBuf.data(), static_cast<unsigned int>(WriteBuf.size()) ) );
@@ -269,7 +261,6 @@ bool SensorBoard::writeCommand(I2cDevice^ Device, uint8_t Register, uint8_t Comm
 	}
 	return ifOk;
 }
-
 
 uint8_t SensorBoard::readByte(I2cDevice^ Device, uint8_t Register) {
 	std::vector<BYTE> WriteBuf = { Register };
@@ -290,7 +281,6 @@ uint8_t SensorBoard::readByte(I2cDevice^ Device, uint8_t Register) {
 	}
 	return data;
 }
-
 
 std::array<float, NUMBER_OF_ANGLES> SensorBoard::GetAngles() {
 	MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);

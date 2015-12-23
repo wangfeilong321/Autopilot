@@ -28,18 +28,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Base.h" />
+    <ClInclude Include="src\InputOutput\Controller.h" />
     <ClInclude Include="src\InputOutput\EngineBoard.h" />
     <ClInclude Include="src\InputOutput\SensorBoard.h" />
     <ClInclude Include="src\InputOutput\Interface.h" />
+    <ClInclude Include="src\InputOutput\SocketBoard.h" />
     <ClInclude Include="src\Math\MadgwickAHRS.h" />
     <ClInclude Include="src\Math\PID.h" />
     <ClInclude Include="src\Utilities\StringUtilities.h" />
     <ClInclude Include="src\Utilities\Timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\InputOutput\Controller.cpp" />
     <ClCompile Include="src\InputOutput\EngineBoard.cpp" />
     <ClCompile Include="src\InputOutput\SensorBoard.cpp" />
     <ClCompile Include="src\InputOutput\Interface.cpp" />
+    <ClCompile Include="src\InputOutput\SocketBoard.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Math\MadgwickAHRS.c">
       <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</CompileAsWinRT>
@@ -172,7 +176,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0602;NTDDI_VERSION=0x06030000;ASIO_STANDALONE;BOOST_DATE_TIME_NO_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>

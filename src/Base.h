@@ -13,4 +13,6 @@ const int ENGINE_PIN_4 = 22;
 
 const int NUMBER_OF_ANGLES = 3;
 
+const int MAX_RPM = 15000;
+
 #endif

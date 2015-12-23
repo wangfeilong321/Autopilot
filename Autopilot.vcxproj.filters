@@ -9,6 +9,8 @@
     <ClInclude Include="src\Utilities\Timer.h" />
     <ClInclude Include="src\InputOutput\SensorBoard.h" />
     <ClInclude Include="src\InputOutput\EngineBoard.h" />
+    <ClInclude Include="src\InputOutput\Controller.h" />
+    <ClInclude Include="src\InputOutput\SocketBoard.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -18,5 +20,7 @@
     <ClCompile Include="src\Math\MadgwickAHRS.c" />
     <ClCompile Include="src\InputOutput\SensorBoard.cpp" />
     <ClCompile Include="src\InputOutput\EngineBoard.cpp" />
+    <ClCompile Include="src\InputOutput\Controller.cpp" />
+    <ClCompile Include="src\InputOutput\SocketBoard.cpp" />
   </ItemGroup>
 </Project>

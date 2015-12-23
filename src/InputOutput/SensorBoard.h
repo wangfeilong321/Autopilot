@@ -18,10 +18,10 @@ public:
 	SensorBoard();
 	virtual ~SensorBoard() = default;
 
-	virtual bool Run();
-	virtual bool Connected();
 	virtual void Connect();
-
+	virtual bool Connected();
+	virtual bool Run();
+	
 	std::array<float, NUMBER_OF_ANGLES> GetAngles();
 	
 protected:
