@@ -1,4 +1,7 @@
 #include <SocketBoard.h>
+#include <string>
+
+using namespace std;
 
 SocketBoard::SocketBoard() : socket(ref new StreamSocket()), writer(ref new DataWriter(socket->OutputStream)), reader(ref new DataReader(socket->InputStream)), ifConnected(false) {}
 
@@ -23,17 +26,48 @@ bool SocketBoard::Connected() {
 
 bool SocketBoard::Run() {
 	
-	writer->WriteString(dataToSend);
-	auto bytesToWrite = writer->MeasureString(dataToSend);
-	auto writtenBytes = 0;
+	string dataToSend;
 
+	dataToSend += string("s"); //start flag
+	dataToSend += string("0.0,"); //timer
+	dataToSend += string(to_string(38.0477f / 0.3028f) + string(",")); //altitudeASL ft
+	dataToSend += string("0.0,"); //vNorth
+	dataToSend += string("0.0,"); //vEast
+	dataToSend += string("0.0,"); //vDown
+	dataToSend += string("0.0,"); //U
+	dataToSend += string("0.0,");//V
+	dataToSend += string("0.0,"); //W
+	dataToSend += string("0.0,"); //Roll
+	dataToSend += string("0.0,"); //Pitch
+	dataToSend += string("0.0,"); //Yaw
+	dataToSend += string("0.0,"); //P
+	dataToSend += string("0.0,"); //Q
+	dataToSend += string("0.0,"); //R
+	dataToSend += string("0.0,"); //velDotX
+	dataToSend += string("0.0,"); //velDotY
+	dataToSend += string("0.0,"); //velDotZ
+	dataToSend += string("0.0,"); //vcas
+	dataToSend += string("0.0,"); //Engine0 RPM
+	dataToSend += string("0.0,"); //Engine1 RPM
+	dataToSend += string("0.0,"); //Engine2 RPM
+	dataToSend += string("0.0"); //Engine3 RPM
+	dataToSend += string("f"); // finish flag
+	
+	auto writtenBytes = 0;
+	auto bytesToWrite = dataToSend.size();
+	Array<BYTE>^ buffer = ref new Array<BYTE>(bytesToWrite);
+	//copy(begin(dataToSend), end(dataToSend), buffer->begin());
+	for (auto i = 0; i < bytesToWrite; ++i)
+		buffer[i] = dataToSend[i];
+	
+	writer->WriteBytes(buffer);
+	
 	create_task(writer->StoreAsync()).then([this, &writtenBytes](task<size_t> writeTask) {
 		try {
-			// Try getting an exception.
 			writtenBytes = writeTask.get();
 		}
 		catch (Exception^ exception) {
-			//rootPage->NotifyUser("Send failed with error: " + exception->Message, NotifyType::ErrorMessage);
+			String^ exceptionStr = exception->Message;
 		}
 	}).then([this, &bytesToWrite, &writtenBytes]() {
 		if (writtenBytes == bytesToWrite) {
@@ -43,19 +77,24 @@ bool SocketBoard::Run() {
 			bool ok = false;
 		}
 	});
-	
-	auto readBytes = 0;
-	create_task(reader->LoadAsync(MAX_SIZE)).then([this, &readBytes](task<size_t> readTask) {
+
+	//auto readBytes = 0;
+	create_task(reader->LoadAsync(MAX_SIZE)).then([this](task<size_t> readTask) {
 		try {
-			// Try getting an exception.
-			readBytes = readTask.get();
+			readTask.get();
 		}
 		catch (Exception^ exception) {
-			//rootPage->NotifyUser("Send failed with error: " + exception->Message, NotifyType::ErrorMessage);
+			String^ exceptionStr = exception->Message;
 		}
-	}).then([this, &readBytes]() {
-		if(readBytes > 0)
-			dataToRecv = reader->ReadString(readBytes);
+	}).then([this]() {
+		auto readBytes = MAX_SIZE;
+		if (readBytes > 0) {
+			string dataToRecv("",readBytes);
+			Array<BYTE>^ buffer = ref new Array<BYTE>(readBytes);
+			reader->ReadBytes(buffer);
+			for (auto i = 0; i < readBytes; ++i)
+				dataToRecv[i] = buffer[i];
+		}
 	});
 
 	return true;

@@ -23,9 +23,7 @@ public:
 private:
 	StreamSocket^ socket;
 	bool ifConnected;
-	String^ dataToSend;
 	DataWriter^ writer;
-	String^ dataToRecv;
 	DataReader^ reader;
 	const size_t MAX_SIZE = 1024;
 };
