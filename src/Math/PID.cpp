@@ -1,6 +1,5 @@
-#include <string>
-#include <iostream>
 #include <PID.h>
+#include <cmath>
 
 using namespace std;
 
@@ -22,13 +21,13 @@ PID::PID() {
 	Trigger = 0.0;
 }
 
-PID::~PID() {}
+void PID::Connect() {}
 
-void PID::SetCurrentInput(double angleRad) { 	Input = angleRad; }
+bool PID::Connected() {
+	return true;
+}
 
-double PID::GetCurrentOutput() { return -Output; }
-
-bool PID::Run(void) {
+bool PID::Run() {
 	double Dval = (Input - Input_prev) / dt;
 	
 	// Do not continue to integrate the input to the integrator if a wind-up
@@ -39,6 +38,7 @@ bool PID::Run(void) {
 	double test = 0.0;
 	if (Trigger != 0) 
 		test = Trigger;
+	
 	double I_out_delta = 0.0;
 	
 	if (fabs(test) < 0.000001) {
@@ -61,7 +61,7 @@ bool PID::Run(void) {
 			break;
 		}
 	}
-
+	
 	if (test < 0.0) 
 		I_out_total = 0.0;  // Reset integrator to 0.0
 
@@ -76,15 +76,16 @@ bool PID::Run(void) {
 
 	Input_prev = Input;
 	Input_prev2 = Input_prev;
-
 	Clip();
-	
+
 	return true;
 }
+
+void PID::SetCurrentInput(double angleRad) { Input = angleRad; }
+
+double PID::GetCurrentOutput() { return -Output; }
 
 void PID::Clip(void) {
 	if (Output > clipmax)      Output = clipmax;
 	else if (Output < clipmin) Output = clipmin;
 }
-
-void PID::Debug(int /*from*/) {}

@@ -5,8 +5,6 @@ using namespace std;
 
 Controller::Controller() : ISensor(new SensorBoard), IEngine(new EngineBoard()), ISocket(new SocketBoard()) {}
 
-Controller::~Controller() {}
-
 void Controller::Connect() {
 	ISensor->Connect();
 	if (!ISensor->Connected()) {

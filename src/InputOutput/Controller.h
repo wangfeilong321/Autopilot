@@ -12,7 +12,7 @@
 class Controller : public Interface {
 public:
 	Controller();
-	virtual ~Controller();
+	virtual ~Controller() = default;
 
 	virtual void Connect();
 	virtual bool Connected();

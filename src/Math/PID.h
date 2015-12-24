@@ -1,12 +1,16 @@
 #ifndef PID_H
 #define PID_H
 
-class PID {
+#include <Interface.h>
+
+class PID : public Interface {
 public:
 	PID();
-	~PID();
+	virtual ~PID() = default;
 	
-	bool Run(void);
+	virtual void Connect();
+	virtual bool Connected();
+	virtual bool Run();
 	
 	/// These define the indices use to select the various integrators.
 	enum eIntegrateType { eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3 };
@@ -31,7 +35,6 @@ private:
 	eIntegrateType IntType;
 	
 	void Clip();
-	void Debug(int from);
 };
 
 #endif
