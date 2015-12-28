@@ -37,6 +37,7 @@
     <ClInclude Include="src\Math\PID.h" />
     <ClInclude Include="src\Utilities\StringUtilities.h" />
     <ClInclude Include="src\Utilities\Timer.h" />
+    <ClInclude Include="StateSpace.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\InputOutput\Controller.cpp" />
@@ -176,7 +177,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;D_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>

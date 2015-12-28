@@ -28,9 +28,9 @@ protected:
 	};
 
 private:
-	std::unique_ptr<SensorBoard> ISensor;
-	std::unique_ptr<EngineBoard> IEngine;
-	std::unique_ptr<SocketBoard> ISocket;
+	std::shared_ptr<SensorBoard> ISensor;
+	std::shared_ptr<EngineBoard> IEngine;
+	std::shared_ptr<SocketBoard> ISocket;
 };
 
 #endif

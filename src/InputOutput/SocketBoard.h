@@ -20,12 +20,16 @@ public:
 	virtual bool Connected();
 	virtual bool Run();
 
+protected:
+
+	void doRead();
+	void doWrite();
+
 private:
-	StreamSocket^ socket;
 	bool ifConnected;
+	StreamSocket^ socket;
 	DataWriter^ writer;
 	DataReader^ reader;
-	const size_t MAX_SIZE = 1024;
 };
 
 #endif SOCKET_H
