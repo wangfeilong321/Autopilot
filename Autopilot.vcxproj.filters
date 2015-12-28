@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="src\Base.h" />
-    <ClInclude Include="src\Utilities\StringUtilities.h" />
     <ClInclude Include="src\Math\PID.h" />
     <ClInclude Include="src\InputOutput\Interface.h" />
     <ClInclude Include="src\Math\MadgwickAHRS.h" />
@@ -11,10 +10,10 @@
     <ClInclude Include="src\InputOutput\EngineBoard.h" />
     <ClInclude Include="src\InputOutput\Controller.h" />
     <ClInclude Include="src\InputOutput\SocketBoard.h" />
+    <ClInclude Include="src\Math\StateSpace.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Utilities\StringUtilities.cpp" />
     <ClCompile Include="src\Math\PID.cpp" />
     <ClCompile Include="src\InputOutput\Interface.cpp" />
     <ClCompile Include="src\Math\MadgwickAHRS.c" />
