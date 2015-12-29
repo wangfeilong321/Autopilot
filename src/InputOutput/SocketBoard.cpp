@@ -32,8 +32,8 @@ bool SocketBoard::Connected() {
 }
 
 bool SocketBoard::Run() {
-	doWrite();
 	doRead();
+	doWrite();
 	return true;
 }
 
@@ -55,6 +55,23 @@ void SocketBoard::doRead() {
 			DOUBLE rudderCmd = reader->ReadDouble();
 			DOUBLE throttleCmd = reader->ReadDouble();
 		});
+	}).then([this](task<void> previousTask) {
+		try {
+			// Try getting all exceptions from the continuation chain above this point.
+			previousTask.get();
+			// Everything went ok, so try to receive another string. The receive will continue until the stream is
+			// broken (i.e. peer closed closed the socket).
+		}
+		catch (Exception^ exception) {
+			String^ message = "Read stream failed with error: " + exception->Message;
+			// Explicitly close the socket.
+			delete socket;
+		}
+		catch (task_canceled&) {
+			// Do not print anything here - this will usually happen because user closed the client socket.
+			// Explicitly close the socket.
+			delete socket;
+		}
 	});
 }
 
@@ -69,8 +86,15 @@ void SocketBoard::doWrite() {
 
 	auto totalMessageSize = sizeof(UINT32) + 6 * sizeof(DOUBLE); //total message size
 
-	create_task(writer->StoreAsync()).then([this, totalMessageSize](size_t writtenBytes) {
-		if (writtenBytes != totalMessageSize)
-			cancel_current_task();
+	create_task(writer->StoreAsync()).then([this, totalMessageSize](task<UINT32> writeTask) {
+		try {
+			// Try getting an exception.
+			auto writtenBytes = writeTask.get();
+			if (writtenBytes != totalMessageSize)
+				cancel_current_task();
+		}
+		catch (Exception^ exception) {
+			String^ message = "Send failed with error: " + exception->Message;
+		}
 	});
 }
