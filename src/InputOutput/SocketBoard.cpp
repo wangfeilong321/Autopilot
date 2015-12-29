@@ -25,6 +25,8 @@ void SocketBoard::Connect() {
 	String^ remotePort = ref new String(L"3001");
 	create_task(socket->ConnectAsync(remoteHost, remotePort)).get();
 	ifConnected = true;
+	doRead();
+	doWrite();
 }
 
 bool SocketBoard::Connected() {
@@ -32,20 +34,17 @@ bool SocketBoard::Connected() {
 }
 
 bool SocketBoard::Run() {
-	doWrite();
-	doRead();
-	return true;
+	return Connected();
 }
 
 void SocketBoard::doRead() {
-	/*
-	task<UINT32>(reader->LoadAsync(sizeof(UINT32)).then([this](UINT32 size) {
+	task<UINT32>(reader->LoadAsync(sizeof(UINT32))).then([this](UINT32 size) {
 		if (size < sizeof(UINT32)) {
 			// The underlying socket was closed before we were able to read the whole data.
 			cancel_current_task();
 		}
 		UINT32 dataLength = reader->ReadUInt32();
-		task<UINT32>(reader->LoadAsync(dataLength)).then([this, dataLength](UINT32 actualDataLength) {
+		return task<UINT32>(reader->LoadAsync(dataLength)).then([this, dataLength](UINT32 actualDataLength) {
 			if (actualDataLength != dataLength) {
 				// The underlying socket was closed before we were able to read the whole data.
 				cancel_current_task();
@@ -56,8 +55,24 @@ void SocketBoard::doRead() {
 			reader->ReadDouble(); //rudder
 			reader->ReadDouble(); //throttle
 		});
+	}).then([this](task<void> t) {
+		try {
+			// Try getting all exceptions from the continuation chain above this point.
+			t.get();
+			doRead();
+		}
+		catch (Platform::Exception^ e) {
+			// Explicitly close the socket.
+			ifConnected = false;
+			delete socket;
+		}
+		catch (task_canceled&) {
+			// Do not print anything here - this will usually happen because user closed the client socket.
+			// Explicitly close the socket.
+			ifConnected = false;
+			delete socket;
+		}
 	});
-	*/
 }
 
 void SocketBoard::doWrite() {
@@ -69,10 +84,29 @@ void SocketBoard::doWrite() {
 	writer->WriteDouble(0.6); //Yaw
 	writer->WriteDouble(0.0); //vCas
 
-	auto totalMessageSize = sizeof(UINT32) + 6 * sizeof(DOUBLE); //total message size
+	UINT32 totalMessageSize = sizeof(UINT32) + 6 * sizeof(DOUBLE); //total message size
 
 	task<UINT32>(writer->StoreAsync()).then([this, totalMessageSize](UINT32 writtenBytes) {
 		if (writtenBytes != totalMessageSize)
 			cancel_current_task();
+	}).then([this](task<void> t) {
+		try {
+			// Try getting all exceptions from the continuation chain above this point.
+			t.get();
+			doWrite();
+			// Everything went ok, so try to receive another string. The receive will continue until the stream is
+			// broken (i.e. peer closed the socket).
+		}
+		catch (Platform::Exception^ e) {
+			// Explicitly close the socket.
+			ifConnected = false;
+			delete socket;
+		}
+		catch (task_canceled&) {
+			// Do not print anything here - this will usually happen because user closed the client socket.
+			// Explicitly close the socket.
+			ifConnected = false;
+			delete socket;
+		}
 	});
 }

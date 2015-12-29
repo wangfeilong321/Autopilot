@@ -21,7 +21,6 @@ public:
 	virtual bool Run();
 
 protected:
-
 	void doRead();
 	void doWrite();
 
