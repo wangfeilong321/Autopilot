@@ -180,16 +180,16 @@ I2cDevice^ SensorBoard::MakeDevice(int slaveAddress, _In_opt_ String^ friendlyNa
 	auto dis = concurrency::create_task(DeviceInformation::FindAllAsync(aqs)).get();
 
 	if (dis->Size != 1)
-		throw wexception(L"I2C bus not found");
+		throw exception("I2C bus not found");
 	
 	String^ id = dis->GetAt(0)->Id;
 
 	auto _device = concurrency::create_task(I2cDevice::FromIdAsync(id, ref new I2cConnectionSettings(slaveAddress))).get();
 
 	if (!_device) {
-		std::wostringstream msg;
-		msg << L"Slave address 0x" << std::hex << slaveAddress << L" on bus " << id->Data() << L" is in use. Please ensure that no other applications are using I2C.";
-		throw wexception(msg.str());
+		std::ostringstream msg;
+		msg << "Slave address 0x" << std::hex << slaveAddress << " on bus " << id->Data() << " is in use. Please ensure that no other applications are using I2C.";
+		throw exception(msg.str());
 	}
 	return _device;
 }
@@ -225,7 +225,7 @@ bool SensorBoard::readMagnetData(int16_t * destination) {
 }
 
 bool SensorBoard::readBytes(I2cDevice^ Device, uint8_t Register, uint8_t numBytesToRead, uint8_t * DestBuffer) {
-	std::vector<BYTE> WriteBuf = { Register };
+	vector<BYTE> WriteBuf = { Register };
 	auto ReadBuf = ref new Array<BYTE>(numBytesToRead);
 	I2cTransferResult result = Device->WriteReadPartial( ArrayReference<BYTE>(WriteBuf.data(), static_cast<unsigned int>(WriteBuf.size()) ), ReadBuf);
 	bool ifOk = false;
@@ -239,15 +239,15 @@ bool SensorBoard::readBytes(I2cDevice^ Device, uint8_t Register, uint8_t numByte
 		case I2cTransferStatus::PartialTransfer:
 			break;
 		case I2cTransferStatus::SlaveAddressNotAcknowledged:
-			throw wexception(L"Slave address was not acknowledged");
+			throw exception("Slave address was not acknowledged");
 		default:
-			throw wexception(L"Invalid transfer status value");
+			throw exception("Invalid transfer status value");
 	}
 	return ifOk;
 }
 
 bool SensorBoard::writeCommand(I2cDevice^ Device, uint8_t Register, uint8_t Command) {
-	std::vector<BYTE> WriteBuf = { Register, Command };
+	vector<BYTE> WriteBuf = { Register, Command };
 	I2cTransferResult result = Device->WritePartial( ArrayReference<BYTE>( WriteBuf.data(), static_cast<unsigned int>(WriteBuf.size()) ) );
 	bool ifOk = false;
 	switch (result.Status) {
@@ -258,15 +258,15 @@ bool SensorBoard::writeCommand(I2cDevice^ Device, uint8_t Register, uint8_t Comm
 		case I2cTransferStatus::PartialTransfer:
 			break;
 		case I2cTransferStatus::SlaveAddressNotAcknowledged:
-			throw wexception(L"Slave address was not acknowledged");
+			throw exception("Slave address was not acknowledged");
 		default:
-			throw wexception(L"Invalid transfer status value");
+			throw exception("Invalid transfer status value");
 	}
 	return ifOk;
 }
 
 uint8_t SensorBoard::readByte(I2cDevice^ Device, uint8_t Register) {
-	std::vector<BYTE> WriteBuf = { Register };
+	vector<BYTE> WriteBuf = { Register };
 	auto ReadBuf = ref new Array<BYTE>(1);
 	I2cTransferResult result = Device->WriteReadPartial(ArrayReference<BYTE>(WriteBuf.data(), static_cast<unsigned int>(WriteBuf.size())), ReadBuf);
 	uint8_t data = 0;
@@ -278,9 +278,9 @@ uint8_t SensorBoard::readByte(I2cDevice^ Device, uint8_t Register) {
 		case I2cTransferStatus::PartialTransfer:
 			break;
 		case I2cTransferStatus::SlaveAddressNotAcknowledged:
-			throw wexception(L"Slave address was not acknowledged");
+			throw exception("Slave address was not acknowledged");
 		default:
-			throw wexception(L"Invalid transfer status value");
+			throw exception("Invalid transfer status value");
 	}
 	return data;
 }

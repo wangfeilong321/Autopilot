@@ -27,12 +27,12 @@ public:
 protected:
 	I2cDevice^ MakeDevice(int slaveAddress, _In_opt_ String^ friendlyName);
 	
-	class wexception {
+	class exception {
 	public:
-		explicit wexception(const std::wstring &msg) : msg_(msg) {}
-		virtual const wchar_t *wwhat() const { return msg_.c_str(); }
+		explicit exception(const std::string &msg) : msg_(msg) {}
+		virtual const char *what() const { return msg_.c_str(); }
 	private:
-		std::wstring msg_;
+		std::string msg_;
 	};
 
 private:

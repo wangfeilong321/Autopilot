@@ -7,23 +7,23 @@ Controller::Controller() : IState(new StateSpace()), ISensor(new SensorBoard(ISt
 void Controller::Connect() {
 	ISensor->Connect();
 	if (!ISensor->Connected()) {
-		std::wostringstream msg;
-		msg << L"Sensor device is not connected. Please ensure that you connected Sensor Board to computer.";
-		throw wexception(msg.str());
+		std::ostringstream msg;
+		msg << "Sensor device is not connected. Please ensure that you connected Sensor Board to computer.";
+		throw exception(msg.str());
 	}
 
 	IEngine->Connect();
 	if (!IEngine->Connected()) {
-		std::wostringstream msg;
-		msg << L"Engine device is not connected. Please ensure that you connected Engine Board to computer.";
-		throw wexception(msg.str());
+		std::ostringstream msg;
+		msg << "Engine device is not connected. Please ensure that you connected Engine Board to computer.";
+		throw exception(msg.str());
 	}
 	
 	ISocket->Connect();
 	if (!ISocket->Connected()) {
-		std::wostringstream msg;
-		msg << L"Socket device is not connected. Please ensure that you connected Socket Board to computer.";
-		throw wexception(msg.str());
+		std::ostringstream msg;
+		msg << "Socket device is not connected. Please ensure that you connected Socket Board to computer.";
+		throw exception(msg.str());
 	}
 }
 

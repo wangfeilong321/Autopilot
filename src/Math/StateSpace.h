@@ -40,7 +40,9 @@ public:
 		AileronCmd(0.0),
 		ElevatorCmd(0.0), 
 		RudderCmd(0.0), 
-		ThrottleCmd(0.0) {}
+		ThrottleCmd(0.0) {
+		auto m = 0; //test var here
+	}
 
 	void setSensorData(float axd, float ayd, float azd, float gxd, float gyd, float gzd, float mxd, float myd, float mzd) {
 		if (

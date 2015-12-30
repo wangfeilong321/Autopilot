@@ -1,7 +1,4 @@
 #include <SocketBoard.h>
-#include <string>
-#include <iterator>
-#include <algorithm>
 
 using namespace std;
 
@@ -49,13 +46,13 @@ void SocketBoard::doRead() {
 				// The underlying socket was closed before we were able to read the whole data.
 				cancel_current_task();
 			}
-			//read data for GCS here. Order is: aileron, elevator, rudder, throttle
-			IState->setGCSData(reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble());
 		});
 	}).then([this](task<void> t) {
 		try {
 			// Try getting all exceptions from the continuation chain above this point.
 			t.get();
+			//read data for GCS here. Order is: aileron, elevator, rudder, throttle
+			IState->setGCSData(reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble());
 			doRead();
 		}
 		catch (Platform::Exception^ e) {
