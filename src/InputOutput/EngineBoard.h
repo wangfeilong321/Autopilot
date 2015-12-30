@@ -5,12 +5,13 @@
 #include <StateSpace.h>
 
 #include <atomic>
+#include <memory>
 
 using namespace Windows::Devices::Gpio;
 
 class EngineBoard : public Interface {
 public:
-	EngineBoard();
+	EngineBoard(const std::shared_ptr<StateSpace> ISS);
 	virtual ~EngineBoard() = default;
 
 	virtual void Connect();
@@ -25,6 +26,7 @@ protected:
 
 private:
 	std::atomic<int> deltaTmcs = 2000;
+	std::shared_ptr<StateSpace> IState;
 	bool ifConnected;
 	GpioPinValue pinValue = GpioPinValue::Low;
 	GpioPin ^pin1;

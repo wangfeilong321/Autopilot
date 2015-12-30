@@ -135,15 +135,15 @@ bool SensorBoard::Run() {
 	
 	bool IfReadAccelOk = readAccelData(AccelData);
 		
-	axd = AccelData[0] * aRes;  // get actual g value, this depends on scale being set
-	ayd = AccelData[1] * aRes;
-	azd = AccelData[2] * aRes;
+	ax = AccelData[0] * aRes;  // get actual g value, this depends on scale being set
+	ay = AccelData[1] * aRes;
+	az = AccelData[2] * aRes;
 
 	bool IfReadGyroOk = readGyroData(GyroData);
 
-	gxd = GyroData[0] * gRes;  // get actual gyro value, this depends on scale being set
-	gyd = GyroData[1] * gRes;
-	gzd = GyroData[2] * gRes;
+	gx = GyroData[0] * gRes;  // get actual gyro value, this depends on scale being set
+	gy = GyroData[1] * gRes;
+	gz = GyroData[2] * gRes;
 
 	bool IfReadMagnetOk = readMagnetData(MagnetData);
 
@@ -158,11 +158,16 @@ bool SensorBoard::Run() {
 	// Calculate the magnetometer values in milliGauss
 	// Include factory calibration per data sheet and user environmental corrections
 	// get actual magnetometer value, this depends on scale being set
-	mxd = MagnetData[0] * mRes - magbias[0];
-	myd = MagnetData[1] * mRes - magbias[1];
-	mzd = MagnetData[2] * mRes - magbias[2];
+	mx = MagnetData[0] * mRes - magbias[0];
+	my = MagnetData[1] * mRes - magbias[1];
+	mz = MagnetData[2] * mRes - magbias[2];
 
-	return IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk;
+	if (IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk) {
+		IState->setSensorData(ax, ay, az, gx, gy, gz, mx, my, mz);
+		return true;
+	}
+
+	return false;
 }
 
 I2cDevice^ SensorBoard::MakeDevice(int slaveAddress, _In_opt_ String^ friendlyName) {

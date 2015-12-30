@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Controller::Controller() : IState(new StateSpace()), ISensor(new SensorBoard(IState)), IEngine(new EngineBoard()), ISocket(new SocketBoard()) {}
+Controller::Controller() : IState(new StateSpace()), ISensor(new SensorBoard(IState)), IEngine(new EngineBoard(IState)), ISocket(new SocketBoard(IState)) {}
 
 void Controller::Connect() {
 	ISensor->Connect();

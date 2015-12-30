@@ -5,7 +5,7 @@
 
 using namespace std;
 
-SocketBoard::SocketBoard() : ifConnected(false) {
+SocketBoard::SocketBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false) {
 	socket = ref new StreamSocket();
 	reader = ref new DataReader(socket->InputStream);
 	reader->InputStreamOptions = InputStreamOptions::Partial;
@@ -49,11 +49,8 @@ void SocketBoard::doRead() {
 				// The underlying socket was closed before we were able to read the whole data.
 				cancel_current_task();
 			}
-			//read data here
-			reader->ReadDouble(); //aileron
-			reader->ReadDouble(); //elevator
-			reader->ReadDouble(); //rudder
-			reader->ReadDouble(); //throttle
+			//read data for GCS here. Order is: aileron, elevator, rudder, throttle
+			IState->setGCSData(reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble());
 		});
 	}).then([this](task<void> t) {
 		try {
@@ -78,10 +75,10 @@ void SocketBoard::doRead() {
 void SocketBoard::doWrite() {
 	writer->WriteUInt32(6 * sizeof(DOUBLE)); //data size in bytes
 	writer->WriteDouble(0.0); //timer
-	writer->WriteDouble(38.0477f / 0.3028f); //altitudeASL ft
-	writer->WriteDouble(0.8); //Roll
-	writer->WriteDouble(0.7); //Pitch
-	writer->WriteDouble(0.6); //Yaw
+	writer->WriteDouble(IState->getAltitude()); //altitudeASL ft
+	writer->WriteDouble(IState->getRoll()); //Roll
+	writer->WriteDouble(IState->getPitch()); //Pitch
+	writer->WriteDouble(IState->getYaw()); //Yaw
 	writer->WriteDouble(0.0); //vCas
 
 	UINT32 totalMessageSize = sizeof(UINT32) + 6 * sizeof(DOUBLE); //total message size

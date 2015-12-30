@@ -6,7 +6,6 @@
 		Class StateSpace implements lazy evaluations. Once cacheValid sets false, we calculate proper data. Later we check new incoming data, and if abs(new-old)<e, we don't compute anything.
 */
 
-
 #ifndef STATE_SPACE_H
 #define STATE_SPACE_H
 
@@ -32,10 +31,6 @@ public:
 		latitude(0.0),
 		longitude(0.0),
 		altitude(0.0),
-		aileron(0.0),
-		elevator(0.0),
-		rudder(0.0),
-		throttle(0.0),
 		Roll(0.0),
 		Pitch(0.0),
 		Yaw(0.0),
@@ -47,62 +42,133 @@ public:
 		RudderCmd(0.0), 
 		ThrottleCmd(0.0) {}
 
-	StateSpace(float axd, float ayd, float azd, float gxd, float gyd, float gzd, float mxd, float myd, float mzd) {
-
+	void setSensorData(float axd, float ayd, float azd, float gxd, float gyd, float gzd, float mxd, float myd, float mzd) {
+		if (
+			(std::fabs(axd - ax.load()) < e) &&
+			(std::fabs(ayd - ay.load()) < e) &&
+			(std::fabs(azd - az.load()) < e) &&
+			(std::fabs(gxd - gx.load()) < e) &&
+			(std::fabs(gyd - gy.load()) < e) &&
+			(std::fabs(gzd - gz.load()) < e) &&
+			(std::fabs(mxd - mx.load()) < e) &&
+			(std::fabs(myd - my.load()) < e) &&
+			(std::fabs(mzd - mz.load()) < e)) {
+			cacheValid = true;
+			return;
+		}
+		ax = axd;
+		ay = ayd;
+		az = azd;
+		gx = gxd;
+		gy = gyd;
+		gz = gzd;
+		mx = mxd;
+		my = myd;
+		mz = mzd;
+		cacheValid = false;
 	}
 
-	StateSpace(float lat, float lon, float alt) {
-
+	void setGPSData(float lat, float lon, float alt) {
+		if (
+			(std::fabs(lat - latitude.load()) < e) &&
+			(std::fabs(lon - longitude.load()) < e) &&
+			(std::fabs(alt - altitude.load()) < e)) {
+			cacheValid = true;
+			return;
+		}
+		latitude = lat;
+		longitude = lon;
+		altitude = alt;
+		cacheValid = false;
 	}
 
-	StateSpace(float aileron, float elevator, float rudder, float throttle) {
-
+	void setGCSData(float aileron, float elevator, float rudder, float throttle) {
+		if (
+			(std::fabs(aileron - AileronCmd.load()) < e) &&
+			(std::fabs(elevator - ElevatorCmd.load()) < e) &&
+			(std::fabs(rudder - RudderCmd.load()) < e) &&
+			(std::fabs(throttle - ThrottleCmd.load()) < e) ) {
+			cacheValid = true;
+			return;
+		}
+		AileronCmd = aileron;
+		ElevatorCmd = elevator;
+		RudderCmd = rudder;
+		ThrottleCmd = throttle;
+		cacheValid = false;
 	}
 
-	StateSpace(StateSpace &&) {
-
-	}
-
-	double getRoll() {  
+	float getRoll() {  
 		if (!cacheValid)
 			computeDerived();
 		return Roll;
 	}
 
-	double getPitch() { 
+	float getPitch() { 
 		if (!cacheValid)
 			computeDerived();
 		return Pitch;
 	}
 
-	double getYaw() { 
+	float getYaw() { 
 		if (!cacheValid)
 			computeDerived();
 		return Yaw;
 	}
 
-	double GetX() {
+	float GetX() {
 		if (!cacheValid)
 			computeDerived();
 		return X;
 	}
 	
-	double getY() {
+	float getY() {
 		if (!cacheValid)
 			computeDerived();
 		return Y;
 	}
 
-	double getZ() {
+	float getZ() {
 		if (!cacheValid)
 			computeDerived();
 		return Z;
+	}
+
+	float getAltitude() {
+		if (!cacheValid)
+			computeDerived();
+		return 38.0477f / 0.3028f;
+	}
+
+	float getAileron() {
+		if (!cacheValid)
+			computeDerived();
+		return AileronCmd;
+	}
+
+	float getElevator() {
+		if (!cacheValid)
+			computeDerived();
+		return ElevatorCmd;
+	}
+
+	float getRudder() {
+		if (!cacheValid)
+			computeDerived();
+		return RudderCmd;
+	}
+
+	float getThrottle() {
+		if (!cacheValid)
+			computeDerived();
+		return ThrottleCmd;
 	}
 
 private:
 	void computeDerived() {
 		ComputeAngles();
 		ComputePosition();
+		cacheValid = true;
 	}
 
 	void ComputeAngles() {
@@ -117,6 +183,8 @@ private:
 	void ComputePosition() {}
 
 	bool cacheValid;
+
+	const float e = 1e-9f;
 
 	/* These members hold input data */
 	
@@ -135,12 +203,6 @@ private:
 	std::atomic<float> latitude;
 	std::atomic<float> longitude;
 	std::atomic<float> altitude;
-
-	// These are commands from GCS to AP.
-	std::atomic<float> aileron;
-	std::atomic<float> elevator;
-	std::atomic<float> rudder;
-	std::atomic<float> throttle;
 
 	/*********************************/
 

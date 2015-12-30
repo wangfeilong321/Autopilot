@@ -7,7 +7,7 @@
 using namespace std;
 using namespace chrono;
 
-EngineBoard::EngineBoard() : ifConnected(false) {}
+EngineBoard::EngineBoard(const std::shared_ptr<StateSpace> ISS) : IState(ISS), ifConnected(false) {}
 
 void EngineBoard::Connect() {
 	auto gpio = GpioController::GetDefault();
@@ -50,6 +50,9 @@ bool EngineBoard::Connected() {
 }
 
 bool EngineBoard::Run() {
+
+	deltaTmcs = IState->getThrottle();
+
 	static auto start1 = high_resolution_clock::now();
 	static auto start2 = high_resolution_clock::now();
 	static auto start3 = high_resolution_clock::now();

@@ -15,7 +15,7 @@ using namespace Platform;
 
 class SocketBoard : public Interface {
 public:
-	SocketBoard();
+	SocketBoard(const std::shared_ptr<StateSpace>& ISS);
 	virtual ~SocketBoard();
 	
 	virtual void Connect();
@@ -31,6 +31,7 @@ private:
 	StreamSocket^ socket;
 	DataWriter^ writer;
 	DataReader^ reader;
+	std::shared_ptr<StateSpace> IState;
 };
 
 #endif SOCKET_H
