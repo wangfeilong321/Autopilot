@@ -5,6 +5,7 @@
 #include <SensorBoard.h>
 #include <EngineBoard.h>
 #include <SocketBoard.h>
+#include <StateSpace.h>
 
 #include <memory>
 #include <string>
@@ -28,6 +29,7 @@ protected:
 	};
 
 private:
+	std::shared_ptr<StateSpace> IState;
 	std::shared_ptr<SensorBoard> ISensor;
 	std::shared_ptr<EngineBoard> IEngine;
 	std::shared_ptr<SocketBoard> ISocket;

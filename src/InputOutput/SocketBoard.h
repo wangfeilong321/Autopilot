@@ -2,6 +2,8 @@
 #define SOCKETBOARD_H
 
 #include <Interface.h>
+#include <StateSpace.h>
+
 #include <ppltasks.h>
 
 using namespace Windows::Networking;

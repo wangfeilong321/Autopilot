@@ -5,7 +5,7 @@
 
 using namespace std;
 
-SocketBoard::SocketBoard()	:	ifConnected(false) {
+SocketBoard::SocketBoard() : ifConnected(false) {
 	socket = ref new StreamSocket();
 	reader = ref new DataReader(socket->InputStream);
 	reader->InputStreamOptions = InputStreamOptions::Partial;

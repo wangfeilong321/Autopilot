@@ -2,6 +2,8 @@
 #define ENGINE_BOARD_H
 
 #include <Interface.h>
+#include <StateSpace.h>
+
 #include <atomic>
 
 using namespace Windows::Devices::Gpio;

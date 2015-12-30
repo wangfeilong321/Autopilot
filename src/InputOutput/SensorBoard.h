@@ -1,12 +1,14 @@
 #ifndef SENSOR_BOARD_H
 #define SENSOR_BOARD_H
 
-#include <string>
-#include <ppltasks.h>
-#include <array>
-#include <sstream>
-#include <Interface.h>
 #include <Base.h>
+#include <Interface.h>
+#include <StateSpace.h>
+
+#include <ppltasks.h>
+
+#include <string>
+#include <sstream>
 
 using namespace Platform;
 using namespace Windows::Foundation;
@@ -15,15 +17,13 @@ using namespace Windows::Devices::Enumeration;
 
 class SensorBoard : public Interface {
 public:
-	SensorBoard();
+	SensorBoard(const std::shared_ptr<StateSpace>& IState);
 	virtual ~SensorBoard() = default;
 
 	virtual void Connect();
 	virtual bool Connected();
 	virtual bool Run();
-	
-	std::array<float, NUMBER_OF_ANGLES> GetAngles();
-	
+		
 protected:
 	I2cDevice^ MakeDevice(int slaveAddress, _In_opt_ String^ friendlyName);
 	
@@ -48,6 +48,8 @@ private:
 	I2cDevice^ Accel;
 	I2cDevice^ Gyro;
 	I2cDevice^ Magnet;
+
+	std::shared_ptr<StateSpace> IState;
 
 	bool ifConnected;
 
@@ -209,7 +211,6 @@ private:
 
 	float q[4] = { 1.0f, 0.0f, 0.0f, 0.0f }; // vector to hold quaternion
 	float eInt[3] = { 0.0f, 0.0f, 0.0f }; // vector to hold integral error for Mahony method
-	float roll, pitch, yaw;
 
 	// global constants for 9 DoF fusion and AHRS (Attitude and Heading Reference System)
 	const float gyroMeasError = M_PI * (40.0f / 180.0f);       // gyroscope measurement error in rads/s (shown as 40 deg/s)

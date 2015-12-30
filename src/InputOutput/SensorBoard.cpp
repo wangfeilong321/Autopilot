@@ -1,10 +1,8 @@
 #include <SensorBoard.h>
-#include <Timer.h>
-#include <MadgwickAHRS.h>
 
 using namespace std;
 
-SensorBoard::SensorBoard() : ifConnected(false) {
+SensorBoard::SensorBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false) {
 	String^ friendlyName;
 		
 	Accel = MakeDevice(ADXL345_ADDRESS, friendlyName);
@@ -280,16 +278,4 @@ uint8_t SensorBoard::readByte(I2cDevice^ Device, uint8_t Register) {
 			throw wexception(L"Invalid transfer status value");
 	}
 	return data;
-}
-
-std::array<float, NUMBER_OF_ANGLES> SensorBoard::GetAngles() {
-	MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);
-	QuaternionToEuler(&roll, &pitch, &yaw);
-
-	array<float, NUMBER_OF_ANGLES> angles;
-	angles[0] = roll;
-	angles[1] = pitch;
-	angles[2] = yaw;
-
-	return angles;
 }
