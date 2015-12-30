@@ -2,12 +2,7 @@
 
 using namespace std;
 
-SocketBoard::SocketBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false) {
-	socket = ref new StreamSocket();
-	reader = ref new DataReader(socket->InputStream);
-	reader->InputStreamOptions = InputStreamOptions::Partial;
-	writer = ref new DataWriter(socket->OutputStream);
-}
+SocketBoard::SocketBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false) {}
 
 SocketBoard::~SocketBoard() {
 	if (socket != nullptr) {
@@ -17,6 +12,13 @@ SocketBoard::~SocketBoard() {
 }
 
 void SocketBoard::Connect() {
+	socket = ref new StreamSocket();
+	socket->Control->KeepAlive = true;
+	socket->Control->NoDelay = false;
+	socket->Control->QualityOfService = Windows::Networking::Sockets::SocketQualityOfService::LowLatency;
+	reader = ref new DataReader(socket->InputStream);
+	reader->InputStreamOptions = InputStreamOptions::Partial;
+	writer = ref new DataWriter(socket->OutputStream);
 	String^ remoteHostAddr = ref new String(L"192.168.0.10");
 	HostName^ remoteHost = ref new HostName(remoteHostAddr);
 	String^ remotePort = ref new String(L"3001");
@@ -51,7 +53,7 @@ void SocketBoard::doRead() {
 		try {
 			// Try getting all exceptions from the continuation chain above this point.
 			t.get();
-			//read data for GCS here. Order is: aileron, elevator, rudder, throttle
+			//read data from GCS here. Order is: aileron, elevator, rudder, throttle
 			IState->setGCSData(reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble());
 			doRead();
 		}
@@ -61,7 +63,7 @@ void SocketBoard::doRead() {
 			delete socket;
 		}
 		catch (task_canceled&) {
-			// Do not print anything here - this will usually happen because user closed the client socket.
+			// Do not print anything here - this will usually happen because user closed the server socket.
 			// Explicitly close the socket.
 			ifConnected = false;
 			delete socket;

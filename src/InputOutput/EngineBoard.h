@@ -4,7 +4,6 @@
 #include <Interface.h>
 #include <StateSpace.h>
 
-#include <atomic>
 #include <memory>
 
 using namespace Windows::Devices::Gpio;
@@ -25,7 +24,7 @@ protected:
 	void Engine4OnTick();
 
 private:
-	std::atomic<int> deltaTmcs = 2000;
+	int deltaTmcs = 2000;
 	std::shared_ptr<StateSpace> IState;
 	bool ifConnected;
 	GpioPinValue pinValue = GpioPinValue::Low;
