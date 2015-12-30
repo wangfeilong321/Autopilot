@@ -51,7 +51,7 @@ bool EngineBoard::Connected() {
 
 bool EngineBoard::Run() {
 
-	deltaTmcs = IState->getThrottle();
+	deltaTmcs = static_cast<int>(1000+1000*IState->getThrottle());
 
 	static auto start1 = high_resolution_clock::now();
 	static auto start2 = high_resolution_clock::now();
