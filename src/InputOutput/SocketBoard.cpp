@@ -1,4 +1,5 @@
 #include <SocketBoard.h>
+#include <array>
 
 using namespace std;
 
@@ -72,12 +73,13 @@ void SocketBoard::doRead() {
 }
 
 void SocketBoard::doWrite() {
+	array<float, 3> Angles = IState->getAngles();
 	writer->WriteUInt32(6 * sizeof(DOUBLE)); //data size in bytes
 	writer->WriteDouble(0.0); //timer
 	writer->WriteDouble(IState->getAltitude()); //altitudeASL ft
-	writer->WriteDouble(IState->getRoll()); //Roll
-	writer->WriteDouble(IState->getPitch()); //Pitch
-	writer->WriteDouble(IState->getYaw()); //Yaw
+	writer->WriteDouble(Angles[0]); //Roll
+	writer->WriteDouble(Angles[1]); //Pitch
+	writer->WriteDouble(Angles[2]); //Yaw
 	writer->WriteDouble(0.0); //vCas
 
 	UINT32 totalMessageSize = sizeof(UINT32) + 6 * sizeof(DOUBLE); //total message size
