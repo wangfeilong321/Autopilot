@@ -42,6 +42,29 @@ public:
 		ThrottleCmd = throttle;
 	}
 
+	void setEnginesPRM(int Rpmd0, int Rpmd1, int Rpmd2, int Rpmd3) {
+		Rpm0 = Rpmd0;
+		Rpm1 = Rpmd1;
+		Rpm2 = Rpmd2;
+		Rpm3 = Rpmd3;
+	}
+
+	float getEng0Rpm() {
+		return static_cast<float>(((Rpm0 - 1000.0f) / 1000.0f)*MAX_RPM);
+	}
+
+	float getEng1Rpm() {
+		return static_cast<float>(((Rpm1 - 1000.0f) / 1000.0f)*MAX_RPM);
+	}
+
+	float getEng2Rpm() {
+		return static_cast<float>(((Rpm2 - 1000.0f) / 1000.0f)*MAX_RPM);
+	}
+
+	float getEng3Rpm() {
+		return static_cast<float>(((Rpm3 - 1000.0f) / 1000.0f)*MAX_RPM);
+	}
+
 	float getRoll() {
 		computeAngles();
 		return Roll;
@@ -58,7 +81,7 @@ public:
 	}
 
 	float getAltitude() {
-		return 1000.0f;
+		return 38.0477f / 0.3028f;
 	}
 
 	float getAileron() {
@@ -90,10 +113,14 @@ private:
 	void computeAngles() {
 		MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);
 		QuaternionToEuler(&Roll, &Pitch, &Yaw);
+		Roll *= degtorad;
+		Pitch *= degtorad;
+		Yaw *= degtorad;
 	}
 
 	float Roll, Pitch, Yaw;
 	float AileronCmd, ElevatorCmd, RudderCmd, ThrottleCmd;
+	int Rpm0, Rpm1, Rpm2, Rpm3;
 };
 
 #endif

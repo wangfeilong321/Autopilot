@@ -55,7 +55,11 @@ void SocketBoard::doRead() {
 			// Try getting all exceptions from the continuation chain above this point.
 			t.get();
 			//read data from GCS here. Order is: aileron, elevator, rudder, throttle
-			IState->setGCSData(reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble(), reader->ReadDouble());
+			auto aileron = reader->ReadDouble();
+			auto elevator = reader->ReadDouble();
+			auto rudder = reader->ReadDouble();
+			auto throttle = reader->ReadDouble();
+			IState->setGCSData(aileron, elevator, rudder, throttle);
 			doRead();
 		}
 		catch (Platform::Exception^ e) {
@@ -74,15 +78,19 @@ void SocketBoard::doRead() {
 
 void SocketBoard::doWrite() {
 	array<float, 3> Angles = IState->getAngles();
-	writer->WriteUInt32(6 * sizeof(DOUBLE)); //data size in bytes
+	writer->WriteUInt32(10 * sizeof(DOUBLE)); //data size in bytes
 	writer->WriteDouble(0.0); //timer
 	writer->WriteDouble(IState->getAltitude()); //altitudeASL ft
 	writer->WriteDouble(Angles[0]); //Roll
 	writer->WriteDouble(Angles[1]); //Pitch
 	writer->WriteDouble(Angles[2]); //Yaw
 	writer->WriteDouble(0.0); //vCas
+	writer->WriteDouble(IState->getEng0Rpm());
+	writer->WriteDouble(IState->getEng1Rpm());
+	writer->WriteDouble(IState->getEng2Rpm());
+	writer->WriteDouble(IState->getEng3Rpm());
 
-	UINT32 totalMessageSize = sizeof(UINT32) + 6 * sizeof(DOUBLE); //total message size
+	UINT32 totalMessageSize = sizeof(UINT32) + 10 * sizeof(DOUBLE); //total message size
 
 	task<UINT32>(writer->StoreAsync()).then([this, totalMessageSize](UINT32 writtenBytes) {
 		if (writtenBytes != totalMessageSize)

@@ -53,6 +53,8 @@ bool EngineBoard::Run() {
 
 	deltaTmcs = static_cast<int>(1000+1000*IState->getThrottle());
 
+	IState->setEnginesPRM(deltaTmcs, deltaTmcs, deltaTmcs, deltaTmcs);
+
 	static auto start1 = high_resolution_clock::now();
 	static auto start2 = high_resolution_clock::now();
 	static auto start3 = high_resolution_clock::now();
