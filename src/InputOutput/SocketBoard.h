@@ -12,6 +12,8 @@ using namespace Concurrency;
 using namespace Windows::Storage::Streams;
 using namespace Windows::System;
 using namespace Platform;
+using namespace Windows::Foundation;
+using namespace Windows::System::Threading;
 
 class SocketBoard : public Interface {
 public:
@@ -32,6 +34,7 @@ private:
 	DataWriter^ writer;
 	DataReader^ reader;
 	std::shared_ptr<StateSpace> IState;
+	int timer_sec;
 };
 
 #endif SOCKET_H

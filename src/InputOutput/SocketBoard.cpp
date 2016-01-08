@@ -3,7 +3,7 @@
 
 using namespace std;
 
-SocketBoard::SocketBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false) {}
+SocketBoard::SocketBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false), timer_sec(15) {}
 
 SocketBoard::~SocketBoard() {
 	if (socket != nullptr) {
@@ -15,7 +15,7 @@ SocketBoard::~SocketBoard() {
 void SocketBoard::Connect() {
 	socket = ref new StreamSocket();
 	socket->Control->KeepAlive = true;
-	socket->Control->NoDelay = false;
+	socket->Control->NoDelay = true;
 	socket->Control->QualityOfService = Windows::Networking::Sockets::SocketQualityOfService::LowLatency;
 	reader = ref new DataReader(socket->InputStream);
 	reader->InputStreamOptions = InputStreamOptions::Partial;
@@ -25,6 +25,14 @@ void SocketBoard::Connect() {
 	String^ remotePort = ref new String(L"3001");
 	create_task(socket->ConnectAsync(remoteHost, remotePort)).get();
 	ifConnected = true;
+	TimeSpan period;
+	period.Duration = 60 * 10000000; // 10,000,000 ticks per second
+	ThreadPoolTimer^ PeriodicTimer = ThreadPoolTimer::CreatePeriodicTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
+		timer_sec--;
+		// 
+		// TODO: Work
+		// 
+	}), period);
 	doRead();
 	doWrite();
 }
@@ -79,7 +87,7 @@ void SocketBoard::doRead() {
 void SocketBoard::doWrite() {
 	array<float, 3> Angles = IState->getAngles();
 	writer->WriteUInt32(10 * sizeof(DOUBLE)); //data size in bytes
-	writer->WriteDouble(0.0); //timer
+	writer->WriteDouble(timer_sec); //timer
 	writer->WriteDouble(IState->getAltitude()); //altitudeASL ft
 	writer->WriteDouble(Angles[0]); //Roll
 	writer->WriteDouble(Angles[1]); //Pitch

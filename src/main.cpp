@@ -7,7 +7,7 @@ int main(Platform::Array<Platform::String^>^ args) {
 		Controller C;
 		C.Connect();
 		if (!C.Connected())
-			throw("WTF");
+			throw("Unexpected exception");
 		while (C.Run());
 	}
 	catch (std::exception& e) {
