@@ -26,13 +26,12 @@ void SocketBoard::Connect() {
 	create_task(socket->ConnectAsync(remoteHost, remotePort)).get();
 	ifConnected = true;
 	TimeSpan period;
-	period.Duration = 60 * 10000000; // 10,000,000 ticks per second
+	period.Duration = 1 * 10000000; // 10,000,000 ticks per second
 	ThreadPoolTimer^ PeriodicTimer = ThreadPoolTimer::CreatePeriodicTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
 		timer_sec--;
-		// 
-		// TODO: Work
-		// 
-	}), period);
+		if (timer_sec <= 0)
+			source->Cancel();
+	}), period, ref new TimerDestroyedHandler([&](ThreadPoolTimer^ source) {}));
 	doRead();
 	doWrite();
 }
@@ -72,6 +71,42 @@ void SocketBoard::doRead() {
 		}
 		catch (Platform::Exception^ e) {
 			// Explicitly close the socket.
+			SocketErrorStatus errorStatus = SocketError::GetStatus(e->HResult);
+			if (errorStatus != SocketErrorStatus::Unknown) {
+				switch (errorStatus) {
+					case SocketErrorStatus::HostNotFound: {
+						// If hostname from user, this may indicate bad input
+						// set a flag to ask user to re-enter hostname
+						break;
+					}
+					case SocketErrorStatus::ConnectionRefused: {
+						// The server might be temporarily busy
+						break;
+					}
+					case SocketErrorStatus::NetworkIsUnreachable: {
+						// Could be a connectivity issue
+						break;
+					}
+					case SocketErrorStatus::UnreachableHost: {
+						// Could be a connectivity issue
+						break;
+					}
+					case SocketErrorStatus::NetworkIsDown: {
+						// Could be a connectivity issue
+						break;
+					}
+					default: {
+						// Connection failed and no options are available
+						// Try to use cached data if available 
+						// may want to tell user that connect failed
+						break;
+					}
+				}
+			}
+			else {
+				// got an Hresult that is not mapped to an enum
+				// Could be a connectivity issue
+			}
 			ifConnected = false;
 			delete socket;
 		}
@@ -113,6 +148,42 @@ void SocketBoard::doWrite() {
 		}
 		catch (Platform::Exception^ e) {
 			// Explicitly close the socket.
+			SocketErrorStatus errorStatus = SocketError::GetStatus(e->HResult);
+			if (errorStatus != SocketErrorStatus::Unknown) {
+				switch (errorStatus) {
+					case SocketErrorStatus::HostNotFound: {
+						// If hostname from user, this may indicate bad input
+						// set a flag to ask user to re-enter hostname
+						break;
+					}
+					case SocketErrorStatus::ConnectionRefused: {
+						// The server might be temporarily busy
+						break;
+					}
+					case SocketErrorStatus::NetworkIsUnreachable: {
+						// Could be a connectivity issue
+						break;
+					}
+					case SocketErrorStatus::UnreachableHost: {
+						// Could be a connectivity issue
+						break;
+					}
+					case SocketErrorStatus::NetworkIsDown: {
+						// Could be a connectivity issue
+						break;
+					}
+					default: {
+						// Connection failed and no options are available
+						// Try to use cached data if available 
+						// may want to tell user that connect failed
+						break;
+					}
+				}
+			}
+			else {
+				// got an Hresult that is not mapped to an enum
+				// Could be a connectivity issue
+			}
 			ifConnected = false;
 			delete socket;
 		}
