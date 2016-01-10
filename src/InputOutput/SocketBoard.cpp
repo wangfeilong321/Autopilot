@@ -15,10 +15,8 @@ SocketBoard::~SocketBoard() {
 void SocketBoard::Connect() {
 	socket = ref new StreamSocket();
 	socket->Control->KeepAlive = true;
-	socket->Control->NoDelay = true;
 	socket->Control->QualityOfService = Windows::Networking::Sockets::SocketQualityOfService::LowLatency;
 	reader = ref new DataReader(socket->InputStream);
-	reader->InputStreamOptions = InputStreamOptions::Partial;
 	writer = ref new DataWriter(socket->OutputStream);
 	String^ remoteHostAddr = ref new String(L"192.168.0.10");
 	HostName^ remoteHost = ref new HostName(remoteHostAddr);
@@ -45,73 +43,41 @@ bool SocketBoard::Run() {
 }
 
 void SocketBoard::doRead() {
-	task<UINT32>(reader->LoadAsync(sizeof(UINT32))).then([this](UINT32 size) {
+	// Read first 4 bytes (length of the subsequent string).
+	create_task(reader->LoadAsync(sizeof(UINT32))).then([this](unsigned int size) {
 		if (size < sizeof(UINT32)) {
 			// The underlying socket was closed before we were able to read the whole data.
 			cancel_current_task();
 		}
-		UINT32 dataLength = reader->ReadUInt32();
-		return task<UINT32>(reader->LoadAsync(dataLength)).then([this, dataLength](UINT32 actualDataLength) {
-			if (actualDataLength != dataLength) {
+		unsigned int stringLength = reader->ReadUInt32();
+		return create_task(reader->LoadAsync(stringLength)).then([this, stringLength](unsigned int actualStringLength) {
+			if (actualStringLength != stringLength) {
 				// The underlying socket was closed before we were able to read the whole data.
 				cancel_current_task();
 			}
-		});
-	}).then([this](task<void> t) {
-		try {
-			// Try getting all exceptions from the continuation chain above this point.
-			t.get();
-			//read data from GCS here. Order is: aileron, elevator, rudder, throttle
+			// Display the string on the screen. This thread is invoked on non-UI thread, so we need to marshal the 
+			// call back to the UI thread.
 			auto aileron = reader->ReadDouble();
 			auto elevator = reader->ReadDouble();
 			auto rudder = reader->ReadDouble();
 			auto throttle = reader->ReadDouble();
 			IState->setGCSData(aileron, elevator, rudder, throttle);
+		});
+	}).then([this](task<void> previousTask) {
+		try {
+			// Try getting all exceptions from the continuation chain above this point.
+			previousTask.get();
+			// Everything went ok, so try to receive another string. The receive will continue until the stream is
+			// broken (i.e. peer closed the socket).
 			doRead();
 		}
-		catch (Platform::Exception^ e) {
+		catch (Platform::Exception^ exception) {
 			// Explicitly close the socket.
-			SocketErrorStatus errorStatus = SocketError::GetStatus(e->HResult);
-			if (errorStatus != SocketErrorStatus::Unknown) {
-				switch (errorStatus) {
-					case SocketErrorStatus::HostNotFound: {
-						// If hostname from user, this may indicate bad input
-						// set a flag to ask user to re-enter hostname
-						break;
-					}
-					case SocketErrorStatus::ConnectionRefused: {
-						// The server might be temporarily busy
-						break;
-					}
-					case SocketErrorStatus::NetworkIsUnreachable: {
-						// Could be a connectivity issue
-						break;
-					}
-					case SocketErrorStatus::UnreachableHost: {
-						// Could be a connectivity issue
-						break;
-					}
-					case SocketErrorStatus::NetworkIsDown: {
-						// Could be a connectivity issue
-						break;
-					}
-					default: {
-						// Connection failed and no options are available
-						// Try to use cached data if available 
-						// may want to tell user that connect failed
-						break;
-					}
-				}
-			}
-			else {
-				// got an Hresult that is not mapped to an enum
-				// Could be a connectivity issue
-			}
 			ifConnected = false;
 			delete socket;
 		}
 		catch (task_canceled&) {
-			// Do not print anything here - this will usually happen because user closed the server socket.
+			// Do not print anything here - this will usually happen because user closed the client socket.
 			// Explicitly close the socket.
 			ifConnected = false;
 			delete socket;
@@ -120,6 +86,7 @@ void SocketBoard::doRead() {
 }
 
 void SocketBoard::doWrite() {
+	
 	array<float, 3> Angles = IState->getAngles();
 	writer->WriteUInt32(10 * sizeof(DOUBLE)); //data size in bytes
 	writer->WriteDouble(timer_sec); //timer
@@ -133,57 +100,13 @@ void SocketBoard::doWrite() {
 	writer->WriteDouble(IState->getEng2Rpm());
 	writer->WriteDouble(IState->getEng3Rpm());
 
-	UINT32 totalMessageSize = sizeof(UINT32) + 10 * sizeof(DOUBLE); //total message size
-
-	task<UINT32>(writer->StoreAsync()).then([this, totalMessageSize](UINT32 writtenBytes) {
-		if (writtenBytes != totalMessageSize)
-			cancel_current_task();
-	}).then([this](task<void> t) {
+	create_task(writer->StoreAsync()).then([this](task<unsigned int> writeTask) {
 		try {
-			// Try getting all exceptions from the continuation chain above this point.
-			t.get();
+			// Try getting an exception.
+			writeTask.get();
 			doWrite();
-			// Everything went ok, so try to receive another string. The receive will continue until the stream is
-			// broken (i.e. peer closed the socket).
 		}
-		catch (Platform::Exception^ e) {
-			// Explicitly close the socket.
-			SocketErrorStatus errorStatus = SocketError::GetStatus(e->HResult);
-			if (errorStatus != SocketErrorStatus::Unknown) {
-				switch (errorStatus) {
-					case SocketErrorStatus::HostNotFound: {
-						// If hostname from user, this may indicate bad input
-						// set a flag to ask user to re-enter hostname
-						break;
-					}
-					case SocketErrorStatus::ConnectionRefused: {
-						// The server might be temporarily busy
-						break;
-					}
-					case SocketErrorStatus::NetworkIsUnreachable: {
-						// Could be a connectivity issue
-						break;
-					}
-					case SocketErrorStatus::UnreachableHost: {
-						// Could be a connectivity issue
-						break;
-					}
-					case SocketErrorStatus::NetworkIsDown: {
-						// Could be a connectivity issue
-						break;
-					}
-					default: {
-						// Connection failed and no options are available
-						// Try to use cached data if available 
-						// may want to tell user that connect failed
-						break;
-					}
-				}
-			}
-			else {
-				// got an Hresult that is not mapped to an enum
-				// Could be a connectivity issue
-			}
+		catch (Exception^ exception) {
 			ifConnected = false;
 			delete socket;
 		}
