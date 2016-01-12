@@ -13,6 +13,8 @@
 
 #include <cmath>
 #include <array>
+#include <condition_variable>
+#include <mutex>
 
 class StateSpace {
 public:
@@ -26,7 +28,8 @@ public:
 		ThrottleCmd(0.0),
 		axd(0.0), ayd(0.0), azd(0.0),
 		gxd(0.0), gyd(0.0), gzd(0.0),
-		mxd(0.0), myd(0.0), mzd(0.0) {
+		mxd(0.0), myd(0.0), mzd(0.0),
+		Rpm0(MIN_THROTTLE), Rpm1(MIN_THROTTLE), Rpm2(MIN_THROTTLE), Rpm3(MIN_THROTTLE) {
 	}
 
 	void setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz) {
@@ -105,7 +108,20 @@ public:
 		return std::array<float, 3>{Roll, Pitch, Yaw};
 	}
 
+	void Wait() {
+		std::mutex mut;
+		std::unique_lock<std::mutex> lk(mut);
+		cv.wait(lk);
+	}
+
+	void Release() {
+		cv.notify_one();
+	}
+
 private:
+
+	std::condition_variable cv;
+
 	float axd, ayd, azd;
 	float gxd, gyd, gzd;
 	float mxd, myd, mzd;

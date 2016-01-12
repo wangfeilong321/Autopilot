@@ -24,7 +24,7 @@ protected:
 	void Engine4OnTick();
 
 private:
-	int deltaTmcs = 2000;
+	int deltaTmcs;
 	std::shared_ptr<StateSpace> IState;
 	bool ifConnected;
 	GpioPinValue pinValue = GpioPinValue::Low;

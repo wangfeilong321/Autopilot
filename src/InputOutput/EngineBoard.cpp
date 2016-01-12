@@ -7,7 +7,7 @@
 using namespace std;
 using namespace chrono;
 
-EngineBoard::EngineBoard(const std::shared_ptr<StateSpace> ISS) : IState(ISS), ifConnected(false) {}
+EngineBoard::EngineBoard(const std::shared_ptr<StateSpace> ISS) : IState(ISS), ifConnected(false), deltaTmcs(MIN_THROTTLE) {}
 
 void EngineBoard::Connect() {
 	auto gpio = GpioController::GetDefault();
@@ -41,6 +41,45 @@ void EngineBoard::Connect() {
 
 	pin4->Write(pinValue);
 	pin4->SetDriveMode(GpioPinDriveMode::Output);
+	
+	IState->Wait();
+	
+	const int calibrationTime = 3;
+
+	{
+		const int calibrationDeltaTmcs = 2000;
+		
+		auto start = high_resolution_clock::now();
+		
+		Timer timer(true);
+		while (timer.Elapsed().count() < calibrationTime) {
+			auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
+			if (duration.count() >= calibrationDeltaTmcs) {
+				Engine1OnTick();
+				Engine2OnTick();
+				Engine3OnTick();
+				Engine4OnTick();
+				start = high_resolution_clock::now();
+			}
+		}
+	}
+	{
+		const int calibrationDeltaTmcs = 1000;
+
+		auto start = high_resolution_clock::now();
+
+		Timer timer(true);
+		while (timer.Elapsed().count() < calibrationTime) {
+			auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
+			if (duration.count() >= calibrationDeltaTmcs) {
+				Engine1OnTick();
+				Engine2OnTick();
+				Engine3OnTick();
+				Engine4OnTick();
+				start = high_resolution_clock::now();
+			}
+		}
+	}
 
 	ifConnected = true;
 }
@@ -55,30 +94,15 @@ bool EngineBoard::Run() {
 
 	IState->setEnginesPRM(deltaTmcs, deltaTmcs, deltaTmcs, deltaTmcs);
 
-	static auto start1 = high_resolution_clock::now();
-	static auto start2 = high_resolution_clock::now();
-	static auto start3 = high_resolution_clock::now();
-	static auto start4 = high_resolution_clock::now();
+	static auto start = high_resolution_clock::now();
 
-	auto duration1 = duration_cast<microseconds>(high_resolution_clock::now() - start1);
-	if (duration1.count() >= deltaTmcs) {
+	auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
+	if (duration.count() >= deltaTmcs) {
 		Engine1OnTick();
-		start1 = high_resolution_clock::now();
-	}
-	auto duration2 = duration_cast<microseconds>(high_resolution_clock::now() - start2);
-	if (duration2.count() >= deltaTmcs) {
 		Engine2OnTick();
-		start2 = high_resolution_clock::now();
-	}
-	auto duration3 = duration_cast<microseconds>(high_resolution_clock::now() - start3);
-	if (duration3.count() >= deltaTmcs) {
 		Engine3OnTick();
-		start3 = high_resolution_clock::now();
-	}
-	auto duration4 = duration_cast<microseconds>(high_resolution_clock::now() - start4);
-	if (duration4.count() >= deltaTmcs) {
 		Engine4OnTick();
-		start4 = high_resolution_clock::now();
+		start = high_resolution_clock::now();
 	}
 	return true;
 }

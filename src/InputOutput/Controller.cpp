@@ -12,17 +12,17 @@ void Controller::Connect() {
 		throw exception(msg.str());
 	}
 
-	IEngine->Connect();
-	if (!IEngine->Connected()) {
-		std::ostringstream msg;
-		msg << "Engine device is not connected. Please ensure that you connected Engine Board to computer.";
-		throw exception(msg.str());
-	}
-	
 	ISocket->Connect();
 	if (!ISocket->Connected()) {
 		std::ostringstream msg;
 		msg << "Socket device is not connected. Please ensure that you connected Socket Board to computer.";
+		throw exception(msg.str());
+	}
+
+	IEngine->Connect();
+	if (!IEngine->Connected()) {
+		std::ostringstream msg;
+		msg << "Engine device is not connected. Please ensure that you connected Engine Board to computer.";
 		throw exception(msg.str());
 	}
 }

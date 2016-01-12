@@ -1,9 +1,10 @@
+#include <Base.h>
 #include <SocketBoard.h>
 #include <array>
 
 using namespace std;
 
-SocketBoard::SocketBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false), timer_sec(15) {}
+SocketBoard::SocketBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false), timer_sec(START_TIMER) {}
 
 SocketBoard::~SocketBoard() {
 	if (socket != nullptr) {
@@ -27,8 +28,10 @@ void SocketBoard::Connect() {
 	period.Duration = 1 * 10000000; // 10,000,000 ticks per second.
 	ThreadPoolTimer^ PeriodicTimer = ThreadPoolTimer::CreatePeriodicTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
 		timer_sec--;
-		if (timer_sec <= 0)
+		if (timer_sec <= 0) {
 			source->Cancel();
+			IState->Release();
+		}
 	}), period, ref new TimerDestroyedHandler([&](ThreadPoolTimer^ source) {}));
 	doRead();
 	doWrite();
