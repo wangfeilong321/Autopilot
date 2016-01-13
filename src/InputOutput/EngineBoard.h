@@ -12,16 +12,13 @@ class EngineBoard : public Interface {
 public:
 	EngineBoard(const std::shared_ptr<StateSpace> ISS);
 	virtual ~EngineBoard() = default;
-
+	
 	virtual void Connect();
 	virtual bool Connected();
 	virtual bool Run();
 	
 protected:
-	void Engine1OnTick();
-	void Engine2OnTick();
-	void Engine3OnTick();
-	void Engine4OnTick();
+	void OnTick();
 
 private:
 	int deltaTmcs;

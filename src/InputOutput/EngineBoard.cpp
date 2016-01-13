@@ -52,13 +52,10 @@ void EngineBoard::Connect() {
 		auto start = high_resolution_clock::now();
 		
 		Timer timer(true);
-		while (timer.Elapsed().count() < calibrationTime) {
+		while (timer.Elapsed().count() <= calibrationTime) {
 			auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
 			if (duration.count() >= calibrationDeltaTmcs) {
-				Engine1OnTick();
-				Engine2OnTick();
-				Engine3OnTick();
-				Engine4OnTick();
+				OnTick();
 				start = high_resolution_clock::now();
 			}
 		}
@@ -69,13 +66,10 @@ void EngineBoard::Connect() {
 		auto start = high_resolution_clock::now();
 
 		Timer timer(true);
-		while (timer.Elapsed().count() < calibrationTime) {
+		while (timer.Elapsed().count() <= calibrationTime) {
 			auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
 			if (duration.count() >= calibrationDeltaTmcs) {
-				Engine1OnTick();
-				Engine2OnTick();
-				Engine3OnTick();
-				Engine4OnTick();
+				OnTick();
 				start = high_resolution_clock::now();
 			}
 		}
@@ -98,43 +92,19 @@ bool EngineBoard::Run() {
 
 	auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
 	if (duration.count() >= deltaTmcs) {
-		Engine1OnTick();
-		Engine2OnTick();
-		Engine3OnTick();
-		Engine4OnTick();
+		OnTick();
 		start = high_resolution_clock::now();
 	}
 	return true;
 }
 
-void EngineBoard::Engine1OnTick() {
+void EngineBoard::OnTick() {
 	if (pinValue == GpioPinValue::High)
 		pinValue = GpioPinValue::Low;
 	else
 		pinValue = GpioPinValue::High;
 	pin1->Write(pinValue);
-}
-
-void EngineBoard::Engine2OnTick() {
-	if (pinValue == GpioPinValue::High)
-		pinValue = GpioPinValue::Low;
-	else
-		pinValue = GpioPinValue::High;
 	pin2->Write(pinValue);
-}
-
-void EngineBoard::Engine3OnTick() {
-	if (pinValue == GpioPinValue::High)
-		pinValue = GpioPinValue::Low;
-	else
-		pinValue = GpioPinValue::High;
 	pin3->Write(pinValue);
-}
-
-void EngineBoard::Engine4OnTick() {
-	if (pinValue == GpioPinValue::High)
-		pinValue = GpioPinValue::Low;
-	else
-		pinValue = GpioPinValue::High;
 	pin4->Write(pinValue);
 }

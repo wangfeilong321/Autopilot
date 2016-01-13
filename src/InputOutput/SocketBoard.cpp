@@ -28,9 +28,9 @@ void SocketBoard::Connect() {
 	period.Duration = 1 * 10000000; // 10,000,000 ticks per second.
 	ThreadPoolTimer^ PeriodicTimer = ThreadPoolTimer::CreatePeriodicTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
 		timer_sec--;
-		if (timer_sec <= 0) {
-			source->Cancel();
+		if (timer_sec == 0) {
 			IState->Release();
+			source->Cancel();
 		}
 	}), period, ref new TimerDestroyedHandler([&](ThreadPoolTimer^ source) {}));
 	doRead();
