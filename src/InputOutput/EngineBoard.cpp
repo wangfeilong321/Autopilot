@@ -14,67 +14,54 @@ void EngineBoard::Connect() {
 	if (!gpio)
 		return;
 
-	pin1 = gpio->OpenPin(ENGINE_PIN_1);
-	if (!pin1)
-		return;
-
-	pin1->Write(pinValue);
-	pin1->SetDriveMode(GpioPinDriveMode::Output);
-
-	pin2 = gpio->OpenPin(ENGINE_PIN_2);
-	if (!pin2)
-		return;
-
-	pin2->Write(pinValue);
-	pin2->SetDriveMode(GpioPinDriveMode::Output);
-
-	pin3 = gpio->OpenPin(ENGINE_PIN_3);
-	if (!pin3)
-		return;
-
-	pin3->Write(pinValue);
-	pin3->SetDriveMode(GpioPinDriveMode::Output);
-
-	pin4 = gpio->OpenPin(ENGINE_PIN_4);
-	if (!pin4)
-		return;
-
-	pin4->Write(pinValue);
-	pin4->SetDriveMode(GpioPinDriveMode::Output);
+	#ifdef OPEN_1
+		pin1 = gpio->OpenPin(ENGINE_PIN_1);
+		if (!pin1)
+			return;
+		pin1->Write(pinValue);
+		pin1->SetDriveMode(GpioPinDriveMode::Output);
+	#endif
 	
+	#ifdef OPEN_2
+		pin2 = gpio->OpenPin(ENGINE_PIN_2);
+		if (!pin2)
+			return;
+		pin2->Write(pinValue);
+		pin2->SetDriveMode(GpioPinDriveMode::Output);
+	#endif
+
+	#ifdef OPEN_3
+		pin3 = gpio->OpenPin(ENGINE_PIN_3);
+		if (!pin3)
+			return;
+		pin3->Write(pinValue);
+		pin3->SetDriveMode(GpioPinDriveMode::Output);
+	#endif
+
+	#ifdef OPEN_4
+		pin4 = gpio->OpenPin(ENGINE_PIN_4);
+		if (!pin4)
+			return;
+		pin4->Write(pinValue);
+		pin4->SetDriveMode(GpioPinDriveMode::Output);
+	#endif
+
 	IState->Wait();
 	
-	const int calibrationTime = 3;
-
-	{
-		const int calibrationDeltaTmcs = 2000;
-		
+	#ifdef CALIBRATE
+		const int calibrationTimeSec = 2;
+		deltaTmcs = static_cast<int>(1000 + 1000 * IState->getThrottle());
 		auto start = high_resolution_clock::now();
-		
 		Timer timer(true);
-		while (timer.Elapsed().count() <= calibrationTime) {
+		while (timer.Elapsed().count() <= calibrationTimeSec) {
 			auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
-			if (duration.count() >= calibrationDeltaTmcs) {
+			if (duration.count() >= deltaTmcs) {
 				OnTick();
 				start = high_resolution_clock::now();
 			}
 		}
-	}
-	{
-		const int calibrationDeltaTmcs = 1000;
-
-		auto start = high_resolution_clock::now();
-
-		Timer timer(true);
-		while (timer.Elapsed().count() <= calibrationTime) {
-			auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
-			if (duration.count() >= calibrationDeltaTmcs) {
-				OnTick();
-				start = high_resolution_clock::now();
-			}
-		}
-	}
-
+	#endif
+	
 	ifConnected = true;
 }
 

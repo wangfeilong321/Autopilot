@@ -33,8 +33,8 @@ void SocketBoard::Connect() {
 			source->Cancel();
 		}
 	}), period, ref new TimerDestroyedHandler([&](ThreadPoolTimer^ source) {}));
-	doRead();
 	doWrite();
+	doRead();
 }
 
 bool SocketBoard::Connected() {
