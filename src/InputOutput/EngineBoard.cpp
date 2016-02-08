@@ -7,50 +7,42 @@
 using namespace std;
 using namespace chrono;
 
-EngineBoard::EngineBoard(const std::shared_ptr<StateSpace> ISS) : IState(ISS), ifConnected(false), deltaTmcs(MIN_THROTTLE) {}
+EngineBoard::EngineBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false), deltaTmcs(MAX_THROTTLE) {}
 
 void EngineBoard::Connect() {
 	auto gpio = GpioController::GetDefault();
 	if (!gpio)
 		return;
 
-	#ifdef OPEN_1
-		pin1 = gpio->OpenPin(ENGINE_PIN_1);
-		if (!pin1)
-			return;
-		pin1->Write(pinValue);
-		pin1->SetDriveMode(GpioPinDriveMode::Output);
-	#endif
+	pin1 = gpio->OpenPin(ENGINE_PIN_1);
+	if (!pin1)
+		return;
+	pin1->Write(pinValue);
+	pin1->SetDriveMode(GpioPinDriveMode::Output);
 	
-	#ifdef OPEN_2
-		pin2 = gpio->OpenPin(ENGINE_PIN_2);
-		if (!pin2)
-			return;
-		pin2->Write(pinValue);
-		pin2->SetDriveMode(GpioPinDriveMode::Output);
-	#endif
-
-	#ifdef OPEN_3
-		pin3 = gpio->OpenPin(ENGINE_PIN_3);
-		if (!pin3)
-			return;
-		pin3->Write(pinValue);
-		pin3->SetDriveMode(GpioPinDriveMode::Output);
-	#endif
-
-	#ifdef OPEN_4
-		pin4 = gpio->OpenPin(ENGINE_PIN_4);
-		if (!pin4)
-			return;
-		pin4->Write(pinValue);
-		pin4->SetDriveMode(GpioPinDriveMode::Output);
-	#endif
+	pin2 = gpio->OpenPin(ENGINE_PIN_2);
+	if (!pin2)
+		return;
+	pin2->Write(pinValue);
+	pin2->SetDriveMode(GpioPinDriveMode::Output);
+	
+	pin3 = gpio->OpenPin(ENGINE_PIN_3);
+	if (!pin3)
+		return;
+	pin3->Write(pinValue);
+	pin3->SetDriveMode(GpioPinDriveMode::Output);
+	
+	pin4 = gpio->OpenPin(ENGINE_PIN_4);
+	if (!pin4)
+		return;
+	pin4->Write(pinValue);
+	pin4->SetDriveMode(GpioPinDriveMode::Output);
 
 	IState->Wait();
 	
-	#ifdef CALIBRATE
-		const int calibrationTimeSec = 2;
-		deltaTmcs = static_cast<int>(1000 + 1000 * IState->getThrottle());
+	{
+		const int calibrationTimeSec = 3;
+		deltaTmcs = MAX_THROTTLE;
 		auto start = high_resolution_clock::now();
 		Timer timer(true);
 		while (timer.Elapsed().count() <= calibrationTimeSec) {
@@ -60,8 +52,20 @@ void EngineBoard::Connect() {
 				start = high_resolution_clock::now();
 			}
 		}
-	#endif
-	
+	}
+	{
+		const int calibrationTimeSec = 3;
+		deltaTmcs = MIN_THROTTLE;
+		auto start = high_resolution_clock::now();
+		Timer timer(true);
+		while (timer.Elapsed().count() <= calibrationTimeSec) {
+			auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
+			if (duration.count() >= deltaTmcs) {
+				OnTick();
+				start = high_resolution_clock::now();
+			}
+		}
+	}
 	ifConnected = true;
 }
 

@@ -2,6 +2,7 @@
 #define PID_H
 
 #include <Interface.h>
+#include <StateSpace.h>
 
 class PID : public Interface {
 public:
@@ -11,28 +12,22 @@ public:
 	virtual void Connect();
 	virtual bool Connected();
 	virtual bool Run();
-	
-	/// These define the indices use to select the various integrators.
-	enum eIntegrateType { eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3 };
-	
-	void SetCurrentInput(double angleRad);
-	
-	double GetCurrentOutput();
+
+	void SetInput(float val);
+	float GetOutput();
 
 private:
-	double Kp, Ki, Kd;
-	double I_out_total;
-	double Input_prev, Input_prev2;
-	double KpPropertySign;
-	double KiPropertySign;
-	double KdPropertySign;
-	double Output, Input;
-	double clipmin, clipmax;
-	bool IsStandard;
-	double dt;
-	double Trigger;
+	enum eIntegrateType { eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3 };
 
-	eIntegrateType IntType;
+	float Kp, Ki, Kd;
+	float I_out_total;
+	float Input_prev, Input_prev2;
+	float Output, Input;
+	const float CLIP_MIN = -1.0f;
+	const float CLIP_MAX = 1.0f;
+	float dt;
+
+	eIntegrateType IntType = eAdamsBashforth2;
 	
 	void Clip();
 };
