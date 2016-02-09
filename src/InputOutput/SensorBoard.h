@@ -1,5 +1,4 @@
-#ifndef SENSOR_BOARD_H
-#define SENSOR_BOARD_H
+#pragma once
 
 #include <Base.h>
 #include <Interface.h>
@@ -209,5 +208,3 @@ private:
 	int16_t MagnetData[3];
 	float magbias[3];
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef ENGINE_BOARD_H
-#define ENGINE_BOARD_H
+#pragma once
 
 #include <Interface.h>
 #include <StateSpace.h>
@@ -30,5 +29,3 @@ private:
 	GpioPin ^pin3;
 	GpioPin ^pin4;
 };
-
-#endif

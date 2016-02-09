@@ -1,12 +1,9 @@
-#ifndef CONTROLLER_H
-#define CONTROLLER_H
+#pragma once
 
 #include <Interface.h>
 #include <SensorBoard.h>
 #include <EngineBoard.h>
 #include <SocketBoard.h>
-#include <StateSpace.h>
-#include <PID.h>
 
 #include <memory>
 #include <string>
@@ -34,9 +31,4 @@ private:
 	std::shared_ptr<SensorBoard> ISensor;
 	std::shared_ptr<EngineBoard> IEngine;
 	std::shared_ptr<SocketBoard> ISocket;
-	std::shared_ptr<PID> IPIDPitch;
-	std::shared_ptr<PID> IPIDRoll;
-	std::shared_ptr<PID> IPIDYaw;
 };
-
-#endif

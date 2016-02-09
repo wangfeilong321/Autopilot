@@ -1,12 +1,4 @@
-//=====================================================================================================
-// StateSpace.h
-//=====================================================================================================
-
-/** Class StateSpace holds an arbitrary location XYZ in the Earth centered Earth fixed reference frame (ECEF). Orientation is hold in the Local (North-East-Down, NED) frame.
-*/
-
-#ifndef STATE_SPACE_H
-#define STATE_SPACE_H
+#pragma once
 
 #include <Base.h>
 #include <MadgwickAHRS.h>
@@ -38,10 +30,19 @@ public:
 		mxd = mx; myd = my; mzd = mz;
 	}
 
-	void setGCSData(float aileron, float elevator, float rudder, float throttle) {
+	void setAileron(float aileron) {
 		AileronCmd = aileron;
+	}
+
+	void setElevator(float elevator) {
 		ElevatorCmd = elevator;
+	}
+
+	void setRudder(float rudder) {
 		RudderCmd = rudder;
+	}
+
+	void setThrottle(float throttle) {
 		ThrottleCmd = throttle;
 	}
 
@@ -138,5 +139,3 @@ private:
 	float AileronCmd, ElevatorCmd, RudderCmd, ThrottleCmd;
 	int Rpm0, Rpm1, Rpm2, Rpm3;
 };
-
-#endif

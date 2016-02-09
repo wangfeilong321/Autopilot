@@ -1,5 +1,4 @@
-#ifndef INTERFACE_H
-#define INTERFACE_H
+#pragma once
 
 class Interface {
 public:
@@ -10,6 +9,3 @@ public:
 	virtual bool Connected() = 0;
 	virtual bool Run() = 0;
 };
-
-#endif
-

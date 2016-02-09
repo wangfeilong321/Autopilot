@@ -1,5 +1,4 @@
-#ifndef SOCKETBOARD_H
-#define SOCKETBOARD_H
+#pragma once
 
 #include <Interface.h>
 #include <StateSpace.h>
@@ -36,5 +35,3 @@ private:
 	std::shared_ptr<StateSpace> IState;
 	int timer_sec;
 };
-
-#endif SOCKET_H

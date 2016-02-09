@@ -161,8 +161,6 @@ double Matrix33::Determinant(void) const {
 
 Matrix33 Matrix33::Inverse(void) const {
   // Compute the inverse of a general matrix using Cramers rule.
-  // I guess googling for cramers rule gives tons of references
-  // for this. :)
 
   if (Determinant() != 0.0) {
     double rdet = 1.0/Determinant();

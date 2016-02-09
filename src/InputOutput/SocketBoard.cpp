@@ -60,11 +60,10 @@ void SocketBoard::doRead() {
 			}
 			// Display the string on the screen. This thread is invoked on non-UI thread, so we need to marshal the 
 			// call back to the UI thread.
-			auto aileron = reader->ReadDouble();
-			auto elevator = reader->ReadDouble();
-			auto rudder = reader->ReadDouble();
-			auto throttle = reader->ReadDouble();
-			IState->setGCSData(aileron, elevator, rudder, throttle);
+			IState->setAileron(static_cast<float>(reader->ReadDouble()));
+			IState->setElevator(static_cast<float>(reader->ReadDouble()));
+			IState->setRudder(static_cast<float>(reader->ReadDouble()));
+			IState->setThrottle(static_cast<float>(reader->ReadDouble()));
 		});
 	}).then([this](task<void> previousTask) {
 		try {

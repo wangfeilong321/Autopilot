@@ -1,5 +1,4 @@
-#ifndef PID_H
-#define PID_H
+#pragma once
 
 #include <Interface.h>
 #include <StateSpace.h>
@@ -31,5 +30,3 @@ private:
 	
 	void Clip();
 };
-
-#endif

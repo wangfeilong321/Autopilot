@@ -48,7 +48,7 @@ bool PID::Run() {
 			I_out_delta = Ki * dt * (1.5f*Input - 0.5f*Input_prev);  // 2nd order Adams Bashforth integrator
 			break;
 		case eAdamsBashforth3:                                   // 3rd order Adams Bashforth integrator
-			I_out_delta = (Ki / 12.0f) * dt * (23.0f*Input - 16.0*Input_prev + 5.0f*Input_prev2);
+			I_out_delta = (Ki / 12.0f) * dt * (23.0f*Input - 16.0f*Input_prev + 5.0f*Input_prev2);
 			break;
 		case eNone:
 			// No integator is defined or used.

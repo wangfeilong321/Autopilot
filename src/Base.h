@@ -1,5 +1,4 @@
-#ifndef BASE_H
-#define BASE_H
+#pragma once
 
 const float M_PI = 3.14159265358979323846f;
 
@@ -19,5 +18,3 @@ const int START_TIMER = 10;
 
 const int MIN_THROTTLE = 1000;
 const int MAX_THROTTLE = 2000;
-
-#endif

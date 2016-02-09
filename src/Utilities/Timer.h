@@ -1,5 +1,4 @@
-#ifndef TIMER_H
-#define TIMER_H
+#pragma once
 
 #include <chrono>
 
@@ -20,5 +19,3 @@ public:
 private:
 	high_resolution_clock::time_point _start;
 };
-
-#endif
