@@ -5,6 +5,8 @@
 
 #include <ColumnVector3.h>
 
+class Quaternion;
+
 class MatrixException {
 public:
   std::string Message;
@@ -127,6 +129,10 @@ public:
   */
 	void InitMatrix(const double m11, const double m12, const double m13, const double m21, const double m22, const double m23, const double m31, const double m32, const double m33);
 
+	/** Returns the quaternion associated with this direction cosine (rotation) matrix.
+	*/
+	Quaternion GetQuaternion(void) const;
+
   /** Returns the quaternion associated with this direction cosine (rotation) matrix.
   */
 		//FGQuaternion GetQuaternion(void) const;
@@ -210,6 +216,30 @@ public:
   */
   Matrix33 operator/(const double scalar) const;
 
+	/** In place matrix addition.
+			@param B matrix to add.
+			@return reference to the current matrix.
+			Compute the sum of the current matrix and the matrix B
+			given in the argument.
+	*/
+	Matrix33& operator+=(const Matrix33 &B);
+	
+	/** In place matrix multiplication.
+			@param B matrix to multiply with.
+			@return reference to the current matrix.
+			Compute the product of the current matrix and the matrix B
+			given in the argument.
+	*/
+	Matrix33& operator*=(const Matrix33 &B);
+
+	/** In place matrix scale.
+			@param scalar scalar value to multiply with.
+			@return reference to the current matrix.
+			Compute the product of the current matrix and the scalar value scalar
+			given in the argument.
+	*/
+	Matrix33& operator*=(const double scalar);
+	
   /** In place matrix subtraction.
 	    @param B matrix to subtract.
       @return reference to the current matrix.
@@ -217,31 +247,7 @@ public:
       given in the argument.
   */
   Matrix33& operator-=(const Matrix33 &B);
-
-  /** In place matrix addition.
-	    @param B matrix to add.
-      @return reference to the current matrix.
-			Compute the sum of the current matrix and the matrix B
-      given in the argument.
-  */
-  Matrix33& operator+=(const Matrix33 &B);
-
-  /** In place matrix multiplication.
-      @param B matrix to multiply with.
-      @return reference to the current matrix.
-      Compute the product of the current matrix and the matrix B
-      given in the argument.
-  */
-  Matrix33& operator*=(const Matrix33 &B);
-
-  /** In place matrix scale.
-	    @param scalar scalar value to multiply with.
-      @return reference to the current matrix.
-			Compute the product of the current matrix and the scalar value scalar
-      given in the argument.
-  */
-  Matrix33& operator*=(const double scalar);
-
+    
   /** In place matrix scale.
       @param scalar scalar value to divide through.
       @return reference to the current matrix.

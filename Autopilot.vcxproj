@@ -39,6 +39,7 @@
     <ClInclude Include="src\Math\MadgwickAHRS.h" />
     <ClInclude Include="src\Math\Matrix33.h" />
     <ClInclude Include="src\Math\PID.h" />
+    <ClInclude Include="src\Math\Quaternion.h" />
     <ClInclude Include="src\Math\StateSpace.h" />
     <ClInclude Include="src\Utilities\Timer.h" />
   </ItemGroup>
@@ -58,6 +59,7 @@
     </ClCompile>
     <ClCompile Include="src\Math\Matrix33.cpp" />
     <ClCompile Include="src\Math\PID.cpp" />
+    <ClCompile Include="src\Math\Quaternion.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{243E8ED0-58CF-4322-BB7D-D52E70352608}</ProjectGuid>

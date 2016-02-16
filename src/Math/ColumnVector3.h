@@ -83,35 +83,35 @@ public:
       @return The resulting vector from the multiplication with that scalar.
       Multiply the vector with the scalar given in the argument.   */
 	ColumnVector3 operator*(const double scalar) const;
+	
+	/** Cross product multiplication.
+	@param V vector to multiply with.
+	@return The resulting vector from the cross product multiplication.
+	Compute and return the cross product of the current vector with
+	the given argument.   */
+	ColumnVector3 operator*(const ColumnVector3& V) const;
 
-  /** Multiply by 1/scalar.
+	/// Scale by a scalar.
+	ColumnVector3& operator*=(const double scalar);
+
+	/// Addition operator.
+	ColumnVector3 operator+(const ColumnVector3& B) const;
+
+	/// Add an other vector.
+	ColumnVector3& operator+=(const ColumnVector3 &B);
+
+	/// Subtraction operator.
+	ColumnVector3 operator-(const ColumnVector3& B) const;
+
+	/// Subtract an other vector.
+	ColumnVector3& operator-=(const ColumnVector3 &B);
+
+	 /** Multiply by 1/scalar.
       @param scalar scalar value to devide the vector through.
       @return The resulting vector from the division through that scalar.
       Multiply the vector with the 1/scalar given in the argument.   */
   ColumnVector3 operator/(const double scalar) const;
-
-  /** Cross product multiplication.
-      @param V vector to multiply with.
-      @return The resulting vector from the cross product multiplication.
-      Compute and return the cross product of the current vector with
-      the given argument.   */
-	ColumnVector3 operator*(const ColumnVector3& V) const;
-
-  /// Addition operator.
-	ColumnVector3 operator+(const ColumnVector3& B) const;
-
-  /// Subtraction operator.
-	ColumnVector3 operator-(const ColumnVector3& B) const;
-
-  /// Subtract an other vector.
-	ColumnVector3& operator-=(const ColumnVector3 &B);
-
-  /// Add an other vector.
-	ColumnVector3& operator+=(const ColumnVector3 &B);
-
-  /// Scale by a scalar.
-	ColumnVector3& operator*=(const double scalar);
-
+	  
   /// Scale by a 1/scalar.
   ColumnVector3& operator/=(const double scalar);
 

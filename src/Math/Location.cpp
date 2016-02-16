@@ -1,6 +1,8 @@
 #include <Location.h>
 #include <cmath>
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Location::Location(void) : mECLoc(1.0, 0.0, 0.0), mCacheValid(false) {
 	SetEllipse();
   epa = 0.0;
@@ -15,6 +17,8 @@ Location::Location(void) : mECLoc(1.0, 0.0, 0.0), mCacheValid(false) {
   mTi2l.InitMatrix();
   mTl2i.InitMatrix();
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location::Location(double lon, double lat, double radius) : mCacheValid(false) {
 	SetEllipse();
@@ -39,6 +43,8 @@ Location::Location(double lon, double lat, double radius) : mCacheValid(false) {
                           radius*sinLat );
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Location::Location(const ColumnVector3& lv) : mECLoc(lv), mCacheValid(false) {
 	SetEllipse();
   epa = 0.0;
@@ -53,6 +59,8 @@ Location::Location(const ColumnVector3& lv) : mECLoc(lv), mCacheValid(false) {
   mTi2l.InitMatrix();
   mTl2i.InitMatrix();
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location::Location(const Location& l) : mECLoc(l.mECLoc), mCacheValid(l.mCacheValid) {
   a = l.a;
@@ -85,6 +93,8 @@ Location::Location(const Location& l) : mECLoc(l.mECLoc), mCacheValid(l.mCacheVa
   GeodeticAltitude = l.GeodeticAltitude;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 const Location& Location::operator=(const Location& l) {
   mECLoc = l.mECLoc;
   mCacheValid = l.mCacheValid;
@@ -116,6 +126,8 @@ const Location& Location::operator=(const Location& l) {
   return *this;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void Location::SetLongitude(double longitude) {
   double rtmp = mECLoc.Magnitude(eX, eY);
   // Check if we have zero radius.
@@ -132,6 +144,8 @@ void Location::SetLongitude(double longitude) {
   mECLoc(eX) = rtmp*cos(longitude);
   mECLoc(eY) = rtmp*sin(longitude);
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void Location::SetLatitude(double latitude) {
   mCacheValid = false;
@@ -154,6 +168,8 @@ void Location::SetLatitude(double latitude) {
   mECLoc(eZ) = r*sin(latitude);
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void Location::SetRadius(double radius) {
   mCacheValid = false;
 
@@ -163,6 +179,8 @@ void Location::SetRadius(double radius) {
   else
     mECLoc *= radius/rold;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void Location::SetPosition(double lon, double lat, double radius) {
   mCacheValid = false;
@@ -177,6 +195,8 @@ void Location::SetPosition(double lon, double lat, double radius) {
                           radius*sinLat );
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void Location::SetPositionGeodetic(double lon, double lat, double height) {
   mCacheValid = false;
 
@@ -189,6 +209,8 @@ void Location::SetPositionGeodetic(double lon, double lat, double height) {
   mECLoc(eZ) = ((1 - e2)*RN + height)*slat;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void Location::SetEllipse() {
   mCacheValid = false;
 
@@ -198,31 +220,63 @@ void Location::SetEllipse() {
   c = a * e2;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void Location::SetEarthPositionAngle(double EPA) { epa = EPA; mCacheValid = false; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void Location::IncrementEarthPositionAngle(double delta) { epa += delta; mCacheValid = false; }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const ColumnVector3& Location::GetOmegaPlanet() const { return vOmegaPlanet; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double Location::GetLongitude() const { ComputeDerived(); return mLon; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::GetLongitudeDeg() const { ComputeDerived(); return radtodeg*mLon; }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double Location::GetSinLongitude() const { ComputeDerived(); return -mTec2l(2, 1); }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::GetCosLongitude() const { ComputeDerived(); return mTec2l(2, 2); }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double Location::GetLatitude() const { ComputeDerived(); return mLat; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::GetGeodLatitudeRad(void) const { ComputeDerived(); return mGeodLat; }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double Location::GetLatitudeDeg() const { ComputeDerived(); return radtodeg*mLat; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::GetGeodLatitudeDeg(void) const { ComputeDerived(); return radtodeg*mGeodLat; }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double Location::GetGeodAltitude(void) const { ComputeDerived(); return GeodeticAltitude; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::GetSinLatitude() const { ComputeDerived(); return -mTec2l(3, 3); }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double Location::GetCosLatitude() const { ComputeDerived(); return mTec2l(1, 3); }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::GetTanLatitude() const {
 	ComputeDerived();
@@ -233,39 +287,58 @@ double Location::GetTanLatitude() const {
 		return -mTec2l(3, 3) / cLat;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double Location::GetEPA() const { return epa; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::GetRadius() const { ComputeDerived(); return mRadius; }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 const Matrix33& Location::GetTl2ec(void) const { ComputeDerived(); return mTl2ec; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Matrix33& Location::GetTec2l(void) const { ComputeDerived(); return mTec2l; }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 const Matrix33& Location::GetTi2ec(void) const { ComputeDerived(); return mTi2ec; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Matrix33& Location::GetTec2i(void) const { ComputeDerived(); return mTec2i; }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 const Matrix33& Location::GetTi2l(void) const { ComputeDerived(); return mTi2l; }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Matrix33& Location::GetTl2i(void) const { ComputeDerived(); return mTl2i; }
 
-Location Location::LocalToLocation(const ColumnVector3& lvec) const {
-	ComputeDerived(); return mTl2ec*lvec + mECLoc;
-}
 
-ColumnVector3 Location::LocationToLocal(const ColumnVector3& ecvec) const {
-	ComputeDerived(); return mTec2l*(ecvec - mECLoc);
-}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::operator()(unsigned int idx) const { return mECLoc.Entry(idx); }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double& Location::operator()(unsigned int idx) { mCacheValid = false; return mECLoc.Entry(idx); }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double Location::Entry(unsigned int idx) const { return mECLoc.Entry(idx); }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double& Location::Entry(unsigned int idx) {
 	mCacheValid = false; return mECLoc.Entry(idx);
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Location& Location::operator=(const ColumnVector3& v) {
 	mECLoc(eX) = v(eX);
@@ -276,11 +349,17 @@ const Location& Location::operator=(const ColumnVector3& v) {
 	return *this;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 bool Location::operator==(const Location& l) const {
 	return mECLoc == l.mECLoc;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 bool Location::operator!=(const Location& l) const { return !operator==(l); }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Location& Location::operator+=(const Location &l) {
 	mCacheValid = false;
@@ -288,11 +367,15 @@ const Location& Location::operator+=(const Location &l) {
 	return *this;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 const Location& Location::operator-=(const Location &l) {
 	mCacheValid = false;
 	mECLoc -= l.mECLoc;
 	return *this;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Location& Location::operator*=(double scalar) {
 	mCacheValid = false;
@@ -300,25 +383,49 @@ const Location& Location::operator*=(double scalar) {
 	return *this;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 const Location& Location::operator/=(double scalar) {
 	return operator*=(1.0 / scalar);
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location Location::operator+(const Location& l) const {
 	return Location(mECLoc + l.mECLoc);
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Location Location::operator-(const Location& l) const {
 	return Location(mECLoc - l.mECLoc);
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location Location::operator*(double scalar) const {
 	return Location(scalar*mECLoc);
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 Location::operator const ColumnVector3&() const {
 	return mECLoc;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Location Location::LocalToLocation(const ColumnVector3& lvec) const {
+	ComputeDerived(); return mTl2ec*lvec + mECLoc;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ColumnVector3 Location::LocationToLocal(const ColumnVector3& ecvec) const {
+	ComputeDerived(); return mTec2l*(ecvec - mECLoc);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void Location::ComputeDerivedUnconditional(void) const {
   // The radius is just the Euclidean norm of the vector.
@@ -421,28 +528,14 @@ void Location::ComputeDerivedUnconditional(void) const {
   mCacheValid = true;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void Location::ComputeDerived(void) const {
 	if (!mCacheValid)
 		ComputeDerivedUnconditional();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-//  The calculations, below, implement the Haversine formulas to calculate
-//  heading and distance to a set of lat/long coordinates from the current
-//  position.
-//
-//  The basic equations are (lat1, long1 are source positions; lat2
-//  long2 are target positions):
-//
-//  R = earth’s radius
-//  Δlat = lat2 − lat1
-//  Δlong = long2 − long1
-//
-//  For the waypoint distance calculation:
-//
-//  a = sin²(Δlat/2) + cos(lat1)∙cos(lat2)∙sin²(Δlong/2)
-//  c = 2∙atan2(√a, √(1−a))
-//  d = R∙c
 
 double Location::GetDistanceTo(double target_longitude, double target_latitude) const {
   double delta_lat_rad = target_latitude  - GetLatitude();
@@ -456,20 +549,6 @@ double Location::GetDistanceTo(double target_longitude, double target_latitude) 
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-//  The calculations, below, implement the Haversine formulas to calculate
-//  heading and distance to a set of lat/long coordinates from the current
-//  position.
-//
-//  The basic equations are (lat1, long1 are source positions; lat2
-//  long2 are target positions):
-//
-//  R = earth’s radius
-//  Δlat = lat2 − lat1
-//  Δlong = long2 − long1
-//
-//  For the heading angle calculation:
-//
-//  θ = atan2(sin(Δlong)∙cos(lat2), cos(lat1)∙sin(lat2) − sin(lat1)∙cos(lat2)∙cos(Δlong))
 
 double Location::GetHeadingTo(double target_longitude, double target_latitude) const {
   double delta_lon_rad = target_longitude - GetLongitude();

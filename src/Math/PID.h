@@ -24,7 +24,6 @@ private:
 	float Output, Input;
 	const float CLIP_MIN = -1.0f;
 	const float CLIP_MAX = 1.0f;
-	float dt;
 
 	eIntegrateType IntType = eAdamsBashforth2;
 	

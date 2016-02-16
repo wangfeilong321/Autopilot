@@ -88,14 +88,12 @@ void SocketBoard::doRead() {
 }
 
 void SocketBoard::doWrite() {
-	
-	array<float, 3> Angles = IState->getAngles();
 	writer->WriteUInt32(10 * sizeof(DOUBLE)); //data size in bytes
 	writer->WriteDouble(timer_sec); //timer
 	writer->WriteDouble(IState->getAltitude()); //altitudeASL ft
-	writer->WriteDouble(Angles[0]); //Roll
-	writer->WriteDouble(Angles[1]); //Pitch
-	writer->WriteDouble(Angles[2]); //Yaw
+	writer->WriteDouble(IState->getRoll()); //Roll
+	writer->WriteDouble(IState->getPitch()); //Pitch
+	writer->WriteDouble(IState->getYaw()); //Yaw
 	writer->WriteDouble(0.0); //vCas
 	writer->WriteDouble(IState->getEng0Rpm());
 	writer->WriteDouble(IState->getEng1Rpm());

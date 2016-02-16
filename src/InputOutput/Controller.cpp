@@ -32,5 +32,10 @@ bool Controller::Connected() {
 }
 
 bool Controller::Run() {
-	return (ISensor->Run() && IEngine->Run() && ISocket->Run()) ? true : false;
+	return (
+		ISensor->Run() && // get data from sensor 
+		ISocket->Run() && // get data from socket
+		IState->Run() && // calculate aircraft state
+		IEngine->Run() // send commands to engines
+		) ? true : false;
 }

@@ -4,7 +4,6 @@
 #include <ColumnVector3.h>
 #include <Matrix33.h>
 
-
 /** Location holds an arbitrary location in the Earth centered Earth fixed
     reference frame (ECEF). The coordinate frame ECEF has its center in the middle
     of the earth. The X-axis points from the center of the Earth towards a
@@ -184,6 +183,13 @@ public:
                  respect to the Inertial (ECI) frame in radians. */
 	void IncrementEarthPositionAngle(double delta);
 
+	/** Retrieves the Earth anglular velocity.
+			This is the relative orientation of the ECEF frame with respect to the
+			Inertial frame.
+			@param delta delta to the Earth fixed frame (ECEF) rotation offset about the axis with
+			respect to the Inertial (ECI) frame in radians. */
+	const ColumnVector3& GetOmegaPlanet() const;
+
   /** Get the longitude.
       @return the longitude in rad of the location represented with this
       class instance. The returned values are in the range between
@@ -289,23 +295,6 @@ public:
       @see SetEarthPositionAngle
       @see IncrementEarthPositionAngle */
 	const Matrix33& GetTl2i(void) const;
-
-  /** Get the geodetic distance between the current location and a given
-      location. This corresponds to the shortest distance between the two
-      locations. Earth curvature is taken into account.
-      @param target_longitude the target longitude
-      @param target_latitude the target latitude
-      @return The geodetic distance between the two locations */
-  double GetDistanceTo(double target_longitude, double target_latitude) const;
-  
-  /** Get the heading that should be followed from the current location to
-      a given location along the shortest path. Earth curvature is
-      taken into account.
-      @param target_longitude the target longitude
-      @param target_latitude the target latitude
-      @return The heading that should be followed to reach the targeted
-              location along the shortest path */
-  double GetHeadingTo(double target_longitude, double target_latitude) const;
 
   /** Conversion from Local frame coordinates to a location in the
       earth centered and fixed frame.
@@ -422,6 +411,23 @@ public:
 
   /** Cast to a simple 3d vector */
 	operator const ColumnVector3&() const;
+
+	/** Get the geodetic distance between the current location and a given
+			location. This corresponds to the shortest distance between the two
+			locations. Earth curvature is taken into account.
+			@param target_longitude the target longitude
+			@param target_latitude the target latitude
+			@return The geodetic distance between the two locations */
+	double GetDistanceTo(double target_longitude, double target_latitude) const;
+
+	/** Get the heading that should be followed from the current location to
+			a given location along the shortest path. Earth curvature is
+			taken into account.
+			@param target_longitude the target longitude
+			@param target_latitude the target latitude
+			@return The heading that should be followed to reach the targeted
+			location along the shortest path */
+	double GetHeadingTo(double target_longitude, double target_latitude) const;
 
 private:
   /** Computation of derived values.

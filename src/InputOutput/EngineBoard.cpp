@@ -77,7 +77,10 @@ bool EngineBoard::Run() {
 
 	deltaTmcs = static_cast<int>(1000+1000*IState->getThrottle());
 
-	IState->setEnginesPRM(deltaTmcs, deltaTmcs, deltaTmcs, deltaTmcs);
+	IState->setEng0RPM(deltaTmcs);
+	IState->setEng1RPM(deltaTmcs);
+	IState->setEng2RPM(deltaTmcs);
+	IState->setEng3RPM(deltaTmcs);
 
 	static auto start = high_resolution_clock::now();
 
