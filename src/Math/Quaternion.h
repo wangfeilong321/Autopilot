@@ -314,9 +314,6 @@ private:
   /** The cached sines and cosines of the euler angles.  */
   mutable ColumnVector3 mEulerSines;
   mutable ColumnVector3 mEulerCosines;
-
-	enum { ePhi = 1, eTht, ePsi };
-	enum { eP = 1, eQ, eR };
 };
 
 /** Scalar multiplication.

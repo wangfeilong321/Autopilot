@@ -62,6 +62,7 @@
     <ClCompile Include="src\Math\Matrix33.cpp" />
     <ClCompile Include="src\Math\PID.cpp" />
     <ClCompile Include="src\Math\Quaternion.cpp" />
+    <ClCompile Include="src\Math\StateSpace.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{243E8ED0-58CF-4322-BB7D-D52E70352608}</ProjectGuid>

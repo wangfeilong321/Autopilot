@@ -476,9 +476,6 @@ private:
       The C++ keyword "mutable" tells the compiler that the data member is
       allowed to change during a const member function. */
   mutable bool mCacheValid;
-	
-	// Positions X, Y, Z
-	enum { eX = 1, eY, eZ };
 
 	const double sign(const double num) const { return num >= 0.0 ? 1.0 : -1.0; }
 };

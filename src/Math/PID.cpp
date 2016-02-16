@@ -10,6 +10,7 @@ PID::PID() {
 	Output = 0.0f;
 	I_out_total = 0.0f;
 	Input_prev = Input_prev2 = 0.0f;
+	IntType = eAdamsBashforth2;
 }
 
 void PID::Connect() {}

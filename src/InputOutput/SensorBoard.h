@@ -196,10 +196,10 @@ private:
 		MRT_75,       // 75 Hz ODR    
 	};
 
-	uint8_t Ascale = AFS_2G;
-	uint8_t Arate = ARTBW_200_100; // 200 Hz ODR, 100 Hz bandwidth
-	uint8_t Gscale = GFS_250DPS;
-	uint8_t Grate = GRTBW_200_50;  // 200 Hz ODR,  50 Hz bandwidth
+	uint8_t Ascale = AFS_16G;
+	uint8_t Arate = ARTBW_3200_1600; // 200 Hz ODR, 100 Hz bandwidth
+	uint8_t Gscale = GFS_2000DPS;
+	uint8_t Grate = GRTBW_800_110;  // 200 Hz ODR,  50 Hz bandwidth
 	uint8_t Mrate = MRT_75;        //  75 Hz ODR 
 	float aRes, gRes, mRes;       // scale resolutions per LSB for the sensors
 	

@@ -33,5 +33,6 @@
     <ClCompile Include="src\Math\Location.cpp" />
     <ClCompile Include="src\Math\Quaternion.cpp" />
     <ClCompile Include="src\Math\Inertial.cpp" />
+    <ClCompile Include="src\Math\StateSpace.cpp" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <Base.h>
 #include <ColumnVector3.h>
 #include <Location.h>
 
@@ -30,7 +31,6 @@ public:
   double GetSemiMinor(void) const;
 
 private:
-	enum { eX = 1, eY, eZ };
   ColumnVector3 vOmegaPlanet;
   double gAccel;
   double gAccelReference;

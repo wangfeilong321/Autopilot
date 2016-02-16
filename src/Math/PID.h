@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Base.h>
 #include <Interface.h>
 #include <StateSpace.h>
 
@@ -16,8 +17,6 @@ public:
 	float GetOutput();
 
 private:
-	enum eIntegrateType { eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3 };
-
 	float Kp, Ki, Kd;
 	float I_out_total;
 	float Input_prev, Input_prev2;
@@ -25,7 +24,7 @@ private:
 	const float CLIP_MIN = -1.0f;
 	const float CLIP_MAX = 1.0f;
 
-	eIntegrateType IntType = eAdamsBashforth2;
+	eIntegrateType IntType;
 	
 	void Clip();
 };

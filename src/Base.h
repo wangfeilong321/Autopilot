@@ -22,3 +22,11 @@ const int MIN_THROTTLE = 1000;
 const int MAX_THROTTLE = 2000;
 
 const float dt = 0.008333333f;
+
+enum { eX = 1, eY, eZ };
+enum { eP = 1, eQ, eR };
+enum { ePhi = 1, eTht, ePsi };
+
+enum eIntegrateType { eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3, eAdamsBashforth4, eBuss1, eBuss2, eLocalLinearization, eAdamsBashforth5 };
+
+const float Gftsec2 = 32.1850393f;
