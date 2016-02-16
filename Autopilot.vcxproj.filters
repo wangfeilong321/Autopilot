@@ -16,6 +16,7 @@
     <ClInclude Include="src\Math\Matrix33.h" />
     <ClInclude Include="src\Math\Location.h" />
     <ClInclude Include="src\Math\Quaternion.h" />
+    <ClInclude Include="src\Math\Inertial.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -31,5 +32,6 @@
     <ClCompile Include="src\Math\Matrix33.cpp" />
     <ClCompile Include="src\Math\Location.cpp" />
     <ClCompile Include="src\Math\Quaternion.cpp" />
+    <ClCompile Include="src\Math\Inertial.cpp" />
   </ItemGroup>
 </Project>

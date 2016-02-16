@@ -167,7 +167,7 @@ public:
   /** Sets the semimajor and semiminor axis lengths for this planet.
       The eccentricity and flattening are calculated from the semimajor
       and semiminor axis lengths */
-  void SetEllipse();
+  void SetEllipse(double semimajor, double semiminor);
 
   /** Sets the Earth position angle.
       This is the relative orientation of the ECEF frame with respect to the
@@ -182,13 +182,6 @@ public:
       @param delta delta to the Earth fixed frame (ECEF) rotation offset about the axis with
                  respect to the Inertial (ECI) frame in radians. */
 	void IncrementEarthPositionAngle(double delta);
-
-	/** Retrieves the Earth anglular velocity.
-			This is the relative orientation of the ECEF frame with respect to the
-			Inertial frame.
-			@param delta delta to the Earth fixed frame (ECEF) rotation offset about the axis with
-			respect to the Inertial (ECI) frame in radians. */
-	const ColumnVector3& GetOmegaPlanet() const;
 
   /** Get the longitude.
       @return the longitude in rad of the location represented with this
@@ -470,14 +463,11 @@ private:
   double epa;
 
   /* Terms for geodetic latitude calculation. Values are from WGS84 model */
-  double a = 20925646.32546;     // WGS84 semimajor axis length in feet
-	double b = 20855486.5951;      // WGS84 semiminor axis length in feet
-  double e2;   // Earth eccentricity squared
+  double a;  // WGS84 semimajor axis length in feet
+  double e2; // Earth eccentricity squared
   double c;
   double ec;
   double ec2;
-
-	ColumnVector3 vOmegaPlanet = ColumnVector3(0.0, 0.0, 0.00007292115);
 
   /** A data validity flag.
       This class implements caching of the derived values like the

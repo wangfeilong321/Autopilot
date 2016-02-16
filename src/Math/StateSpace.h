@@ -3,6 +3,7 @@
 #include <Base.h>
 #include <MadgwickAHRS.h>
 #include <Location.h>
+#include <Inertial.h>
 #include <Matrix33.h>
 #include <Quaternion.h>
 #include <ColumnVector3.h>
@@ -27,11 +28,16 @@ public:
 		mxd(0.0), myd(0.0), mzd(0.0),
 		Rpm0(MIN_THROTTLE), Rpm1(MIN_THROTTLE), Rpm2(MIN_THROTTLE), Rpm3(MIN_THROTTLE), 
 		AttitudeLocal(0.0, 0.0, 0.0), vUVW(0.0, 0.0, 0.0), vUVWidot(0.0, 0.0, 0.0) {
+		
+		integrator_translational_rate = eAdamsBashforth2;
+		integrator_translational_position = eAdamsBashforth3;
 
 		dqUVWidot.resize(5, ColumnVector3(0.0, 0.0, 0.0));
 		dqInertialVelocity.resize(5, ColumnVector3(0.0, 0.0, 0.0));
-		
+
+		vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
 		vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, 38.05*meterstofeet+150*meterstofeet); //Sets the initial position of the aircraft (lon, lat, HAE)
+
 		Ti2ec = vLocation.GetTi2ec();   // ECI to ECEF transform
 		Tec2i = Ti2ec.Transposed();    // ECEF to ECI frame transform
 		vInertialPosition = Tec2i * vLocation; // Inertial position 
@@ -39,8 +45,7 @@ public:
 		AttitudeECI = Ti2l.GetQuaternion() * AttitudeLocal; //ECI orientation of the aircraft
 		UpdateBodyMatrices();
 		vVel = Tb2l * vUVW; // Velocity of the body frame wrt ECEF expressed in Local frame 
-		VehicleRadius = vLocation.GetRadius(); // Inertial radius
-		CalculateInertialVelocity(); // Inertial velocity
+		vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
 	}
 
 	bool Run() {
@@ -109,13 +114,12 @@ private:
 	enum { eX = 1, eY, eZ };
 
 	Location vLocation;
+	Inertial vInertial;
 	ColumnVector3 vInertialPosition;
 	ColumnVector3 vInertialVelocity;
 	ColumnVector3 vUVW;
 	ColumnVector3 vVel;
 	ColumnVector3 vUVWidot;
-
-	double VehicleRadius;
 
 	float axd, ayd, azd;
 	float gxd, gyd, gzd;
@@ -137,6 +141,9 @@ private:
 	Matrix33 Tb2i;   // body to ECI frame rotation matrix
 	Matrix33 Ti2l;   // ECI to body frame rotation matrix
 	Matrix33 Tl2i;   // local to inertial frame rotation matrix
+	const Matrix33 Tap2b = Matrix33(1.0,  0.0,  0.0,
+	                                0.0, -1.0,  0.0,
+	                                0.0,  0.0, -1.0 );
 	Quaternion AttitudeLocal;
 	Quaternion AttitudeECI;
 
@@ -159,17 +166,15 @@ private:
 	}
 
 	void computePosition() {
-		
-		vUVWidot = 
-		
+		vUVWidot = Tb2i*Tap2b*ColumnVector3(axd,ayd,azd) + Tec2i * vInertial.GetGravityJ2(vLocation);
 		Integrate(vInertialVelocity, vUVWidot, dqUVWidot, dt, integrator_translational_rate);
 		Integrate(vInertialPosition, vInertialVelocity, dqInertialVelocity, dt, integrator_translational_position);
-				
+		
 		// CAUTION : the order of the operations below is very important to get transformation
 		// matrices that are consistent with the new state of the vehicle
 
 		// 1. Update the Earth position angle (EPA)
-		vLocation.IncrementEarthPositionAngle(vLocation.GetOmegaPlanet()(eZ)*dt);
+		vLocation.IncrementEarthPositionAngle(vInertial.omega()*dt);
 
 		// 2. Update the Ti2ec and Tec2i transforms from the updated EPA
 		Ti2ec = vLocation.GetTi2ec(); // ECI to ECEF transform
@@ -185,6 +190,12 @@ private:
 		// 5. Update the "Orientation-based" transformation matrices from the updated
 		//    orientation quaternion and vLocation vector.
 		UpdateBodyMatrices();
+
+		// Translational position derivative (velocities are integrated in the inertial frame)
+		CalculateUVW();
+
+		// Compute vehicle velocity wrt ECEF frame, expressed in Local horizontal frame.
+		vVel = Tb2l * vUVW;
 	}
 	
 	void Integrate(ColumnVector3& Integrand, ColumnVector3& Val, std::deque<ColumnVector3>& ValDot, double deltat, eIntegrateType integration_type) {
@@ -214,8 +225,8 @@ private:
 		}
 	}
 	
-	void CalculateInertialVelocity(void) {
-		vInertialVelocity = Tb2i * vUVW + (vLocation.GetOmegaPlanet() * vInertialPosition);
+	void CalculateUVW(void) {
+		vUVW = Ti2b * (vInertialVelocity - (vInertial.GetOmegaPlanet() * vInertialPosition));
 	}
 
 	void UpdateLocationMatrices() {

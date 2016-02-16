@@ -4,7 +4,8 @@
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location::Location(void) : mECLoc(1.0, 0.0, 0.0), mCacheValid(false) {
-	SetEllipse();
+	e2 = c = 0.0;
+  a = ec = ec2 = 1.0;
   epa = 0.0;
 
   mLon = mLat = mRadius = 0.0;
@@ -21,7 +22,8 @@ Location::Location(void) : mECLoc(1.0, 0.0, 0.0), mCacheValid(false) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location::Location(double lon, double lat, double radius) : mCacheValid(false) {
-	SetEllipse();
+	e2 = c = 0.0;
+  a = ec = ec2 = 1.0;
   epa = 0.0;
 
   mLon = mLat = mRadius = 0.0;
@@ -46,7 +48,8 @@ Location::Location(double lon, double lat, double radius) : mCacheValid(false) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location::Location(const ColumnVector3& lv) : mECLoc(lv), mCacheValid(false) {
-	SetEllipse();
+	e2 = c = 0.0;
+  a = ec = ec2 = 1.0;
   epa = 0.0;
 
   mLon = mLat = mRadius = 0.0;
@@ -211,10 +214,11 @@ void Location::SetPositionGeodetic(double lon, double lat, double height) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void Location::SetEllipse() {
+void Location::SetEllipse(double semimajor, double semiminor) {
   mCacheValid = false;
 
-  ec = b/a;
+  a = semimajor;
+  ec = semiminor/a;
   ec2 = ec * ec;
   e2 = 1.0 - ec2;
   c = a * e2;
@@ -227,10 +231,6 @@ void Location::SetEarthPositionAngle(double EPA) { epa = EPA; mCacheValid = fals
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void Location::IncrementEarthPositionAngle(double delta) { epa += delta; mCacheValid = false; }
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-const ColumnVector3& Location::GetOmegaPlanet() const { return vOmegaPlanet; }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -318,7 +318,6 @@ const Matrix33& Location::GetTi2l(void) const { ComputeDerived(); return mTi2l; 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Matrix33& Location::GetTl2i(void) const { ComputeDerived(); return mTl2i; }
-
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
