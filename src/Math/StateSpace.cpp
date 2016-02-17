@@ -103,7 +103,7 @@ void StateSpace::ComputeAngles() {
 }
 
 void StateSpace::ComputePosition() {
-	vUVWidot = Tb2i*(Tap2b*ColumnVector3(axd*Gftsec2, ayd*Gftsec2, azd*Gftsec2)) + Tec2i * vInertial.GetGravityJ2(vLocation);
+	vUVWidot = Tb2i*(Tap2b*(ColumnVector3(axd*Gftsec2, ayd*Gftsec2, azd*Gftsec2) + vInertial.GetGravityJ2(vLocation)));
 	Integrate(vInertialPosition, vInertialVelocity, dqInertialVelocity, dt, integrator_translational_position);
 	Integrate(vInertialVelocity, vUVWidot, dqUVWidot, dt, integrator_translational_rate);
 
@@ -120,9 +120,9 @@ void StateSpace::ComputePosition() {
 	// 3. Update the location from the updated Ti2ec and inertial position
 	vLocation = Ti2ec*vInertialPosition;
 
-	double LonDeg = vLocation.GetLongitudeDeg();
-	double LatDeg = vLocation.GetLatitudeDeg();
-	double AltDeg = vLocation.GetGeodAltitude();
+	//double LonDeg = vLocation.GetLongitudeDeg();
+	//double LatDeg = vLocation.GetLatitudeDeg();
+	//double AltDeg = vLocation.GetGeodAltitude();
 
 	// 4. Update the other "Location-based" transformation matrices from the updated
 	//    vLocation vector.
