@@ -21,7 +21,10 @@ StateSpace::StateSpace() :
 	dqInertialVelocity.resize(5, ColumnVector3(0.0, 0.0, 0.0));
 
 	vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
-	vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, 38.05*meterstofeet); //Sets the initial position of the aircraft (lon, lat, HAE)
+	//vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, 38.05*meterstofeet); //Sets the initial position of the aircraft (lon, lat, HAE)
+	vLocation.SetLongitude(-71.0602777*degtorad);
+	vLocation.SetLatitude(42.35832777*degtorad);
+	vLocation.SetRadius(vInertial.GetRefRadius() + 4.305);
 
 	Ti2ec = vLocation.GetTi2ec();   // ECI to ECEF transform
 	Tec2i = Ti2ec.Transposed();    // ECEF to ECI frame transform
@@ -75,7 +78,7 @@ float StateSpace::getPitch() { return Pitch; }
 
 float StateSpace::getYaw() { return Yaw; }
 
-float StateSpace::getAltitude() { return 38.0477f / 0.3028f; }
+float StateSpace::getAltitude() { return 188.0477f; }
 
 float StateSpace::getAileron() { return AileronCmd; }
 
@@ -103,7 +106,10 @@ void StateSpace::ComputeAngles() {
 }
 
 void StateSpace::ComputePosition() {
-	vUVWidot = Tb2i*(Tap2b*(ColumnVector3(axd*Gftsec2, ayd*Gftsec2, azd*Gftsec2) + vInertial.GetGravityJ2(vLocation)));
+	ColumnVector3 vBodyAccel = Tap2b*ColumnVector3(axd*Gftsec2, ayd*Gftsec2, azd*Gftsec2);
+	ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
+	vUVWidot = Tb2i*(vBodyAccel) + vGravAccel;
+
 	Integrate(vInertialPosition, vInertialVelocity, dqInertialVelocity, dt, integrator_translational_position);
 	Integrate(vInertialVelocity, vUVWidot, dqUVWidot, dt, integrator_translational_rate);
 
@@ -119,10 +125,6 @@ void StateSpace::ComputePosition() {
 
 	// 3. Update the location from the updated Ti2ec and inertial position
 	vLocation = Ti2ec*vInertialPosition;
-
-	//double LonDeg = vLocation.GetLongitudeDeg();
-	//double LatDeg = vLocation.GetLatitudeDeg();
-	//double AltDeg = vLocation.GetGeodAltitude();
 
 	// 4. Update the other "Location-based" transformation matrices from the updated
 	//    vLocation vector.

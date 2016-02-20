@@ -1,43 +1,12 @@
-//=====================================================================================================
-// MadgwickAHRS.c
-//=====================================================================================================
-//
-// Implementation of Madgwick's IMU and AHRS algorithms.
-// See: http://www.x-io.co.uk/node/8#open_source_ahrs_and_imu_algorithms
-//
-// Date			Author          Notes
-// 29/09/2011	SOH Madgwick    Initial release
-// 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
-// 19/02/2012	SOH Madgwick	Magnetometer measurement is normalised
-//
-//=====================================================================================================
-
-//---------------------------------------------------------------------------------------------------
-// Header files
-
 #include <MadgwickAHRS.h>
 #include <Base.h>
 #include <math.h>
 
-//---------------------------------------------------------------------------------------------------
-// Definitions
-
-#define sampleFreq	512.0f		// sample frequency in Hz
-#define betaDef		  0.1f		// 2 * proportional gain
-
-//---------------------------------------------------------------------------------------------------
-// Variable definitions
-
-volatile float beta = betaDef;								// 2 * proportional gain (Kp)
+const float sampleFreq = 256.0f;         		                // sample frequency in Hz
+volatile float beta = 0.1f;								                  // 2 * proportional gain (Kp) == algorithm gain
 volatile float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;	// quaternion of sensor frame relative to auxiliary frame
 
-//---------------------------------------------------------------------------------------------------
-// Function declarations
-
 float invSqrt(float x);
-
-//====================================================================================================
-// Functions
 
 //---------------------------------------------------------------------------------------------------
 // AHRS algorithm update
@@ -229,12 +198,8 @@ float invSqrt(float x) {
 	float halfx = 0.5f * x;
 	float y = x;
 	long i = *(long*)&y;
-	i = 0x5f3759df - (i>>1);
+	i = 0x5f3759df - (i >> 1);
 	y = *(float*)&i;
 	y = y * (1.5f - (halfx * y * y));
 	return y;
 }
-
-//====================================================================================================
-// END OF CODE
-//====================================================================================================
