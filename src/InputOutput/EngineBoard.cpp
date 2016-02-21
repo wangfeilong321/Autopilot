@@ -39,9 +39,9 @@ void EngineBoard::Connect() {
 	pin4->SetDriveMode(GpioPinDriveMode::Output);
 
 	IState->Wait();
-	
+
 	{
-		const int calibrationTimeSec = 3;
+		const int calibrationTimeSec = 2;
 		deltaTmcs = MAX_THROTTLE;
 		auto start = high_resolution_clock::now();
 		Timer timer(true);
@@ -54,7 +54,7 @@ void EngineBoard::Connect() {
 		}
 	}
 	{
-		const int calibrationTimeSec = 3;
+		const int calibrationTimeSec = 1;
 		deltaTmcs = MIN_THROTTLE;
 		auto start = high_resolution_clock::now();
 		Timer timer(true);
@@ -66,6 +66,7 @@ void EngineBoard::Connect() {
 			}
 		}
 	}
+
 	ifConnected = true;
 }
 
