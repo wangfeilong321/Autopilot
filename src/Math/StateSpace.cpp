@@ -1,5 +1,10 @@
 #include <StateSpace.h>
 
+using namespace Windows::System;
+using namespace Platform;
+using namespace Windows::Foundation;
+using namespace Windows::System::Threading;
+
 StateSpace::StateSpace() :
 	Roll(0.0),
 	Pitch(0.0),
@@ -11,20 +16,39 @@ StateSpace::StateSpace() :
 	axd(0.0), ayd(0.0), azd(0.0),
 	gxd(0.0), gyd(0.0), gzd(0.0),
 	mxd(0.0), myd(0.0), mzd(0.0),
-	Rpm0(MIN_THROTTLE), Rpm1(MIN_THROTTLE), Rpm2(MIN_THROTTLE), Rpm3(MIN_THROTTLE),
-	AttitudeLocal(0.0, 0.0, 0.0), vUVW(0.0, 0.0, 0.0), vUVWidot(0.0, 0.0, 0.0) {
+	Rpm0(MIN_THROTTLE), Rpm1(MIN_THROTTLE), Rpm2(MIN_THROTTLE), Rpm3(MIN_THROTTLE) {
 
 	integrator_translational_rate = eAdamsBashforth2;
 	integrator_translational_position = eAdamsBashforth3;
 
-	dqUVWidot.resize(5, ColumnVector3(0.0, 0.0, 0.0));
-	dqInertialVelocity.resize(5, ColumnVector3(0.0, 0.0, 0.0));
-
 	vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
-	//vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, 38.05*meterstofeet); //Sets the initial position of the aircraft (lon, lat, HAE)
 	vLocation.SetLongitude(-71.0602777*degtorad);
 	vLocation.SetLatitude(42.35832777*degtorad);
-	vLocation.SetRadius(vInertial.GetRefRadius() + 4.305);
+	vLocation.SetRadius(vInertial.GetRefRadius() + 38.0477f * meterstofeet);
+}
+
+void StateSpace::TrimAircraft() {
+	TimeSpan period;
+	period.Duration = 1 * 10000000; // 10,000,000 ticks per second.
+	ThreadPoolTimer^ PeriodicTimer = ThreadPoolTimer::CreatePeriodicTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
+		timer_sec--;
+		if (timer_sec == 0) {
+			InitializeDerivatives();
+			canComputePos = true;
+			source->Cancel();
+		}
+	}), period, ref new TimerDestroyedHandler([&](ThreadPoolTimer^ source) {}));
+}
+
+void StateSpace::InitializeDerivatives() {
+	ColumnVector3 vApAccel = Gftsec2*ColumnVector3(axd, ayd, azd);
+	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
+	ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
+	vUVWidot = Tb2i*(vBodyAccel)+vGravAccel;
+
+	dqUVWidot.resize(5, vUVWidot);
+	
+	vLocation.SetEarthPositionAngle(0.0);
 
 	Ti2ec = vLocation.GetTi2ec();   // ECI to ECEF transform
 	Tec2i = Ti2ec.Transposed();    // ECEF to ECI frame transform
@@ -32,13 +56,16 @@ StateSpace::StateSpace() :
 	UpdateLocationMatrices();
 	AttitudeECI = Ti2l.GetQuaternion() * AttitudeLocal; //ECI orientation of the aircraft
 	UpdateBodyMatrices();
+	vUVW = ColumnVector3(0.0, 0.0, 0.0);
 	vVel = Tb2l * vUVW; // Velocity of the body frame wrt ECEF frame expressed in Local frame 
 	vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
+	dqInertialVelocity.resize(5, vInertialVelocity);
 }
 
 bool StateSpace::Run() {
 	ComputeAngles();
-	ComputePosition();
+	if(canComputePos)
+		ComputePosition();
 	return true;
 }
 
@@ -78,7 +105,11 @@ float StateSpace::getPitch() { return Pitch; }
 
 float StateSpace::getYaw() { return Yaw; }
 
-float StateSpace::getAltitude() { return 188.0477f; }
+float StateSpace::getX() { return vLocation(eX); }
+
+float StateSpace::getY() { return vLocation(eY); }
+
+float StateSpace::getZ() { return vLocation(eZ); }
 
 float StateSpace::getAileron() { return AileronCmd; }
 
@@ -106,12 +137,13 @@ void StateSpace::ComputeAngles() {
 }
 
 void StateSpace::ComputePosition() {
-	ColumnVector3 vBodyAccel = Tap2b*ColumnVector3(axd*Gftsec2, ayd*Gftsec2, azd*Gftsec2);
+	ColumnVector3 vApAccel = Gftsec2*ColumnVector3(axd, ayd, azd);
+	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
 	ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
 	vUVWidot = Tb2i*(vBodyAccel) + vGravAccel;
 
-	Integrate(vInertialPosition, vInertialVelocity, dqInertialVelocity, dt, integrator_translational_position);
 	Integrate(vInertialVelocity, vUVWidot, dqUVWidot, dt, integrator_translational_rate);
+	Integrate(vInertialPosition, vInertialVelocity, dqInertialVelocity, dt, integrator_translational_position);
 
 	// CAUTION : the order of the operations below is very important to get transformation
 	// matrices that are consistent with the new state of the vehicle

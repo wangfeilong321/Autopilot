@@ -17,6 +17,10 @@ class StateSpace {
 public:
 	StateSpace();
 
+	void TrimAircraft();
+
+	void InitializeDerivatives();
+
 	bool Run();
 
 	void setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);
@@ -51,7 +55,11 @@ public:
 
 	float getYaw();
 
-	float getAltitude();
+	float getX();
+
+	float getY();
+
+	float getZ();
 
 	float getAileron();
 
@@ -67,6 +75,9 @@ public:
 
 private:
 	std::condition_variable cv;
+
+	int timer_sec = TRIM_TIMER;
+	bool canComputePos = false;
 
 	Location vLocation;
 	Inertial vInertial;

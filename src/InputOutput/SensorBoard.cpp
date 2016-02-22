@@ -53,11 +53,8 @@ SensorBoard::SensorBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), 
 }
 
 void SensorBoard::Connect() {
-
 	uint8_t c = readByte(Accel, WHO_AM_I_ADXL345);
-
 	uint8_t d = readByte(Gyro, WHO_AM_I_L3G4200D);
-
 	uint8_t e = readByte(Magnet, HMC5883L_IDA);  // Read WHO_AM_I register A for HMC5883L
 	uint8_t f = readByte(Magnet, HMC5883L_IDB);  // Read WHO_AM_I register B for HMC5883L
 	uint8_t g = readByte(Magnet, HMC5883L_IDC);  // Read WHO_AM_I register C for HMC5883L
@@ -75,15 +72,15 @@ void SensorBoard::Connect() {
 																																										 // Set accelerometer configuration; interrupt active high, left justify MSB
 	bool ifOkDataFormat = writeCommand(Accel, ADXL345_DATA_FORMAT, 0x04 | Ascale);  // Set full scale range for the accelerometer 
 																																									// Choose ODR and bandwidth
-	bool ifOkBWRate = writeCommand(Accel, ADXL345_BW_RATE, Arate);              // Select normal power operation, and ODR and bandwidth
+	bool ifOkBWRate = writeCommand(Accel, ADXL345_BW_RATE, Arate);                  // Select normal power operation, and ODR and bandwidth
 	bool ifOkEnableINTA = writeCommand(Accel, ADXL345_INT_ENABLE, 0x80);            // Enable data ready interrupt
-	bool ifOkEnableINTMap = writeCommand(Accel, ADXL345_INT_MAP, 0x00);                // Enable data ready interrupt on INT_1
-	bool ifOkBypassFIFO = writeCommand(Accel, ADXL345_FIFO_CTL, 0x00);               // Bypass FIFO
+	bool ifOkEnableINTMap = writeCommand(Accel, ADXL345_INT_MAP, 0x00);             // Enable data ready interrupt on INT_1
+	bool ifOkBypassFIFO = writeCommand(Accel, ADXL345_FIFO_CTL, 0x00);              // Disable FIFO
 
 	bool ifOkEnableGyro = writeCommand(Gyro, L3G4200D_CTRL_REG1, Grate << 4 | 0x0F);  // Set gyro ODR to 100 Hz and Bandwidth to 25 Hz, enable normal mode
 	bool ifOkEnableINTG = writeCommand(Gyro, L3G4200D_CTRL_REG3, 0x08);               // Push/pull, active high interrupt, enable data ready interrupt 
-	bool ifOkGyroScale = writeCommand(Gyro, L3G4200D_CTRL_REG4, Gscale << 4);        // set gyro full scale
-	bool ifOkEnableHPF = writeCommand(Gyro, L3G4200D_CTRL_REG5, 0x00);               // Disable FIFO
+	bool ifOkGyroScale = writeCommand(Gyro, L3G4200D_CTRL_REG4, Gscale << 4);         // set gyro full scale
+	bool ifOkEnableHPF = writeCommand(Gyro, L3G4200D_CTRL_REG5, 0x00);                // Disable FIFO
 
 	bool ifOkEnableRate = writeCommand(Magnet, HMC5883L_CONFIG_A, Mrate << 2);
 	bool ifOkEnableGain = writeCommand(Magnet, HMC5883L_CONFIG_B, 0x00);       // set gain (bits[7:5]) to maximum resolution of 0.73 mG/LSB
@@ -93,16 +90,16 @@ void SensorBoard::Connect() {
 	//  Perform self-test and calculate temperature compensation bias
 	writeCommand(Magnet, HMC5883L_CONFIG_A, 0x71);   // set 8-average, 15 Hz default, positive self-test measurement
 	writeCommand(Magnet, HMC5883L_CONFIG_B, 0xA0);   // set gain (bits[7:5]) to 5
-	writeCommand(Magnet, HMC5883L_MODE, 0x80);      // enable continuous data mode
-	Sleep(150); // wait 150 ms
+	writeCommand(Magnet, HMC5883L_MODE, 0x80);       // enable continuous data mode
+	Sleep(150);                                      // wait 150 ms
 
-	uint8_t rawData[6] = { 0, 0, 0, 0, 0, 0 };                        // x/y/z gyro register data stored here
-	readBytes(Magnet, HMC5883L_OUT_X_H, 6, &rawData[0]);  // Read the six raw data registers sequentially into data array
+	uint8_t rawData[6] = { 0, 0, 0, 0, 0, 0 };                      // x/y/z gyro register data stored here
+	readBytes(Magnet, HMC5883L_OUT_X_H, 6, &rawData[0]);            // Read the six raw data registers sequentially into data array
 	int16_t selfTest[3] = { 0, 0, 0 };
 	selfTest[0] = ((int16_t)rawData[0] << 8) | rawData[1];          // Turn the MSB and LSB into a signed 16-bit value
 	selfTest[1] = ((int16_t)rawData[4] << 8) | rawData[5];
 	selfTest[2] = ((int16_t)rawData[2] << 8) | rawData[3];
-	writeCommand(Magnet, HMC5883L_CONFIG_A, 0x00);   // exit self test
+	writeCommand(Magnet, HMC5883L_CONFIG_A, 0x00);                  // exit self test
 
 	if (selfTest[0] < 575 && selfTest[0] > 243 && selfTest[1] < 575 && selfTest[1] > 243 && selfTest[2] < 575 && selfTest[2] > 243) {
 		ifOkSelfTest = true;

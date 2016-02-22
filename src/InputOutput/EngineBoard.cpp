@@ -67,6 +67,8 @@ void EngineBoard::Connect() {
 		}
 	}
 
+	IState->TrimAircraft();
+
 	ifConnected = true;
 }
 
