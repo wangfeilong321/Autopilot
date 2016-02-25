@@ -1,4 +1,5 @@
 #include <Location.h>
+#include <Inertial.h>
 #include <cmath>
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -230,6 +231,12 @@ void Location::SetEarthPositionAngle(double EPA) { epa = EPA; mCacheValid = fals
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void Location::SetAltitudeASL(double altitudeASL) {
+	SetRadius(GetSeaLevelRadius() + altitudeASL);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void Location::IncrementEarthPositionAngle(double delta) { epa += delta; mCacheValid = false; }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -294,6 +301,12 @@ double Location::GetEPA() const { return epa; }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::GetRadius() const { ComputeDerived(); return mRadius; }
+
+double Location::GetSeaLevelRadius() const {
+	ComputeDerived(); 
+	Inertial i;
+	return i.GetRefRadius();
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

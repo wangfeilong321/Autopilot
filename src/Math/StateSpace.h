@@ -49,17 +49,17 @@ public:
 
 	float getEng3Rpm();
 
-	float getRoll();
+	float getRoll() const;
 
-	float getPitch();
+	float getPitch() const;
 
-	float getYaw();
+	float getYaw() const;
 
-	float getX();
+	float getX() const;
 
-	float getY();
+	float getY() const;
 
-	float getZ();
+	float getZ()const;
 
 	float getAileron();
 

@@ -175,7 +175,12 @@ public:
       @param EPA Earth fixed frame (ECEF) rotation offset about the axis with
                  respect to the Inertial (ECI) frame in radians. */
 	void SetEarthPositionAngle(double EPA);
-
+	
+	/** Set the altitude above sea level.
+		@param altitudeASL altitude above Sea Level in feet.
+		@see SetGroundCallback */
+	void SetAltitudeASL(double altitudeASL);
+	
   /** Increments the Earth position angle.
       This is the relative orientation of the ECEF frame with respect to the
       Inertial frame.
@@ -250,6 +255,11 @@ public:
       always positive. */
   //double GetRadius() const { return mECLoc.Magnitude(); } // may not work with FlightGear
 	double GetRadius() const;
+
+	/** Get the local sea level radius
+		@return the sea level radius at the location in feet.
+		@see SetGroundCallback */
+	double GetSeaLevelRadius(void) const;
 
   /** Transform matrix from local horizontal to earth centered frame.
       @return a const reference to the rotation matrix of the transform from

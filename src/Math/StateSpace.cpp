@@ -22,9 +22,8 @@ StateSpace::StateSpace() :
 	integrator_translational_position = eAdamsBashforth3;
 
 	vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
-	vLocation.SetLongitude(-71.0602777*degtorad);
-	vLocation.SetLatitude(42.35832777*degtorad);
-	vLocation.SetRadius(vInertial.GetRefRadius() + 38.0477f * meterstofeet);
+	vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 180)*meterstofeet);
+	vLocation.SetEarthPositionAngle(0.0);
 }
 
 void StateSpace::TrimAircraft() {
@@ -48,8 +47,6 @@ void StateSpace::InitializeDerivatives() {
 
 	dqUVWidot.resize(5, vUVWidot);
 	
-	vLocation.SetEarthPositionAngle(0.0);
-
 	Ti2ec = vLocation.GetTi2ec();   // ECI to ECEF transform
 	Tec2i = Ti2ec.Transposed();    // ECEF to ECI frame transform
 	vInertialPosition = Tec2i * vLocation; // Inertial position 
@@ -99,17 +96,17 @@ float StateSpace::getEng2Rpm() { return static_cast<float>(((Rpm2 - 1000.0f) / 1
 
 float StateSpace::getEng3Rpm() { return static_cast<float>(((Rpm3 - 1000.0f) / 1000.0f)*MAX_RPM); }
 
-float StateSpace::getRoll() { return Roll; }
+float StateSpace::getRoll() const { return Roll; }
 
-float StateSpace::getPitch() { return Pitch; }
+float StateSpace::getPitch() const { return Pitch; }
 
-float StateSpace::getYaw() { return Yaw; }
+float StateSpace::getYaw() const { return Yaw; }
 
-float StateSpace::getX() { return vLocation(eX); }
+float StateSpace::getX() const { return vLocation(eX); }
 
-float StateSpace::getY() { return vLocation(eY); }
+float StateSpace::getY() const { return vLocation(eY); }
 
-float StateSpace::getZ() { return vLocation(eZ); }
+float StateSpace::getZ() const { return vLocation(eZ); }
 
 float StateSpace::getAileron() { return AileronCmd; }
 
