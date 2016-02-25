@@ -12,6 +12,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <deque>
+#include <chrono>
 
 class StateSpace {
 public:
@@ -118,6 +119,28 @@ private:
 
 	std::deque <ColumnVector3> dqUVWidot;
 	std::deque <ColumnVector3> dqInertialVelocity;
+
+	// Constants for the low-pass filters
+	const float timeConstant = 0.18f;
+	double alpha = 0.9f;
+	double deltatime = 0;
+
+	// Timestamps for the low-pass filters
+	std::chrono::high_resolution_clock clock;
+	std::chrono::high_resolution_clock::time_point timestamp;
+	std::chrono::high_resolution_clock::time_point timestampOld;
+
+	// Gravity and linear accelerations components for the
+	// Wikipedia low-pass filter
+	ColumnVector3 gravity;
+	ColumnVector3 linearAcceleration;
+
+	// Raw accelerometer data
+	ColumnVector3 input;
+	
+	int count = 0;
+
+	void FilterAcceleration(float axd, float ayd, float azd);
 
 	void ComputeAngles();
 

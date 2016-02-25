@@ -1,5 +1,6 @@
 #include <StateSpace.h>
 
+using namespace std::chrono;
 using namespace Windows::System;
 using namespace Platform;
 using namespace Windows::Foundation;
@@ -57,6 +58,9 @@ void StateSpace::InitializeDerivatives() {
 	vVel = Tb2l * vUVW; // Velocity of the body frame wrt ECEF frame expressed in Local frame 
 	vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
 	dqInertialVelocity.resize(5, vInertialVelocity);
+	
+	timestamp = high_resolution_clock::now();
+	timestampOld = high_resolution_clock::now();
 }
 
 bool StateSpace::Run() {
@@ -102,11 +106,11 @@ float StateSpace::getPitch() const { return Pitch; }
 
 float StateSpace::getYaw() const { return Yaw; }
 
-float StateSpace::getX() const { return vLocation(eX); }
+float StateSpace::getX() const { return static_cast<float>(vLocation(eX)); }
 
-float StateSpace::getY() const { return vLocation(eY); }
+float StateSpace::getY() const { return static_cast<float>(vLocation(eY)); }
 
-float StateSpace::getZ() const { return vLocation(eZ); }
+float StateSpace::getZ() const { return static_cast<float>(vLocation(eZ)); }
 
 float StateSpace::getAileron() { return AileronCmd; }
 
@@ -124,6 +128,30 @@ void StateSpace::Wait() {
 
 void StateSpace::Release() { cv.notify_one(); }
 
+void StateSpace::FilterAcceleration(float ax, float ay, float az) {
+	// Get a local copy of the sensor values
+	input = ColumnVector3(ax, ay, az);
+
+	timestamp = high_resolution_clock::now();
+
+	// Find the sample period (between updates).
+	// Convert from nanoseconds to seconds
+	auto m = duration_cast<nanoseconds>(timestamp - timestampOld).count() / 1000000000.0f;
+	deltatime = 1.0 / (count / m);
+
+	count++;
+
+	alpha = timeConstant / (timeConstant + deltatime);
+
+	gravity(eX) = alpha * gravity(eX) + (1 - alpha) * input(eX);
+	gravity(eY) = alpha * gravity(eY) + (1 - alpha) * input(eY);
+	gravity(eZ) = alpha * gravity(eZ) + (1 - alpha) * input(eZ);
+
+	linearAcceleration(eX) = input(eX) - gravity(eX);
+	linearAcceleration(eY) = input(eY) - gravity(eY);
+	linearAcceleration(eZ) = input(eZ) - gravity(eZ);
+}
+
 void StateSpace::ComputeAngles() {
 	MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);
 	QuaternionToEuler(&Roll, &Pitch, &Yaw);
@@ -134,6 +162,7 @@ void StateSpace::ComputeAngles() {
 }
 
 void StateSpace::ComputePosition() {
+	FilterAcceleration(axd, ayd, azd);
 	ColumnVector3 vApAccel = Gftsec2*ColumnVector3(axd, ayd, azd);
 	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
 	ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
