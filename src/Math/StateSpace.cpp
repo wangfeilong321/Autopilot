@@ -41,10 +41,10 @@ void StateSpace::TrimAircraft() {
 }
 
 void StateSpace::InitializeDerivatives() {
-	ColumnVector3 vApAccel = Gftsec2*ColumnVector3(axd, ayd, azd);
+	ColumnVector3 vApAccel = Gftsec2*linearAcceleration;
 	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
-	ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
-	vUVWidot = Tb2i*(vBodyAccel)+vGravAccel;
+	//ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
+	vUVWidot = Tb2i*(vBodyAccel);// + vGravAccel;
 
 	dqUVWidot.resize(5, vUVWidot);
 	
@@ -59,12 +59,17 @@ void StateSpace::InitializeDerivatives() {
 	vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
 	dqInertialVelocity.resize(5, vInertialVelocity);
 	
-	timestamp = high_resolution_clock::now();
-	timestampOld = high_resolution_clock::now();
+	timestampG = high_resolution_clock::now();
+	timestampGOld = high_resolution_clock::now();
+
+	timestampA = high_resolution_clock::now();
+	timestampAOld = high_resolution_clock::now();
 }
 
 bool StateSpace::Run() {
 	ComputeAngles();
+	FilterAcceleration();
+	SmoothAcceleration();
 	if(canComputePos)
 		ComputePosition();
 	return true;
@@ -128,29 +133,50 @@ void StateSpace::Wait() {
 
 void StateSpace::Release() { cv.notify_one(); }
 
-void StateSpace::FilterAcceleration(float ax, float ay, float az) {
+void StateSpace::FilterAcceleration() {
 	// Get a local copy of the sensor values
-	input = ColumnVector3(ax, ay, az);
+	input = ColumnVector3(axd, ayd, azd);
 
-	timestamp = high_resolution_clock::now();
+	timestampG = high_resolution_clock::now();
 
 	// Find the sample period (between updates).
 	// Convert from nanoseconds to seconds
-	auto m = duration_cast<nanoseconds>(timestamp - timestampOld).count() / 1000000000.0f;
-	deltatime = 1.0 / (count / m);
+	deltatimeG = 1.0 / (countG / duration_cast<nanoseconds>(timestampG - timestampGOld).count() / 1000000000.0f);
 
-	count++;
+	countG++;
 
-	alpha = timeConstant / (timeConstant + deltatime);
+	filterFactorG = timeConstant / (timeConstant + deltatimeG);
 
-	gravity(eX) = alpha * gravity(eX) + (1 - alpha) * input(eX);
-	gravity(eY) = alpha * gravity(eY) + (1 - alpha) * input(eY);
-	gravity(eZ) = alpha * gravity(eZ) + (1 - alpha) * input(eZ);
+	//Low pass to get gravity
+	gravity(eX) = filterFactorG * gravity(eX) + (1 - filterFactorG) * input(eX);
+	gravity(eY) = filterFactorG * gravity(eY) + (1 - filterFactorG) * input(eY);
+	gravity(eZ) = filterFactorG * gravity(eZ) + (1 - filterFactorG) * input(eZ);
 
+	//Hih pass to exclude gravity
 	linearAcceleration(eX) = input(eX) - gravity(eX);
 	linearAcceleration(eY) = input(eY) - gravity(eY);
 	linearAcceleration(eZ) = input(eZ) - gravity(eZ);
 }
+
+void StateSpace::SmoothAcceleration() {
+	// Get a local copy of the sensor values
+	input = ColumnVector3(axd, ayd, azd); //linearAcceleration ?
+
+	timestampA = high_resolution_clock::now();
+
+	// Find the sample period (between updates).
+	// Convert from nanoseconds to seconds
+	deltatimeA = 1.0 / (countA / duration_cast<nanoseconds>(timestampA - timestampAOld).count() / 1000000000.0f);
+
+	countA++;
+
+	filterFactorA = timeConstant / (timeConstant + deltatimeA);
+
+	linearAcceleration(eX) = filterFactorA * linearAcceleration(eX) + (1 - filterFactorA) * input(eX);
+	linearAcceleration(eY) = filterFactorA * linearAcceleration(eY) + (1 - filterFactorA) * input(eY);
+	linearAcceleration(eZ) = filterFactorA * linearAcceleration(eZ) + (1 - filterFactorA) * input(eZ);
+}
+
 
 void StateSpace::ComputeAngles() {
 	MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);
@@ -162,11 +188,10 @@ void StateSpace::ComputeAngles() {
 }
 
 void StateSpace::ComputePosition() {
-	FilterAcceleration(axd, ayd, azd);
-	ColumnVector3 vApAccel = Gftsec2*ColumnVector3(axd, ayd, azd);
+	ColumnVector3 vApAccel = Gftsec2*linearAcceleration;
 	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
-	ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
-	vUVWidot = Tb2i*(vBodyAccel) + vGravAccel;
+	//ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
+	vUVWidot = Tb2i*(vBodyAccel);// +vGravAccel;
 
 	Integrate(vInertialVelocity, vUVWidot, dqUVWidot, dt, integrator_translational_rate);
 	Integrate(vInertialPosition, vInertialVelocity, dqInertialVelocity, dt, integrator_translational_position);

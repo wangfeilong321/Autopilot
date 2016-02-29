@@ -122,14 +122,20 @@ private:
 
 	// Constants for the low-pass filters
 	const float timeConstant = 0.18f;
-	double alpha = 0.9f;
-	double deltatime = 0;
+
+	double filterFactorG = 0.9f;
+	double filterFactorA = 0.1f;
+	
+	double deltatimeG = 0;
+	double deltatimeA = 0;
 
 	// Timestamps for the low-pass filters
-	std::chrono::high_resolution_clock clock;
-	std::chrono::high_resolution_clock::time_point timestamp;
-	std::chrono::high_resolution_clock::time_point timestampOld;
+	std::chrono::high_resolution_clock::time_point timestampG;
+	std::chrono::high_resolution_clock::time_point timestampGOld;
 
+	std::chrono::high_resolution_clock::time_point timestampA;
+	std::chrono::high_resolution_clock::time_point timestampAOld;
+		
 	// Gravity and linear accelerations components for the
 	// Wikipedia low-pass filter
 	ColumnVector3 gravity;
@@ -138,9 +144,12 @@ private:
 	// Raw accelerometer data
 	ColumnVector3 input;
 	
-	int count = 0;
-
-	void FilterAcceleration(float axd, float ayd, float azd);
+	//Counters for sample period
+	int countG = 0;
+	int countA = 0;
+	
+	void FilterAcceleration();
+	void SmoothAcceleration();
 
 	void ComputeAngles();
 
