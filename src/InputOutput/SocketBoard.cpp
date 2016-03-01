@@ -4,7 +4,7 @@
 
 using namespace std;
 
-SocketBoard::SocketBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false), timer_sec(START_TIMER) {}
+SocketBoard::SocketBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), ifConnected(false) {}
 
 SocketBoard::~SocketBoard() {
 	if (socket != nullptr) {
@@ -24,15 +24,6 @@ void SocketBoard::Connect() {
 	String^ remotePort = ref new String(L"3001");
 	create_task(socket->ConnectAsync(remoteHost, remotePort)).get();
 	ifConnected = true;
-	TimeSpan period;
-	period.Duration = 1 * 10000000; // 10,000,000 ticks per second.
-	ThreadPoolTimer^ PeriodicTimer = ThreadPoolTimer::CreatePeriodicTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
-		timer_sec--;
-		if (timer_sec == 0) {
-			IState->Release();
-			source->Cancel();
-		}
-	}), period, ref new TimerDestroyedHandler([&](ThreadPoolTimer^ source) {}));
 	doWrite();
 	doRead();
 }
@@ -88,8 +79,7 @@ void SocketBoard::doRead() {
 }
 
 void SocketBoard::doWrite() {
-	writer->WriteUInt32(12 * sizeof(DOUBLE)); //data size in bytes
-	writer->WriteDouble(timer_sec); //timer
+	writer->WriteUInt32(11 * sizeof(DOUBLE)); //data size in bytes
 	writer->WriteDouble(IState->getRoll()); //Roll
 	writer->WriteDouble(IState->getPitch()); //Pitch
 	writer->WriteDouble(IState->getYaw()); //Yaw

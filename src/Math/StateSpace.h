@@ -18,8 +18,6 @@ class StateSpace {
 public:
 	StateSpace();
 
-	void TrimAircraft();
-
 	void InitializeDerivatives();
 
 	bool Run();
@@ -70,16 +68,7 @@ public:
 
 	float getThrottle();
 	
-	void Wait();
-
-	void Release();
-
 private:
-	std::condition_variable cv;
-
-	int timer_sec = TRIM_TIMER;
-	bool canComputePos = false;
-
 	Location vLocation;
 	Inertial vInertial;
 	ColumnVector3 vInertialPosition;
@@ -123,11 +112,11 @@ private:
 	// Constants for the low-pass filters
 	const float timeConstant = 0.18f;
 
-	double filterFactorG = 0.9f;
-	double filterFactorA = 0.1f;
+	float filterFactorG = 0.91f;
+	float filterFactorA = 0.91f;
 	
-	double deltatimeG = 0;
-	double deltatimeA = 0;
+	float deltatimeG = 0;
+	float deltatimeA = 0;
 
 	// Timestamps for the low-pass filters
 	std::chrono::high_resolution_clock::time_point timestampG;
@@ -140,16 +129,13 @@ private:
 	// Wikipedia low-pass filter
 	ColumnVector3 gravity;
 	ColumnVector3 linearAcceleration;
+	ColumnVector3 smoothAcceleration;
 
-	// Raw accelerometer data
-	ColumnVector3 input;
-	
 	//Counters for sample period
 	int countG = 0;
 	int countA = 0;
 	
 	void FilterAcceleration();
-	void SmoothAcceleration();
 
 	void ComputeAngles();
 

@@ -16,8 +16,6 @@ const int NUMBER_OF_ANGLES = 3;
 
 const int MAX_RPM = 15000;
 
-const int START_TIMER = 15;
-
 const int TRIM_TIMER = 10;
 
 const int MIN_THROTTLE = 1000;

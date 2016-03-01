@@ -33,5 +33,4 @@ private:
 	DataWriter^ writer;
 	DataReader^ reader;
 	std::shared_ptr<StateSpace> IState;
-	int timer_sec;
 };

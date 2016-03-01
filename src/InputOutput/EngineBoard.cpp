@@ -37,38 +37,7 @@ void EngineBoard::Connect() {
 		return;
 	pin4->Write(pinValue);
 	pin4->SetDriveMode(GpioPinDriveMode::Output);
-
-	IState->Wait();
-
-	{
-		const int calibrationTimeSec = 2;
-		deltaTmcs = MAX_THROTTLE;
-		auto start = high_resolution_clock::now();
-		Timer timer(true);
-		while (timer.Elapsed().count() <= calibrationTimeSec) {
-			auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
-			if (duration.count() >= deltaTmcs) {
-				OnTick();
-				start = high_resolution_clock::now();
-			}
-		}
-	}
-	{
-		const int calibrationTimeSec = 1;
-		deltaTmcs = MIN_THROTTLE;
-		auto start = high_resolution_clock::now();
-		Timer timer(true);
-		while (timer.Elapsed().count() <= calibrationTimeSec) {
-			auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
-			if (duration.count() >= deltaTmcs) {
-				OnTick();
-				start = high_resolution_clock::now();
-			}
-		}
-	}
-
-	IState->TrimAircraft();
-
+		
 	ifConnected = true;
 }
 

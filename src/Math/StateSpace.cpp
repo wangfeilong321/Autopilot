@@ -23,21 +23,16 @@ StateSpace::StateSpace() :
 	integrator_translational_position = eAdamsBashforth3;
 
 	vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
-	vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 180)*meterstofeet);
+	vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 20)*meterstofeet);
 	vLocation.SetEarthPositionAngle(0.0);
-}
+	
+	timestampG = high_resolution_clock::now();
+	timestampGOld = high_resolution_clock::now();
 
-void StateSpace::TrimAircraft() {
-	TimeSpan period;
-	period.Duration = 1 * 10000000; // 10,000,000 ticks per second.
-	ThreadPoolTimer^ PeriodicTimer = ThreadPoolTimer::CreatePeriodicTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
-		timer_sec--;
-		if (timer_sec == 0) {
-			InitializeDerivatives();
-			canComputePos = true;
-			source->Cancel();
-		}
-	}), period, ref new TimerDestroyedHandler([&](ThreadPoolTimer^ source) {}));
+	timestampA = high_resolution_clock::now();
+	timestampAOld = high_resolution_clock::now();
+	
+	InitializeDerivatives();
 }
 
 void StateSpace::InitializeDerivatives() {
@@ -58,20 +53,12 @@ void StateSpace::InitializeDerivatives() {
 	vVel = Tb2l * vUVW; // Velocity of the body frame wrt ECEF frame expressed in Local frame 
 	vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
 	dqInertialVelocity.resize(5, vInertialVelocity);
-	
-	timestampG = high_resolution_clock::now();
-	timestampGOld = high_resolution_clock::now();
-
-	timestampA = high_resolution_clock::now();
-	timestampAOld = high_resolution_clock::now();
 }
 
 bool StateSpace::Run() {
 	ComputeAngles();
 	FilterAcceleration();
-	SmoothAcceleration();
-	if(canComputePos)
-		ComputePosition();
+	ComputePosition();
 	return true;
 }
 
@@ -125,58 +112,44 @@ float StateSpace::getRudder() { return RudderCmd; }
 
 float StateSpace::getThrottle() { return ThrottleCmd; }
 
-void StateSpace::Wait() {
-	std::mutex mut;
-	std::unique_lock<std::mutex> lk(mut);
-	cv.wait(lk);
-}
-
-void StateSpace::Release() { cv.notify_one(); }
-
 void StateSpace::FilterAcceleration() {
-	// Get a local copy of the sensor values
-	input = ColumnVector3(axd, ayd, azd);
+	timestampA = high_resolution_clock::now();
 
+	// Find the sample period (between updates).
+	// Convert from nanoseconds to seconds
+	auto atime = duration_cast<nanoseconds>(timestampA - timestampAOld).count() / 1000000000.0f;
+	deltatimeA = 1.0f / (countA / atime);
+
+	countA++;
+
+	filterFactorA = timeConstant / (timeConstant + deltatimeA);
+
+	//Low pass to smooth data
+	smoothAcceleration(eX) = smoothAcceleration(eX) + filterFactorA * (axd - smoothAcceleration(eX));
+	smoothAcceleration(eY) = smoothAcceleration(eY) + filterFactorA * (axd - smoothAcceleration(eY));
+	smoothAcceleration(eZ) = smoothAcceleration(eZ) + filterFactorA * (axd - smoothAcceleration(eZ));
+	
 	timestampG = high_resolution_clock::now();
 
 	// Find the sample period (between updates).
 	// Convert from nanoseconds to seconds
-	deltatimeG = 1.0 / (countG / duration_cast<nanoseconds>(timestampG - timestampGOld).count() / 1000000000.0f);
+	auto gtime = duration_cast<nanoseconds>(timestampG - timestampGOld).count() / 1000000000.0f;
+	deltatimeG = 1.0f / (countG / gtime);
 
 	countG++;
 
 	filterFactorG = timeConstant / (timeConstant + deltatimeG);
 
 	//Low pass to get gravity
-	gravity(eX) = filterFactorG * gravity(eX) + (1 - filterFactorG) * input(eX);
-	gravity(eY) = filterFactorG * gravity(eY) + (1 - filterFactorG) * input(eY);
-	gravity(eZ) = filterFactorG * gravity(eZ) + (1 - filterFactorG) * input(eZ);
+	gravity(eX) = filterFactorG * gravity(eX) + (1.0f - filterFactorG) * smoothAcceleration(eX);
+	gravity(eY) = filterFactorG * gravity(eY) + (1.0f - filterFactorG) * smoothAcceleration(eY);
+	gravity(eZ) = filterFactorG * gravity(eZ) + (1.0f - filterFactorG) * smoothAcceleration(eZ);
 
 	//Hih pass to exclude gravity
-	linearAcceleration(eX) = input(eX) - gravity(eX);
-	linearAcceleration(eY) = input(eY) - gravity(eY);
-	linearAcceleration(eZ) = input(eZ) - gravity(eZ);
+	linearAcceleration(eX) = smoothAcceleration(eX) - gravity(eX);
+	linearAcceleration(eY) = smoothAcceleration(eY) - gravity(eY);
+	linearAcceleration(eZ) = smoothAcceleration(eZ) - gravity(eZ);
 }
-
-void StateSpace::SmoothAcceleration() {
-	// Get a local copy of the sensor values
-	input = ColumnVector3(axd, ayd, azd); //linearAcceleration ?
-
-	timestampA = high_resolution_clock::now();
-
-	// Find the sample period (between updates).
-	// Convert from nanoseconds to seconds
-	deltatimeA = 1.0 / (countA / duration_cast<nanoseconds>(timestampA - timestampAOld).count() / 1000000000.0f);
-
-	countA++;
-
-	filterFactorA = timeConstant / (timeConstant + deltatimeA);
-
-	linearAcceleration(eX) = filterFactorA * linearAcceleration(eX) + (1 - filterFactorA) * input(eX);
-	linearAcceleration(eY) = filterFactorA * linearAcceleration(eY) + (1 - filterFactorA) * input(eY);
-	linearAcceleration(eZ) = filterFactorA * linearAcceleration(eZ) + (1 - filterFactorA) * input(eZ);
-}
-
 
 void StateSpace::ComputeAngles() {
 	MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);
