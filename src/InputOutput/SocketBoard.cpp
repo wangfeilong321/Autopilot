@@ -24,6 +24,7 @@ void SocketBoard::Connect() {
 	String^ remotePort = ref new String(L"3001");
 	create_task(socket->ConnectAsync(remoteHost, remotePort)).get();
 	ifConnected = true;
+	IState->TrimAircraft();
 	doWrite();
 	doRead();
 }

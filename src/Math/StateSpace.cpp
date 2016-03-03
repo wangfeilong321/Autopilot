@@ -25,21 +25,26 @@ StateSpace::StateSpace() :
 	vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
 	vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 20)*meterstofeet);
 	vLocation.SetEarthPositionAngle(0.0);
-	
-	timestampG = high_resolution_clock::now();
-	timestampGOld = high_resolution_clock::now();
+}
 
-	timestampA = high_resolution_clock::now();
-	timestampAOld = high_resolution_clock::now();
-	
-	InitializeDerivatives();
+void StateSpace::TrimAircraft() {
+	TimeSpan period;
+	period.Duration = 1 * 10000000; // 10,000,000 ticks per second.
+	ThreadPoolTimer^ PeriodicTimer = ThreadPoolTimer::CreatePeriodicTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
+		timer_sec--;
+		if (timer_sec == 0) {
+			InitializeDerivatives();
+			canComputePos = true;
+			source->Cancel();
+		}
+	}), period, ref new TimerDestroyedHandler([&](ThreadPoolTimer^ source) {}));
 }
 
 void StateSpace::InitializeDerivatives() {
-	ColumnVector3 vApAccel = Gftsec2*linearAcceleration;
+	ColumnVector3 vApAccel = Gftsec2*smoothAcceleration;
 	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
 	//ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
-	vUVWidot = Tb2i*(vBodyAccel);// + vGravAccel;
+	vUVWidot = Tb2i*(vBodyAccel);// +vGravAccel;
 
 	dqUVWidot.resize(5, vUVWidot);
 	
@@ -53,12 +58,24 @@ void StateSpace::InitializeDerivatives() {
 	vVel = Tb2l * vUVW; // Velocity of the body frame wrt ECEF frame expressed in Local frame 
 	vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
 	dqInertialVelocity.resize(5, vInertialVelocity);
+
+	//Initial times
+	timestampG = high_resolution_clock::now();
+	timestampGOld = high_resolution_clock::now();
+
+	timestampA = high_resolution_clock::now();
+	timestampAOld = high_resolution_clock::now();
+
+	axdPrev = axd;
+	aydPrev = ayd;
+	azdPrev = azd;
 }
 
 bool StateSpace::Run() {
 	ComputeAngles();
 	FilterAcceleration();
-	ComputePosition();
+	if(canComputePos)
+		ComputePosition();
 	return true;
 }
 
@@ -113,42 +130,40 @@ float StateSpace::getRudder() { return RudderCmd; }
 float StateSpace::getThrottle() { return ThrottleCmd; }
 
 void StateSpace::FilterAcceleration() {
-	timestampA = high_resolution_clock::now();
+	//High-pass
 
-	// Find the sample period (between updates).
-	// Convert from nanoseconds to seconds
-	auto atime = duration_cast<nanoseconds>(timestampA - timestampAOld).count() / 1000000000.0f;
-	deltatimeA = 1.0f / (countA / atime);
-
-	countA++;
-
-	filterFactorA = timeConstant / (timeConstant + deltatimeA);
-
-	//Low pass to smooth data
-	smoothAcceleration(eX) = smoothAcceleration(eX) + filterFactorA * (axd - smoothAcceleration(eX));
-	smoothAcceleration(eY) = smoothAcceleration(eY) + filterFactorA * (axd - smoothAcceleration(eY));
-	smoothAcceleration(eZ) = smoothAcceleration(eZ) + filterFactorA * (axd - smoothAcceleration(eZ));
-	
+	//Current time
 	timestampG = high_resolution_clock::now();
+	// Find the sample period (between updates)
+	// Convert from nanoseconds to seconds
+	deltatimeG = duration_cast<nanoseconds>(timestampG - timestampGOld).count() / 1000000000.0f;
+	//Filter factor for high-pass
+	filterFactorG = timeConstant / (timeConstant + deltatimeG);
+	//High pass to get linear acceleration
+	linearAcceleration(eX) = filterFactorG * linearAcceleration(eX) + filterFactorG * (axd - axdPrev);
+	linearAcceleration(eY) = filterFactorG * linearAcceleration(eY) + filterFactorG * (ayd - aydPrev);
+	linearAcceleration(eZ) = filterFactorG * linearAcceleration(eZ) + filterFactorG * (azd - azdPrev);
+	//New previous acceleration values
+	axdPrev = axd;
+	aydPrev = ayd;
+	azdPrev = azd;
+	//New previous time value
+	timestampGOld = timestampG;
 
+	//Low-pass
+	//Current time
+	timestampA = high_resolution_clock::now();
 	// Find the sample period (between updates).
 	// Convert from nanoseconds to seconds
-	auto gtime = duration_cast<nanoseconds>(timestampG - timestampGOld).count() / 1000000000.0f;
-	deltatimeG = 1.0f / (countG / gtime);
-
-	countG++;
-
-	filterFactorG = timeConstant / (timeConstant + deltatimeG);
-
-	//Low pass to get gravity
-	gravity(eX) = filterFactorG * gravity(eX) + (1.0f - filterFactorG) * smoothAcceleration(eX);
-	gravity(eY) = filterFactorG * gravity(eY) + (1.0f - filterFactorG) * smoothAcceleration(eY);
-	gravity(eZ) = filterFactorG * gravity(eZ) + (1.0f - filterFactorG) * smoothAcceleration(eZ);
-
-	//Hih pass to exclude gravity
-	linearAcceleration(eX) = smoothAcceleration(eX) - gravity(eX);
-	linearAcceleration(eY) = smoothAcceleration(eY) - gravity(eY);
-	linearAcceleration(eZ) = smoothAcceleration(eZ) - gravity(eZ);
+	deltatimeA = duration_cast<nanoseconds>(timestampA - timestampAOld).count() / 1000000000.0f;
+	//Filter factor for low-pass
+	filterFactorA = deltatimeA / (timeConstant + deltatimeA);
+	//Low pass to smooth result
+	smoothAcceleration(eX) = filterFactorA * linearAcceleration(eX) + (1.0f - filterFactorA) * smoothAcceleration(eX);
+	smoothAcceleration(eY) = filterFactorA * linearAcceleration(eY) + (1.0f - filterFactorA) * smoothAcceleration(eY);
+	smoothAcceleration(eZ) = filterFactorA * linearAcceleration(eZ) + (1.0f - filterFactorA) * smoothAcceleration(eZ);
+	//New previous time value;
+	timestampAOld = timestampA;
 }
 
 void StateSpace::ComputeAngles() {
@@ -161,7 +176,7 @@ void StateSpace::ComputeAngles() {
 }
 
 void StateSpace::ComputePosition() {
-	ColumnVector3 vApAccel = Gftsec2*linearAcceleration;
+	ColumnVector3 vApAccel = Gftsec2*smoothAcceleration;
 	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
 	//ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
 	vUVWidot = Tb2i*(vBodyAccel);// +vGravAccel;
