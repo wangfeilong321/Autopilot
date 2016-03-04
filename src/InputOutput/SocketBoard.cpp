@@ -1,6 +1,5 @@
 #include <Base.h>
 #include <SocketBoard.h>
-#include <array>
 
 using namespace std;
 
@@ -24,7 +23,7 @@ void SocketBoard::Connect() {
 	String^ remotePort = ref new String(L"3001");
 	create_task(socket->ConnectAsync(remoteHost, remotePort)).get();
 	ifConnected = true;
-	IState->TrimAircraft();
+	IState->trimAircraft();
 	doWrite();
 	doRead();
 }
@@ -44,14 +43,12 @@ void SocketBoard::doRead() {
 			// The underlying socket was closed before we were able to read the whole data.
 			cancel_current_task();
 		}
-		unsigned int stringLength = reader->ReadUInt32();
-		return create_task(reader->LoadAsync(stringLength)).then([this, stringLength](unsigned int actualStringLength) {
-			if (actualStringLength != stringLength) {
+		unsigned int Length = reader->ReadUInt32();
+		return create_task(reader->LoadAsync(Length)).then([this, Length](unsigned int actualLength) {
+			if (actualLength != Length) {
 				// The underlying socket was closed before we were able to read the whole data.
 				cancel_current_task();
 			}
-			// Display the string on the screen. This thread is invoked on non-UI thread, so we need to marshal the 
-			// call back to the UI thread.
 			IState->setAileron(static_cast<float>(reader->ReadDouble()));
 			IState->setElevator(static_cast<float>(reader->ReadDouble()));
 			IState->setRudder(static_cast<float>(reader->ReadDouble()));
@@ -65,16 +62,16 @@ void SocketBoard::doRead() {
 			// broken (i.e. peer closed the socket).
 			doRead();
 		}
-		catch (Platform::Exception^ exception) {
+		catch (Exception^ exception) {
 			// Explicitly close the socket.
-			ifConnected = false;
 			delete socket;
+			ifConnected = false;
 		}
 		catch (task_canceled&) {
 			// Do not print anything here - this will usually happen because user closed the client socket.
 			// Explicitly close the socket.
-			ifConnected = false;
 			delete socket;
+			ifConnected = false;
 		}
 	});
 }
@@ -97,17 +94,20 @@ void SocketBoard::doWrite() {
 		try {
 			// Try getting an exception.
 			writeTask.get();
+			// Everything went ok, so try to receive another string. The receive will continue until the stream is
+			// broken (i.e. peer closed the socket).
 			doWrite();
 		}
 		catch (Exception^ exception) {
-			ifConnected = false;
+			// Explicitly close the socket.
 			delete socket;
+			ifConnected = false;
 		}
 		catch (task_canceled&) {
 			// Do not print anything here - this will usually happen because user closed the client socket.
 			// Explicitly close the socket.
-			ifConnected = false;
 			delete socket;
+			ifConnected = false;
 		}
 	});
 }

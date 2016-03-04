@@ -6,18 +6,20 @@ using namespace Platform;
 using namespace Windows::Foundation;
 using namespace Windows::System::Threading;
 
+using namespace std;
+
 StateSpace::StateSpace() :
-	Roll(0.0),
-	Pitch(0.0),
-	Yaw(0.0),
-	AileronCmd(0.0),
-	ElevatorCmd(0.0),
-	RudderCmd(0.0),
-	ThrottleCmd(0.0),
+	roll(0.0),
+	pitch(0.0),
+	yaw(0.0),
+	aileronCmd(0.0),
+	elevatorCmd(0.0),
+	rudderCmd(0.0),
+	throttleCmd(0.0),
 	axd(0.0), ayd(0.0), azd(0.0),
 	gxd(0.0), gyd(0.0), gzd(0.0),
 	mxd(0.0), myd(0.0), mzd(0.0),
-	Rpm0(MIN_THROTTLE), Rpm1(MIN_THROTTLE), Rpm2(MIN_THROTTLE), Rpm3(MIN_THROTTLE) {
+	rpm0(MIN_THROTTLE), rpm1(MIN_THROTTLE), rpm2(MIN_THROTTLE), rpm3(MIN_THROTTLE) {
 
 	integrator_translational_rate = eAdamsBashforth2;
 	integrator_translational_position = eAdamsBashforth3;
@@ -25,22 +27,29 @@ StateSpace::StateSpace() :
 	vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
 	vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 20)*meterstofeet);
 	vLocation.SetEarthPositionAngle(0.0);
+
+	accOut.open("C:\\Deploy\\accOut.csv", ofstream::trunc);
+	if (!accOut.is_open())
+		return;
+	linearAccOut.open("C:\\Deploy\\linearAccOut.csv", ofstream::trunc);
+	if (!linearAccOut.is_open())
+		return;
+	smoothAccOut.open("C:\\Deploy\\smoothAccOut.csv", ofstream::trunc);
+	if (!smoothAccOut.is_open())
+		return;
 }
 
-void StateSpace::TrimAircraft() {
-	TimeSpan period;
-	period.Duration = 1 * 10000000; // 10,000,000 ticks per second.
-	ThreadPoolTimer^ PeriodicTimer = ThreadPoolTimer::CreatePeriodicTimer(ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
-		timer_sec--;
-		if (timer_sec == 0) {
-			InitializeDerivatives();
+void StateSpace::trimAircraft() {
+	TimeSpan delay;
+	delay.Duration = TRIM_TIMER * 1 * 10000000; // 10,000,000 ticks per second. 15 seconds.
+	ThreadPoolTimer ^ delayTimer = ThreadPoolTimer::CreateTimer(
+		ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
+			initializeDerivatives();
 			canComputePos = true;
-			source->Cancel();
-		}
-	}), period, ref new TimerDestroyedHandler([&](ThreadPoolTimer^ source) {}));
+		}), delay);
 }
 
-void StateSpace::InitializeDerivatives() {
+void StateSpace::initializeDerivatives() {
 	ColumnVector3 vApAccel = Gftsec2*smoothAcceleration;
 	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
 	//ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
@@ -60,11 +69,17 @@ void StateSpace::InitializeDerivatives() {
 	dqInertialVelocity.resize(5, vInertialVelocity);
 
 	//Initial times
+
+	timestamp = high_resolution_clock::now();
+	timestampOld = high_resolution_clock::now();
+
 	timestampG = high_resolution_clock::now();
 	timestampGOld = high_resolution_clock::now();
 
 	timestampA = high_resolution_clock::now();
 	timestampAOld = high_resolution_clock::now();
+
+	t = tA = tG = 0.0f;
 
 	axdPrev = axd;
 	aydPrev = ayd;
@@ -85,35 +100,35 @@ void StateSpace::setSensorData(float ax, float ay, float az, float gx, float gy,
 	mxd = mx; myd = my; mzd = mz;
 }
 
-void StateSpace::setAileron(float aileron) { AileronCmd = aileron; }
+void StateSpace::setAileron(float aileron) { aileronCmd = aileron; }
 
-void StateSpace::setElevator(float elevator) { ElevatorCmd = elevator; }
+void StateSpace::setElevator(float elevator) { elevatorCmd = elevator; }
 
-void StateSpace::setRudder(float rudder) { RudderCmd = rudder; }
+void StateSpace::setRudder(float rudder) { rudderCmd = rudder; }
 
-void StateSpace::setThrottle(float throttle) { ThrottleCmd = throttle; }
+void StateSpace::setThrottle(float throttle) { throttleCmd = throttle; }
 
-void StateSpace::setEng0RPM(int Rpmd) { Rpm0 = Rpmd; }
+void StateSpace::setEng0RPM(int Rpmd) { rpm0 = Rpmd; }
 
-void StateSpace::setEng1RPM(int Rpmd) { Rpm1 = Rpmd; }
+void StateSpace::setEng1RPM(int Rpmd) { rpm1 = Rpmd; }
 
-void StateSpace::setEng2RPM(int Rpmd) { Rpm2 = Rpmd; }
+void StateSpace::setEng2RPM(int Rpmd) { rpm2 = Rpmd; }
 
-void StateSpace::setEng3RPM(int Rpmd) { Rpm3 = Rpmd; }
+void StateSpace::setEng3RPM(int Rpmd) { rpm3 = Rpmd; }
 
-float StateSpace::getEng0Rpm() { return static_cast<float>(((Rpm0 - 1000.0f) / 1000.0f)*MAX_RPM); }
+float StateSpace::getEng0Rpm() { return static_cast<float>(((rpm0 - 1000.0f) / 1000.0f)*MAX_RPM); }
 
-float StateSpace::getEng1Rpm() { return static_cast<float>(((Rpm1 - 1000.0f) / 1000.0f)*MAX_RPM); }
+float StateSpace::getEng1Rpm() { return static_cast<float>(((rpm1 - 1000.0f) / 1000.0f)*MAX_RPM); }
 
-float StateSpace::getEng2Rpm() { return static_cast<float>(((Rpm2 - 1000.0f) / 1000.0f)*MAX_RPM); }
+float StateSpace::getEng2Rpm() { return static_cast<float>(((rpm2 - 1000.0f) / 1000.0f)*MAX_RPM); }
 
-float StateSpace::getEng3Rpm() { return static_cast<float>(((Rpm3 - 1000.0f) / 1000.0f)*MAX_RPM); }
+float StateSpace::getEng3Rpm() { return static_cast<float>(((rpm3 - 1000.0f) / 1000.0f)*MAX_RPM); }
 
-float StateSpace::getRoll() const { return Roll; }
+float StateSpace::getRoll() const { return roll; }
 
-float StateSpace::getPitch() const { return Pitch; }
+float StateSpace::getPitch() const { return pitch; }
 
-float StateSpace::getYaw() const { return Yaw; }
+float StateSpace::getYaw() const { return yaw; }
 
 float StateSpace::getX() const { return static_cast<float>(vLocation(eX)); }
 
@@ -121,58 +136,77 @@ float StateSpace::getY() const { return static_cast<float>(vLocation(eY)); }
 
 float StateSpace::getZ() const { return static_cast<float>(vLocation(eZ)); }
 
-float StateSpace::getAileron() { return AileronCmd; }
+float StateSpace::getAileron() { return aileronCmd; }
 
-float StateSpace::getElevator() { return ElevatorCmd; }
+float StateSpace::getElevator() { return elevatorCmd; }
 
-float StateSpace::getRudder() { return RudderCmd; }
+float StateSpace::getRudder() { return rudderCmd; }
 
-float StateSpace::getThrottle() { return ThrottleCmd; }
+float StateSpace::getThrottle() { return throttleCmd; }
 
 void StateSpace::FilterAcceleration() {
-	//High-pass
+	//Current time
+	timestamp = high_resolution_clock::now();
+	// Find the sample period (between updates)
+	// Convert from nanoseconds to seconds
+	deltatime = duration_cast<nanoseconds>(timestamp - timestampOld).count() / 1000000000.0f;
+	//Out input axes accelerations 
+	accOut << t << ";" << axd << ";" << ayd << ";" << azd << ";" << endl;
+	//New previous time value
+	timestampOld = timestamp;
+	//Update current time
+	t += deltatime;
 
+	//HPF
 	//Current time
 	timestampG = high_resolution_clock::now();
 	// Find the sample period (between updates)
 	// Convert from nanoseconds to seconds
 	deltatimeG = duration_cast<nanoseconds>(timestampG - timestampGOld).count() / 1000000000.0f;
 	//Filter factor for high-pass
-	filterFactorG = timeConstant / (timeConstant + deltatimeG);
+	filterFactorG = RC / (RC + deltatimeG);
 	//High pass to get linear acceleration
 	linearAcceleration(eX) = filterFactorG * linearAcceleration(eX) + filterFactorG * (axd - axdPrev);
 	linearAcceleration(eY) = filterFactorG * linearAcceleration(eY) + filterFactorG * (ayd - aydPrev);
 	linearAcceleration(eZ) = filterFactorG * linearAcceleration(eZ) + filterFactorG * (azd - azdPrev);
+	//Out linear axes accelerations 
+	linearAccOut << tG << ";" << linearAcceleration(eX) << ";" << linearAcceleration(eY) << ";" << linearAcceleration(eZ) << ";" << endl;
 	//New previous acceleration values
 	axdPrev = axd;
 	aydPrev = ayd;
 	azdPrev = azd;
 	//New previous time value
 	timestampGOld = timestampG;
+	//Update current time
+	tG += deltatimeG;
 
-	//Low-pass
+	//LPF
 	//Current time
 	timestampA = high_resolution_clock::now();
 	// Find the sample period (between updates).
 	// Convert from nanoseconds to seconds
 	deltatimeA = duration_cast<nanoseconds>(timestampA - timestampAOld).count() / 1000000000.0f;
 	//Filter factor for low-pass
-	filterFactorA = deltatimeA / (timeConstant + deltatimeA);
+	filterFactorA = deltatimeA / (RC + deltatimeA);
 	//Low pass to smooth result
 	smoothAcceleration(eX) = filterFactorA * linearAcceleration(eX) + (1.0f - filterFactorA) * smoothAcceleration(eX);
 	smoothAcceleration(eY) = filterFactorA * linearAcceleration(eY) + (1.0f - filterFactorA) * smoothAcceleration(eY);
 	smoothAcceleration(eZ) = filterFactorA * linearAcceleration(eZ) + (1.0f - filterFactorA) * smoothAcceleration(eZ);
+	//Out smooth axes accelerations 
+	smoothAccOut << tA << ";" << smoothAcceleration(eX) << ";" << smoothAcceleration(eY) << ";" << smoothAcceleration(eZ) << ";" << endl;
 	//New previous time value;
 	timestampAOld = timestampA;
+	//Update current time
+	tA += deltatimeA;
 }
 
 void StateSpace::ComputeAngles() {
 	MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);
-	QuaternionToEuler(&Roll, &Pitch, &Yaw);
-	Roll *= degtorad;
-	Pitch *= degtorad;
-	Yaw *= degtorad;
-	AttitudeLocal = Quaternion(Roll, Pitch, Yaw);
+	QuaternionToEuler(&roll, &pitch, &yaw);
+	roll *= degtorad;
+	pitch *= degtorad;
+	yaw *= degtorad;
+	AttitudeLocal = Quaternion(roll, pitch, yaw);
 }
 
 void StateSpace::ComputePosition() {

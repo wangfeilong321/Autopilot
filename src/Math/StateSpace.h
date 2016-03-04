@@ -13,14 +13,15 @@
 #include <mutex>
 #include <deque>
 #include <chrono>
+#include <fstream>
 
 class StateSpace {
 public:
 	StateSpace();
 
-	void TrimAircraft();
+	void trimAircraft();
 
-	void InitializeDerivatives();
+	void initializeDerivatives();
 
 	bool Run();
 
@@ -71,8 +72,10 @@ public:
 	float getThrottle();
 	
 private:
+	std::ofstream accOut;
+	std::ofstream linearAccOut;
+	std::ofstream smoothAccOut;
 
-	int timer_sec = 15;
 	bool canComputePos = false;
 
 	Location vLocation;
@@ -87,9 +90,9 @@ private:
 	float gxd, gyd, gzd;
 	float mxd, myd, mzd;
 
-	float Roll, Pitch, Yaw;
-	float AileronCmd, ElevatorCmd, RudderCmd, ThrottleCmd;
-	int Rpm0, Rpm1, Rpm2, Rpm3;
+	float roll, pitch, yaw;
+	float aileronCmd, elevatorCmd, rudderCmd, throttleCmd;
+	int rpm0, rpm1, rpm2, rpm3;
 
 	Matrix33 Tec2b;  // ECEF to body frame rotational matrix
 	Matrix33 Tb2ec;  // body to ECEF frame rotational matrix 
@@ -115,16 +118,19 @@ private:
 	std::deque <ColumnVector3> dqUVWidot;
 	std::deque <ColumnVector3> dqInertialVelocity;
 
-	// Constants for the low-pass filters
-	const float timeConstant = 0.18f;
+	// Constant for the filters
+	const float RC = 0.1f;
 
 	float filterFactorG;
 	float filterFactorA;
 	
-	float deltatimeG;
-	float deltatimeA;
+	float deltatime, deltatimeG, deltatimeA;
+	float t, tG, tA;
 
 	// Timestamps for the low-pass filters
+	std::chrono::high_resolution_clock::time_point timestamp;
+	std::chrono::high_resolution_clock::time_point timestampOld;
+
 	std::chrono::high_resolution_clock::time_point timestampG;
 	std::chrono::high_resolution_clock::time_point timestampGOld;
 

@@ -7,10 +7,10 @@ int main(Platform::Array<Platform::String^>^ args) {
 		Controller C;
 		C.Connect();
 		if (!C.Connected())
-			throw("Unexpected exception");
+			throw("Unexpected exception during connection procedures!");
 		while (C.Run());
 	}
-	catch (std::exception& e) {
+	catch (exception& e) {
 		string what = e.what();
 	}
 	return EXIT_SUCCESS;
