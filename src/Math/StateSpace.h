@@ -119,7 +119,7 @@ private:
 	std::deque <ColumnVector3> dqInertialVelocity;
 
 	// Constant for the filters
-	const float RC = 0.1f;
+	const float RC = 1e-10f;
 
 	float filterFactorG;
 	float filterFactorA;

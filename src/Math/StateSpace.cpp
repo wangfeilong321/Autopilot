@@ -28,15 +28,32 @@ StateSpace::StateSpace() :
 	vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 20)*meterstofeet);
 	vLocation.SetEarthPositionAngle(0.0);
 
-	accOut.open("C:\\Deploy\\accOut.csv", ofstream::trunc);
+	accOut.open("C:\\Deploy\\accOut.dat", ofstream::trunc);
 	if (!accOut.is_open())
 		return;
-	linearAccOut.open("C:\\Deploy\\linearAccOut.csv", ofstream::trunc);
+	linearAccOut.open("C:\\Deploy\\linearAccOut.dat", ofstream::trunc);
 	if (!linearAccOut.is_open())
 		return;
-	smoothAccOut.open("C:\\Deploy\\smoothAccOut.csv", ofstream::trunc);
+	smoothAccOut.open("C:\\Deploy\\smoothAccOut.dat", ofstream::trunc);
 	if (!smoothAccOut.is_open())
 		return;
+
+	//Initial times
+
+	timestamp = high_resolution_clock::now();
+	timestampOld = high_resolution_clock::now();
+
+	timestampG = high_resolution_clock::now();
+	timestampGOld = high_resolution_clock::now();
+
+	timestampA = high_resolution_clock::now();
+	timestampAOld = high_resolution_clock::now();
+
+	t = tA = tG = 0.0f;
+
+	axdPrev = axd;
+	aydPrev = ayd;
+	azdPrev = azd;
 }
 
 void StateSpace::trimAircraft() {
@@ -67,23 +84,6 @@ void StateSpace::initializeDerivatives() {
 	vVel = Tb2l * vUVW; // Velocity of the body frame wrt ECEF frame expressed in Local frame 
 	vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
 	dqInertialVelocity.resize(5, vInertialVelocity);
-
-	//Initial times
-
-	timestamp = high_resolution_clock::now();
-	timestampOld = high_resolution_clock::now();
-
-	timestampG = high_resolution_clock::now();
-	timestampGOld = high_resolution_clock::now();
-
-	timestampA = high_resolution_clock::now();
-	timestampAOld = high_resolution_clock::now();
-
-	t = tA = tG = 0.0f;
-
-	axdPrev = axd;
-	aydPrev = ayd;
-	azdPrev = azd;
 }
 
 bool StateSpace::Run() {
@@ -149,9 +149,9 @@ void StateSpace::FilterAcceleration() {
 	timestamp = high_resolution_clock::now();
 	// Find the sample period (between updates)
 	// Convert from nanoseconds to seconds
-	deltatime = duration_cast<nanoseconds>(timestamp - timestampOld).count() / 1000000000.0f;
+	deltatime = duration_cast<milliseconds>(timestamp - timestampOld).count() * msectosec;
 	//Out input axes accelerations 
-	accOut << t << ";" << axd << ";" << ayd << ";" << azd << ";" << endl;
+	accOut << t << "  " << axd << "  " << ayd << "  " << azd << "  " << endl;
 	//New previous time value
 	timestampOld = timestamp;
 	//Update current time
@@ -162,7 +162,7 @@ void StateSpace::FilterAcceleration() {
 	timestampG = high_resolution_clock::now();
 	// Find the sample period (between updates)
 	// Convert from nanoseconds to seconds
-	deltatimeG = duration_cast<nanoseconds>(timestampG - timestampGOld).count() / 1000000000.0f;
+	deltatimeG = duration_cast<milliseconds>(timestampG - timestampGOld).count() * msectosec;
 	//Filter factor for high-pass
 	filterFactorG = RC / (RC + deltatimeG);
 	//High pass to get linear acceleration
@@ -170,7 +170,7 @@ void StateSpace::FilterAcceleration() {
 	linearAcceleration(eY) = filterFactorG * linearAcceleration(eY) + filterFactorG * (ayd - aydPrev);
 	linearAcceleration(eZ) = filterFactorG * linearAcceleration(eZ) + filterFactorG * (azd - azdPrev);
 	//Out linear axes accelerations 
-	linearAccOut << tG << ";" << linearAcceleration(eX) << ";" << linearAcceleration(eY) << ";" << linearAcceleration(eZ) << ";" << endl;
+	linearAccOut << tG << "  " << linearAcceleration(eX) << "  " << linearAcceleration(eY) << "  " << linearAcceleration(eZ) << "  " << endl;
 	//New previous acceleration values
 	axdPrev = axd;
 	aydPrev = ayd;
@@ -185,7 +185,7 @@ void StateSpace::FilterAcceleration() {
 	timestampA = high_resolution_clock::now();
 	// Find the sample period (between updates).
 	// Convert from nanoseconds to seconds
-	deltatimeA = duration_cast<nanoseconds>(timestampA - timestampAOld).count() / 1000000000.0f;
+	deltatimeA = duration_cast<milliseconds>(timestampA - timestampAOld).count() * msectosec;
 	//Filter factor for low-pass
 	filterFactorA = deltatimeA / (RC + deltatimeA);
 	//Low pass to smooth result
@@ -193,7 +193,7 @@ void StateSpace::FilterAcceleration() {
 	smoothAcceleration(eY) = filterFactorA * linearAcceleration(eY) + (1.0f - filterFactorA) * smoothAcceleration(eY);
 	smoothAcceleration(eZ) = filterFactorA * linearAcceleration(eZ) + (1.0f - filterFactorA) * smoothAcceleration(eZ);
 	//Out smooth axes accelerations 
-	smoothAccOut << tA << ";" << smoothAcceleration(eX) << ";" << smoothAcceleration(eY) << ";" << smoothAcceleration(eZ) << ";" << endl;
+	smoothAccOut << tA << "  " << smoothAcceleration(eX) << "  " << smoothAcceleration(eY) << "  " << smoothAcceleration(eZ) << "  " << endl;
 	//New previous time value;
 	timestampAOld = timestampA;
 	//Update current time
