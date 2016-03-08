@@ -60,9 +60,8 @@ void StateSpace::trimAircraft() {
 }
 
 void StateSpace::initializeDerivatives() {
-	ColumnVector3 vApAccel = Gftsec2*linearAcceleration;
-	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
-  vUVWidot = Tb2i*vBodyAccel;
+  //Calculate just linear acceleration from shock or move (no gravity, no normal, no friction, no centripetal, no Coriolis forces) 
+  vUVWidot = Tb2i*(Tap2b*(G_FT_SEC_2*linearAcceleration));
 
 	//Current time
 	timestampB = high_resolution_clock::now();
@@ -162,7 +161,7 @@ void StateSpace::FilterAcceleration() {
 	linearAcceleration(eX) = filterFactorG * linearAcceleration(eX) + filterFactorG * (axd - axdPrev);
 	linearAcceleration(eY) = filterFactorG * linearAcceleration(eY) + filterFactorG * (ayd - aydPrev);
 	linearAcceleration(eZ) = filterFactorG * linearAcceleration(eZ) + filterFactorG * (azd - azdPrev);
-	//Out linear axes accelerations 
+  //Out linear axes accelerations 
 	linearAccOut << tG << "  " << linearAcceleration(eX) << "  " << linearAcceleration(eY) << "  " << linearAcceleration(eZ) << "  " << endl;
 	//New previous acceleration values
 	axdPrev = axd;
@@ -183,9 +182,8 @@ void StateSpace::ComputeAngles() {
 }
 
 void StateSpace::ComputePosition() {
-	ColumnVector3 vApAccel = Gftsec2*linearAcceleration;
-	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
-  vUVWidot = Tb2i*vBodyAccel;
+  //Calculate just linear acceleration from shock or move (no gravity, no normal, no friction, no centripetal, no Coriolis forces) 
+  vUVWidot = Tb2i*(Tap2b*(G_FT_SEC_2*linearAcceleration));
 
   //Current time
 	timestampB = high_resolution_clock::now();

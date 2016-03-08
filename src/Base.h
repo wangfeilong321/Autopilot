@@ -28,4 +28,4 @@ enum { ePhi = 1, eTht, ePsi };
 
 enum eIntegrateType { eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3, eAdamsBashforth4, eBuss1, eBuss2, eLocalLinearization, eAdamsBashforth5 };
 
-const float Gftsec2 = 32.1850393f;
+const float G_FT_SEC_2 = 32.1850393f;
