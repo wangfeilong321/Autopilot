@@ -181,13 +181,9 @@ void MadgwickAHRSupdateIMU(float gx, float gy, float gz, float ax, float ay, flo
 
 void QuaternionToEuler(float* roll, float* pitch, float* yaw) {
 	*yaw = atan2f(2.0f * (q1 * q2 + q0 * q3), q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3);
-	*pitch = -asinf(2.0f * (q1 * q3 - q0 * q2));
+	*pitch = asinf(2.0f * (q1 * q3 - q0 * q2));
 	*roll = atan2f(2.0f * (q0 * q1 + q2 * q3), q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3);
-
-	*pitch *= -180.0f / M_PI;
-	*yaw *= 180.0f / M_PI;
-	*yaw += 10.266f; // Declination at Moscow, Russia
-	*roll *= 180.0f / M_PI;
+  *yaw += 10.266f*degtorad; // Declination at Moscow, Russia
 }
 
 //---------------------------------------------------------------------------------------------------

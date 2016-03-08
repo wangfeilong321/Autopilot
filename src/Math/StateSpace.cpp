@@ -28,28 +28,21 @@ StateSpace::StateSpace() :
 	vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 20)*meterstofeet);
 	vLocation.SetEarthPositionAngle(0.0);
 
-	accOut.open("C:\\Deploy\\accOut.dat", ofstream::trunc);
-	if (!accOut.is_open())
-		return;
 	linearAccOut.open("C:\\Deploy\\linearAccOut.dat", ofstream::trunc);
 	if (!linearAccOut.is_open())
 		return;
-	smoothAccOut.open("C:\\Deploy\\smoothAccOut.dat", ofstream::trunc);
-	if (!smoothAccOut.is_open())
-		return;
+  vUVWiAccOut.open("C:\\Deploy\\vUVWiAccOut.dat", std::ofstream::trunc);
+  if (!vUVWiAccOut.is_open())
+    return;
 
 	//Initial times
-
-	timestamp = high_resolution_clock::now();
-	timestampOld = high_resolution_clock::now();
-
-	timestampG = high_resolution_clock::now();
+  timestampG = high_resolution_clock::now();
 	timestampGOld = high_resolution_clock::now();
 
-	timestampA = high_resolution_clock::now();
-	timestampAOld = high_resolution_clock::now();
+	timestampB = high_resolution_clock::now();
+	timestampBOld = high_resolution_clock::now();
 
-	t = tA = tG = 0.0f;
+	tG = tB = 0.0f;
 
 	axdPrev = axd;
 	aydPrev = ayd;
@@ -67,23 +60,35 @@ void StateSpace::trimAircraft() {
 }
 
 void StateSpace::initializeDerivatives() {
-	ColumnVector3 vApAccel = Gftsec2*smoothAcceleration;
+	ColumnVector3 vApAccel = Gftsec2*linearAcceleration;
 	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
-	//ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
-	vUVWidot = Tb2i*(vBodyAccel);// +vGravAccel;
+  vUVWidot = Tb2i*vBodyAccel;
 
+	//Current time
+	timestampB = high_resolution_clock::now();
+	// Find the sample period (between updates)
+	// Convert from nanoseconds to seconds
+	deltatimeB = duration_cast<milliseconds>(timestampB - timestampBOld).count() * msectosec;
+	//Out input axes accelerations 
+  vUVWiAccOut << tB << "  " << vUVWidot(eX) << "  " << vUVWidot(eY) << "  " << vUVWidot(eZ) << "  " << endl;
+  //New previous time value
+	timestampBOld = timestampB;
+	//Update current time
+	tB += deltatimeB;
+	
 	dqUVWidot.resize(5, vUVWidot);
 	
 	Ti2ec = vLocation.GetTi2ec();   // ECI to ECEF transform
 	Tec2i = Ti2ec.Transposed();    // ECEF to ECI frame transform
 	vInertialPosition = Tec2i * vLocation; // Inertial position 
-	UpdateLocationMatrices();
-	AttitudeECI = Ti2l.GetQuaternion() * AttitudeLocal; //ECI orientation of the aircraft
-	UpdateBodyMatrices();
-	vUVW = ColumnVector3(0.0, 0.0, 0.0);
+  UpdateLocationMatrices(); // Update the other "Location-based" transformation matrices from the updated vLocation vector.
+  AttitudeECI = Ti2l.GetQuaternion() * AttitudeLocal; //ECI orientation of the aircraft
+	UpdateBodyMatrices(); // Update the "Orientation-based" transformation matrices from the updated orientation quaternion and vLocation vector.
+  vUVW = ColumnVector3(0.0, 0.0, 0.0);
 	vVel = Tb2l * vUVW; // Velocity of the body frame wrt ECEF frame expressed in Local frame 
 	vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
-	dqInertialVelocity.resize(5, vInertialVelocity);
+	
+  dqInertialVelocity.resize(5, vInertialVelocity);
 }
 
 bool StateSpace::Run() {
@@ -145,18 +150,6 @@ float StateSpace::getRudder() { return rudderCmd; }
 float StateSpace::getThrottle() { return throttleCmd; }
 
 void StateSpace::FilterAcceleration() {
-	//Current time
-	timestamp = high_resolution_clock::now();
-	// Find the sample period (between updates)
-	// Convert from nanoseconds to seconds
-	deltatime = duration_cast<milliseconds>(timestamp - timestampOld).count() * msectosec;
-	//Out input axes accelerations 
-	accOut << t << "  " << axd << "  " << ayd << "  " << azd << "  " << endl;
-	//New previous time value
-	timestampOld = timestamp;
-	//Update current time
-	t += deltatime;
-
 	//HPF
 	//Current time
 	timestampG = high_resolution_clock::now();
@@ -180,41 +173,32 @@ void StateSpace::FilterAcceleration() {
 	//Update current time
 	tG += deltatimeG;
 
-	//LPF
-	//Current time
-	timestampA = high_resolution_clock::now();
-	// Find the sample period (between updates).
-	// Convert from nanoseconds to seconds
-	deltatimeA = duration_cast<milliseconds>(timestampA - timestampAOld).count() * msectosec;
-	//Filter factor for low-pass
-	filterFactorA = deltatimeA / (RC + deltatimeA);
-	//Low pass to smooth result
-	smoothAcceleration(eX) = filterFactorA * linearAcceleration(eX) + (1.0f - filterFactorA) * smoothAcceleration(eX);
-	smoothAcceleration(eY) = filterFactorA * linearAcceleration(eY) + (1.0f - filterFactorA) * smoothAcceleration(eY);
-	smoothAcceleration(eZ) = filterFactorA * linearAcceleration(eZ) + (1.0f - filterFactorA) * smoothAcceleration(eZ);
-	//Out smooth axes accelerations 
-	smoothAccOut << tA << "  " << smoothAcceleration(eX) << "  " << smoothAcceleration(eY) << "  " << smoothAcceleration(eZ) << "  " << endl;
-	//New previous time value;
-	timestampAOld = timestampA;
-	//Update current time
-	tA += deltatimeA;
+  //TODO MAF
 }
 
 void StateSpace::ComputeAngles() {
-	MadgwickAHRSupdate(gxd*M_PI / 180.0f, gyd*M_PI / 180.0f, gzd*M_PI / 180.0f, axd, ayd, azd, mxd, myd, mzd);
+	MadgwickAHRSupdate(gxd*degtorad, gyd*degtorad, gzd*degtorad, axd, ayd, azd, mxd, myd, mzd);
 	QuaternionToEuler(&roll, &pitch, &yaw);
-	roll *= degtorad;
-	pitch *= degtorad;
-	yaw *= degtorad;
 	AttitudeLocal = Quaternion(roll, pitch, yaw);
 }
 
 void StateSpace::ComputePosition() {
-	ColumnVector3 vApAccel = Gftsec2*smoothAcceleration;
+	ColumnVector3 vApAccel = Gftsec2*linearAcceleration;
 	ColumnVector3 vBodyAccel = Tap2b*vApAccel;
-	//ColumnVector3 vGravAccel = Tec2i*vInertial.GetGravityJ2(vLocation);
-	vUVWidot = Tb2i*(vBodyAccel);// +vGravAccel;
+  vUVWidot = Tb2i*vBodyAccel;
 
+  //Current time
+	timestampB = high_resolution_clock::now();
+	// Find the sample period (between updates)
+	// Convert from nanoseconds to seconds
+	deltatimeB = duration_cast<milliseconds>(timestampB - timestampBOld).count() * msectosec;
+	//Out input axes accelerations 
+  vUVWiAccOut << tB << "  " << vUVWidot(eX) << "  " << vUVWidot(eY) << "  " << vUVWidot(eZ) << "  " << endl;
+  //New previous time value
+	timestampBOld = timestampB;
+	//Update current time
+	tB += deltatimeB;
+	
 	Integrate(vInertialVelocity, vUVWidot, dqUVWidot, dt, integrator_translational_rate);
 	Integrate(vInertialPosition, vInertialVelocity, dqInertialVelocity, dt, integrator_translational_position);
 

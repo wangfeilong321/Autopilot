@@ -72,9 +72,8 @@ public:
 	float getThrottle();
 	
 private:
-	std::ofstream accOut;
 	std::ofstream linearAccOut;
-	std::ofstream smoothAccOut;
+  std::ofstream vUVWiAccOut;
 
 	bool canComputePos = false;
 
@@ -106,9 +105,9 @@ private:
 	Matrix33 Tb2i;   // body to ECI frame rotation matrix
 	Matrix33 Ti2l;   // ECI to body frame rotation matrix
 	Matrix33 Tl2i;   // local to inertial frame rotation matrix
-	const Matrix33 Tap2b = Matrix33(1.0,  0.0,  0.0,
+  const Matrix33 Tap2b = Matrix33(1.0,  0.0,  0.0,
 	                                0.0, -1.0,  0.0,
-	                                0.0,  0.0, -1.0 );
+	                                0.0,  0.0, -1.0 ); //GY-80 to body frame rotation matrix
 	Quaternion AttitudeLocal;
 	Quaternion AttitudeECI;
 
@@ -119,31 +118,26 @@ private:
 	std::deque <ColumnVector3> dqInertialVelocity;
 
 	// Constant for the filters
-	const float RC = 1e-10f;
+	const float RC = 0.18f;
 
 	float filterFactorG;
-	float filterFactorA;
 	
-	float deltatime, deltatimeG, deltatimeA;
-	float t, tG, tA;
+	float deltatimeG, deltatimeB;
+	float tG, tB;
 
-	// Timestamps for the low-pass filters
-	std::chrono::high_resolution_clock::time_point timestamp;
-	std::chrono::high_resolution_clock::time_point timestampOld;
-
-	std::chrono::high_resolution_clock::time_point timestampG;
+  std::chrono::high_resolution_clock::time_point timestampG;
 	std::chrono::high_resolution_clock::time_point timestampGOld;
+  		
+	std::chrono::high_resolution_clock::time_point timestampB;
+	std::chrono::high_resolution_clock::time_point timestampBOld;
 
-	std::chrono::high_resolution_clock::time_point timestampA;
-	std::chrono::high_resolution_clock::time_point timestampAOld;
-		
 	// linear accelerations and smooth accelerations components for the
 	// Wikipedia hight pass and low-pass filters
 	ColumnVector3 linearAcceleration; //high-pass
 	float axdPrev; //high-pass
 	float aydPrev; //high-pass
 	float azdPrev; //high-pass
-	ColumnVector3 smoothAcceleration; //low-pass
+  ColumnVector3 averageAcceleration; //moving-average
 
 	void FilterAcceleration();
 
