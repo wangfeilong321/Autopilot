@@ -1,107 +1,61 @@
 #include <StateSpace.h>
 
-using namespace std::chrono;
-using namespace Windows::System;
-using namespace Platform;
-using namespace Windows::Foundation;
-using namespace Windows::System::Threading;
-
 using namespace std;
 
 StateSpace::StateSpace() :
-	roll(0.0),
-	pitch(0.0),
-	yaw(0.0),
-	aileronCmd(0.0),
-	elevatorCmd(0.0),
-	rudderCmd(0.0),
-	throttleCmd(0.0),
-	axd(0.0), ayd(0.0), azd(0.0),
-	gxd(0.0), gyd(0.0), gzd(0.0),
-	mxd(0.0), myd(0.0), mzd(0.0),
-	rpm0(MIN_THROTTLE), rpm1(MIN_THROTTLE), rpm2(MIN_THROTTLE), rpm3(MIN_THROTTLE) {
+  roll(0.0),
+  pitch(0.0),
+  yaw(0.0),
+  aileronCmd(0.0),
+  elevatorCmd(0.0),
+  rudderCmd(0.0),
+  throttleCmd(0.0),
+  axd(0.0), ayd(0.0), azd(0.0),
+  gxd(0.0), gyd(0.0), gzd(0.0),
+  mxd(0.0), myd(0.0), mzd(0.0),
+  rpm0(MIN_THROTTLE), rpm1(MIN_THROTTLE), rpm2(MIN_THROTTLE), rpm3(MIN_THROTTLE) {
 
-	integrator_translational_rate = eAdamsBashforth2;
-	integrator_translational_position = eAdamsBashforth3;
-
-	vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
-	vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 20)*meterstofeet);
-	vLocation.SetEarthPositionAngle(0.0);
-
-	linearAccOut.open("C:\\Deploy\\linearAccOut.dat", ofstream::trunc);
-	if (!linearAccOut.is_open())
-		return;
-  vUVWiAccOut.open("C:\\Deploy\\vUVWiAccOut.dat", std::ofstream::trunc);
-  if (!vUVWiAccOut.is_open())
-    return;
-
-	//Initial times
-  timestampG = high_resolution_clock::now();
-	timestampGOld = high_resolution_clock::now();
-
-	timestampB = high_resolution_clock::now();
-	timestampBOld = high_resolution_clock::now();
-
-	tG = tB = 0.0f;
-
-	axdPrev = axd;
-	aydPrev = ayd;
-	azdPrev = azd;
-}
-
-void StateSpace::trimAircraft() {
-	TimeSpan delay;
-	delay.Duration = TRIM_TIMER * 1 * 10000000; // 10,000,000 ticks per second. 15 seconds.
-	ThreadPoolTimer ^ delayTimer = ThreadPoolTimer::CreateTimer(
-		ref new TimerElapsedHandler([this](ThreadPoolTimer^ source) {
-			initializeDerivatives();
-			canComputePos = true;
-		}), delay);
+  //Set integrators
+  integrator_translational_rate = eAdamsBashforth2;
+  integrator_translational_position = eAdamsBashforth3;
+  
+  //Set initial geodetic position for the aircraft
+  vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
+  vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 20)*meterstofeet);
+  vLocation.SetEarthPositionAngle(0.0);
+  //Set initial conditions for calculation
+  initializeDerivatives();
 }
 
 void StateSpace::initializeDerivatives() {
   //Calculate just linear acceleration from shock or move (no gravity, no normal, no friction, no centripetal, no Coriolis forces) 
-  vUVWidot = Tb2i*(Tap2b*(G_FT_SEC_2*linearAcceleration));
-
-	//Current time
-	timestampB = high_resolution_clock::now();
-	// Find the sample period (between updates)
-	// Convert from nanoseconds to seconds
-	deltatimeB = duration_cast<milliseconds>(timestampB - timestampBOld).count() * msectosec;
-	//Out input axes accelerations 
-  vUVWiAccOut << tB << "  " << vUVWidot(eX) << "  " << vUVWidot(eY) << "  " << vUVWidot(eZ) << "  " << endl;
-  //New previous time value
-	timestampBOld = timestampB;
-	//Update current time
-	tB += deltatimeB;
+  vUVWidot = ColumnVector3(-0.0032211f, 0.00933534f, -0.0793486f);
+  //Setup initial samples
+  dqUVWidot.resize(5, vUVWidot);
 	
-	dqUVWidot.resize(5, vUVWidot);
-	
-	Ti2ec = vLocation.GetTi2ec();   // ECI to ECEF transform
-	Tec2i = Ti2ec.Transposed();    // ECEF to ECI frame transform
-	vInertialPosition = Tec2i * vLocation; // Inertial position 
+  Ti2ec = vLocation.GetTi2ec();   // ECI to ECEF transform
+  Tec2i = Ti2ec.Transposed();    // ECEF to ECI frame transform
+  vInertialPosition = Tec2i * vLocation; // Inertial position 
   UpdateLocationMatrices(); // Update the other "Location-based" transformation matrices from the updated vLocation vector.
-  AttitudeECI = Ti2l.GetQuaternion() * AttitudeLocal; //ECI orientation of the aircraft
-	UpdateBodyMatrices(); // Update the "Orientation-based" transformation matrices from the updated orientation quaternion and vLocation vector.
+  attitudeECI = Ti2l.GetQuaternion() * attitudeLocal; //ECI orientation of the aircraft
+  UpdateBodyMatrices(); // Update the "Orientation-based" transformation matrices from the updated orientation quaternion and vLocation vector.
   vUVW = ColumnVector3(0.0, 0.0, 0.0);
-	vVel = Tb2l * vUVW; // Velocity of the body frame wrt ECEF frame expressed in Local frame 
-	vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
-	
+  vVel = Tb2l * vUVW; // Velocity of the body frame wrt ECEF frame expressed in Local frame 
+  vInertialVelocity = Tb2i * vUVW + (vInertial.GetOmegaPlanet() * vInertialPosition); // Inertial velocity
+  //Setup initial samples
   dqInertialVelocity.resize(5, vInertialVelocity);
 }
 
 bool StateSpace::Run() {
-	ComputeAngles();
-	FilterAcceleration();
-	if(canComputePos)
-		ComputePosition();
-	return true;
+  ComputeAngles();
+  ComputePosition();
+  return true;
 }
 
 void StateSpace::setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz) {
-	axd = ax; ayd = ay; azd = az;
-	gxd = gx; gyd = gy; gzd = gz;
-	mxd = mx; myd = my; mzd = mz;
+  axd = ax; ayd = ay; azd = az;
+  gxd = gx; gyd = gy; gzd = gz;
+  mxd = mx; myd = my; mzd = mz;
 }
 
 void StateSpace::setAileron(float aileron) { aileronCmd = aileron; }
@@ -134,11 +88,11 @@ float StateSpace::getPitch() const { return pitch; }
 
 float StateSpace::getYaw() const { return yaw; }
 
-float StateSpace::getX() const { return static_cast<float>(vLocation(eX)); }
+float StateSpace::getX() const { return static_cast<float>(vLocation(eX)) * feettometers; }
 
-float StateSpace::getY() const { return static_cast<float>(vLocation(eY)); }
+float StateSpace::getY() const { return static_cast<float>(vLocation(eY)) * feettometers; }
 
-float StateSpace::getZ() const { return static_cast<float>(vLocation(eZ)); }
+float StateSpace::getZ() const { return static_cast<float>(vLocation(eZ)) * feettometers; }
 
 float StateSpace::getAileron() { return aileronCmd; }
 
@@ -148,87 +102,49 @@ float StateSpace::getRudder() { return rudderCmd; }
 
 float StateSpace::getThrottle() { return throttleCmd; }
 
-void StateSpace::FilterAcceleration() {
-	//HPF
-	//Current time
-	timestampG = high_resolution_clock::now();
-	// Find the sample period (between updates)
-	// Convert from nanoseconds to seconds
-	deltatimeG = duration_cast<milliseconds>(timestampG - timestampGOld).count() * msectosec;
-	//Filter factor for high-pass
-	filterFactorG = RC / (RC + deltatimeG);
-	//High pass to get linear acceleration
-	linearAcceleration(eX) = filterFactorG * linearAcceleration(eX) + filterFactorG * (axd - axdPrev);
-	linearAcceleration(eY) = filterFactorG * linearAcceleration(eY) + filterFactorG * (ayd - aydPrev);
-	linearAcceleration(eZ) = filterFactorG * linearAcceleration(eZ) + filterFactorG * (azd - azdPrev);
-  //Out linear axes accelerations 
-	linearAccOut << tG << "  " << linearAcceleration(eX) << "  " << linearAcceleration(eY) << "  " << linearAcceleration(eZ) << "  " << endl;
-	//New previous acceleration values
-	axdPrev = axd;
-	aydPrev = ayd;
-	azdPrev = azd;
-	//New previous time value
-	timestampGOld = timestampG;
-	//Update current time
-	tG += deltatimeG;
-
-  //TODO MAF
-}
-
 void StateSpace::ComputeAngles() {
-	MadgwickAHRSupdate(gxd*degtorad, gyd*degtorad, gzd*degtorad, axd, ayd, azd, mxd, myd, mzd);
-	QuaternionToEuler(&roll, &pitch, &yaw);
-	AttitudeLocal = Quaternion(roll, pitch, yaw);
+  MadgwickAHRSupdate(gxd*degtorad, gyd*degtorad, gzd*degtorad, axd, ayd, azd, mxd, myd, mzd);
+  QuaternionToEuler(&roll, &pitch, &yaw);
+  attitudeLocal = Quaternion(roll, pitch, yaw);
 }
 
 void StateSpace::ComputePosition() {
   //Calculate just linear acceleration from shock or move (no gravity, no normal, no friction, no centripetal, no Coriolis forces) 
-  vUVWidot = Tb2i*(Tap2b*(G_FT_SEC_2*linearAcceleration));
-
-  //Current time
-	timestampB = high_resolution_clock::now();
-	// Find the sample period (between updates)
-	// Convert from nanoseconds to seconds
-	deltatimeB = duration_cast<milliseconds>(timestampB - timestampBOld).count() * msectosec;
-	//Out input axes accelerations 
-  vUVWiAccOut << tB << "  " << vUVWidot(eX) << "  " << vUVWidot(eY) << "  " << vUVWidot(eZ) << "  " << endl;
-  //New previous time value
-	timestampBOld = timestampB;
-	//Update current time
-	tB += deltatimeB;
+  vUVWidot = ColumnVector3(-0.0032211f,  0.00933534f, - 0.0793486f);
 	
-	Integrate(vInertialVelocity, vUVWidot, dqUVWidot, dt, integrator_translational_rate);
-	Integrate(vInertialPosition, vInertialVelocity, dqInertialVelocity, dt, integrator_translational_position);
+  //Double integration to yeild ECI position
+  Integrate(vInertialVelocity, vUVWidot, dqUVWidot, dt, integrator_translational_rate);
+  Integrate(vInertialPosition, vInertialVelocity, dqInertialVelocity, dt, integrator_translational_position);
 
-	// CAUTION : the order of the operations below is very important to get transformation
-	// matrices that are consistent with the new state of the vehicle
+  // CAUTION : the order of the operations below is very important to get transformation
+  // matrices that are consistent with the new state of the vehicle
 
-	// 1. Update the Earth position angle (EPA)
-	vLocation.IncrementEarthPositionAngle(vInertial.omega()*dt);
+  // 1. Update the Earth position angle (EPA)
+  vLocation.IncrementEarthPositionAngle(vInertial.omega()*dt);
 
-	// 2. Update the Ti2ec and Tec2i transforms from the updated EPA
-	Ti2ec = vLocation.GetTi2ec(); // ECI to ECEF transform
-	Tec2i = Ti2ec.Transposed();   // ECEF to ECI frame transform
+  // 2. Update the Ti2ec and Tec2i transforms from the updated EPA
+  Ti2ec = vLocation.GetTi2ec(); // ECI to ECEF transform
+  Tec2i = Ti2ec.Transposed();   // ECEF to ECI frame transform
 
-	// 3. Update the location from the updated Ti2ec and inertial position
-	vLocation = Ti2ec*vInertialPosition;
+  // 3. Update the location from the updated Ti2ec and inertial position
+  vLocation = Ti2ec*vInertialPosition;
 
-	// 4. Update the other "Location-based" transformation matrices from the updated
-	//    vLocation vector.
-	UpdateLocationMatrices();
+  // 4. Update the other "Location-based" transformation matrices from the updated
+  //    vLocation vector.
+  UpdateLocationMatrices();
 
-	// 5. ECI orientation of the aircraft
-	AttitudeECI = Ti2l.GetQuaternion() * AttitudeLocal;
+  // 5. ECI orientation of the aircraft
+  attitudeECI = Ti2l.GetQuaternion() * attitudeLocal;
 
-	// 6. Update the "Orientation-based" transformation matrices from the updated
-	//    orientation quaternion and vLocation vector.
-	UpdateBodyMatrices();
+  // 6. Update the "Orientation-based" transformation matrices from the updated
+  //    orientation quaternion and vLocation vector.
+  UpdateBodyMatrices();
 
-	// Translational position derivative (velocities are integrated in the inertial frame)
-	CalculateUVW();
+  // Translational position derivative (velocities are integrated in the inertial frame)
+  CalculateUVW();
 
-	// Compute vehicle velocity wrt ECEF frame, expressed in Local horizontal frame.
-	vVel = Tb2l * vUVW;
+  // Compute vehicle velocity wrt ECEF frame, expressed in Local horizontal frame.
+  vVel = Tb2l * vUVW;
 }
 
 void StateSpace::Integrate(ColumnVector3& Integrand, ColumnVector3& Val, std::deque<ColumnVector3>& ValDot, double deltat, eIntegrateType integration_type) {
@@ -259,21 +175,21 @@ void StateSpace::Integrate(ColumnVector3& Integrand, ColumnVector3& Val, std::de
 }
 
 void StateSpace::CalculateUVW(void) {
-	vUVW = Ti2b * (vInertialVelocity - (vInertial.GetOmegaPlanet() * vInertialPosition));
+  vUVW = Ti2b * (vInertialVelocity - (vInertial.GetOmegaPlanet() * vInertialPosition));
 }
 
 void StateSpace::UpdateLocationMatrices() {
-	Tl2ec = vLocation.GetTl2ec(); // local to ECEF transform
-	Tec2l = Tl2ec.Transposed();   // ECEF to local frame transform
-	Ti2l = vLocation.GetTi2l();   // ECI to local frame transform
-	Tl2i = Ti2l.Transposed();     // local to ECI transform
+  Tl2ec = vLocation.GetTl2ec(); // local to ECEF transform
+  Tec2l = Tl2ec.Transposed();   // ECEF to local frame transform
+  Ti2l = vLocation.GetTi2l();   // ECI to local frame transform
+  Tl2i = Ti2l.Transposed();     // local to ECI transform
 }
 
 void StateSpace::UpdateBodyMatrices() {
-	Ti2b = AttitudeECI.GetT();         // ECI to body frame transform
-	Tb2i = Ti2b.Transposed();          // body to ECI frame transform
-	Tl2b = Ti2b * Tl2i;                // local to body frame transform
-	Tb2l = Tl2b.Transposed();          // body to local frame transform
-	Tec2b = Ti2b * Tec2i;              // ECEF to body frame transform
-	Tb2ec = Tec2b.Transposed();        // body to ECEF frame tranform
+  Ti2b = attitudeECI.GetT();         // ECI to body frame transform
+  Tb2i = Ti2b.Transposed();          // body to ECI frame transform
+  Tl2b = Ti2b * Tl2i;                // local to body frame transform
+  Tb2l = Tl2b.Transposed();          // body to local frame transform
+  Tec2b = Ti2b * Tec2i;              // ECEF to body frame transform
+  Tb2ec = Tec2b.Transposed();        // body to ECEF frame tranform
 }

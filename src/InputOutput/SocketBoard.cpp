@@ -23,7 +23,6 @@ void SocketBoard::Connect() {
 	String^ remotePort = ref new String(L"3001");
 	create_task(socket->ConnectAsync(remoteHost, remotePort)).get();
 	ifConnected = true;
-	IState->trimAircraft();
 	doWrite();
 	doRead();
 }
@@ -78,12 +77,12 @@ void SocketBoard::doRead() {
 
 void SocketBoard::doWrite() {
 	writer->WriteUInt32(11 * sizeof(DOUBLE)); //data size in bytes
-	writer->WriteDouble(IState->getRoll()); //Roll
+	writer->WriteDouble(IState->getRoll());  //Roll
 	writer->WriteDouble(IState->getPitch()); //Pitch
-	writer->WriteDouble(IState->getYaw()); //Yaw
-	writer->WriteDouble(IState->getX() * feettometers);   // X ECEF
-	writer->WriteDouble(IState->getY() * feettometers);   // Y ECEF
-	writer->WriteDouble(IState->getZ() * feettometers);   // Z ECEF
+	writer->WriteDouble(IState->getYaw());   //Yaw
+	writer->WriteDouble(IState->getX());     // X ECEF
+	writer->WriteDouble(IState->getY());     // Y ECEF
+	writer->WriteDouble(IState->getZ());     // Z ECEF
 	writer->WriteDouble(0.0); //vCas
 	writer->WriteDouble(IState->getEng0Rpm());
 	writer->WriteDouble(IState->getEng1Rpm());

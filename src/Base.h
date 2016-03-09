@@ -6,7 +6,6 @@ const float radtodeg = 57.295779513082320876798154814105f;
 const float degtorad = 0.017453292519943295769236907684886f;
 const float feettometers = 0.3048f;
 const float meterstofeet = 3.28084f;
-const float msectosec = 1e-3f;
 
 const int ENGINE_PIN_1 = 5;
 const int ENGINE_PIN_2 = 6;
@@ -14,8 +13,6 @@ const int ENGINE_PIN_3 = 13;
 const int ENGINE_PIN_4 = 22;
 
 const int MAX_RPM = 15000;
-
-const int TRIM_TIMER = 20;
 
 const int MIN_THROTTLE = 1000;
 const int MAX_THROTTLE = 2000;
@@ -27,5 +24,3 @@ enum { eP = 1, eQ, eR };
 enum { ePhi = 1, eTht, ePsi };
 
 enum eIntegrateType { eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3, eAdamsBashforth4, eBuss1, eBuss2, eLocalLinearization, eAdamsBashforth5 };
-
-const float G_FT_SEC_2 = 32.1850393f;

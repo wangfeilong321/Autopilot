@@ -17,139 +17,108 @@
 
 class StateSpace {
 public:
-	StateSpace();
-
-	void trimAircraft();
-
-	void initializeDerivatives();
-
-	bool Run();
-
-	void setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);
-
-	void setAileron(float aileron);
-
-	void setElevator(float elevator);
-
-	void setRudder(float rudder);
-
-	void setThrottle(float throttle);
-
-	void setEng0RPM(int Rpmd);
-	
-	void setEng1RPM(int Rpmd);
-	
-	void setEng2RPM(int Rpmd);
-
-	void setEng3RPM(int Rpmd);
-
-	float getEng0Rpm();
-
-	float getEng1Rpm();
-
-	float getEng2Rpm();
-
-	float getEng3Rpm();
-
-	float getRoll() const;
-
-	float getPitch() const;
-
-	float getYaw() const;
-
-	float getX() const;
-
-	float getY() const;
-
-	float getZ()const;
-
-	float getAileron();
-
-	float getElevator();
-
-	float getRudder();
-
-	float getThrottle();
-	
+  StateSpace();
+  
+  void initializeDerivatives();
+  
+  bool Run();
+  
+  void setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);
+  
+  void setAileron(float aileron);
+  
+  void setElevator(float elevator);
+  
+  void setRudder(float rudder);
+  
+  void setThrottle(float throttle);
+  
+  void setEng0RPM(int Rpmd);
+  
+  void setEng1RPM(int Rpmd);
+  
+  void setEng2RPM(int Rpmd);
+  
+  void setEng3RPM(int Rpmd);
+  
+  float getEng0Rpm();
+  
+  float getEng1Rpm();
+  
+  float getEng2Rpm();
+  
+  float getEng3Rpm();
+  
+  float getRoll() const;
+  
+  float getPitch() const;
+  
+  float getYaw() const;
+  
+  float getX() const;
+  
+  float getY() const;
+  
+  float getZ()const;
+  
+  float getAileron();
+  
+  float getElevator();
+  
+  float getRudder();
+  
+  float getThrottle();
+  
 private:
-	std::ofstream linearAccOut;
-  std::ofstream vUVWiAccOut;
+  Location vLocation;
+  Inertial vInertial;
+  ColumnVector3 vInertialPosition;
+  ColumnVector3 vInertialVelocity;
+  ColumnVector3 vUVW;
+  ColumnVector3 vVel;
+  ColumnVector3 vUVWidot;
+  
+  float axd, ayd, azd;
+  float gxd, gyd, gzd;
+  float mxd, myd, mzd;
+  
+  float roll, pitch, yaw;
+  float aileronCmd, elevatorCmd, rudderCmd, throttleCmd;
+  int rpm0, rpm1, rpm2, rpm3;
 
-	bool canComputePos = false;
-
-	Location vLocation;
-	Inertial vInertial;
-	ColumnVector3 vInertialPosition;
-	ColumnVector3 vInertialVelocity;
-	ColumnVector3 vUVW;
-	ColumnVector3 vVel;
-	ColumnVector3 vUVWidot;
-
-	float axd, ayd, azd;
-	float gxd, gyd, gzd;
-	float mxd, myd, mzd;
-
-	float roll, pitch, yaw;
-	float aileronCmd, elevatorCmd, rudderCmd, throttleCmd;
-	int rpm0, rpm1, rpm2, rpm3;
-
-	Matrix33 Tec2b;  // ECEF to body frame rotational matrix
-	Matrix33 Tb2ec;  // body to ECEF frame rotational matrix 
-	Matrix33 Tl2b;   // local to body frame matrix copy for immediate local use
-	Matrix33 Tb2l;   // body to local frame matrix copy for immediate local use
-	Matrix33 Tl2ec;  // local to ECEF matrix copy for immediate local use
-	Matrix33 Tec2l;  // ECEF to local frame matrix copy for immediate local use
-	Matrix33 Tec2i;  // ECEF to ECI frame matrix copy for immediate local use
-	Matrix33 Ti2ec;  // ECI to ECEF frame matrix copy for immediate local use
-	Matrix33 Ti2b;   // ECI to body frame rotation matrix
-	Matrix33 Tb2i;   // body to ECI frame rotation matrix
-	Matrix33 Ti2l;   // ECI to body frame rotation matrix
-	Matrix33 Tl2i;   // local to inertial frame rotation matrix
+  Matrix33 Tec2b;  // ECEF to body frame rotational matrix
+  Matrix33 Tb2ec;  // body to ECEF frame rotational matrix 
+  Matrix33 Tl2b;   // local to body frame matrix copy for immediate local use
+  Matrix33 Tb2l;   // body to local frame matrix copy for immediate local use
+  Matrix33 Tl2ec;  // local to ECEF matrix copy for immediate local use
+  Matrix33 Tec2l;  // ECEF to local frame matrix copy for immediate local use
+  Matrix33 Tec2i;  // ECEF to ECI frame matrix copy for immediate local use
+  Matrix33 Ti2ec;  // ECI to ECEF frame matrix copy for immediate local use
+  Matrix33 Ti2b;   // ECI to body frame rotation matrix
+  Matrix33 Tb2i;   // body to ECI frame rotation matrix
+  Matrix33 Ti2l;   // ECI to body frame rotation matrix
+   Matrix33 Tl2i;   // local to inertial frame rotation matrix
   const Matrix33 Tap2b = Matrix33(1.0,  0.0,  0.0,
-	                                0.0, -1.0,  0.0,
-	                                0.0,  0.0, -1.0 ); //GY-80 to body frame rotation matrix
-	Quaternion AttitudeLocal;
-	Quaternion AttitudeECI;
+                                  0.0, -1.0,  0.0,
+                                  0.0,  0.0, -1.0 ); //GY-80 to body frame rotation matrix
+  Quaternion attitudeLocal;
+  Quaternion attitudeECI;
 
-	eIntegrateType integrator_translational_rate;
-	eIntegrateType integrator_translational_position;
-
-	std::deque <ColumnVector3> dqUVWidot;
-	std::deque <ColumnVector3> dqInertialVelocity;
-
-	// Constant for the filters
-	const float RC = 0.18f;
-
-	float filterFactorG;
-	
-	float deltatimeG, deltatimeB;
-	float tG, tB;
-
-  std::chrono::high_resolution_clock::time_point timestampG;
-	std::chrono::high_resolution_clock::time_point timestampGOld;
-  		
-	std::chrono::high_resolution_clock::time_point timestampB;
-	std::chrono::high_resolution_clock::time_point timestampBOld;
-
-	// linear accelerations and smooth accelerations components for the
-	// Wikipedia hight pass and low-pass filters
-	ColumnVector3 linearAcceleration; //high-pass
-	float axdPrev; //high-pass
-	float aydPrev; //high-pass
-	float azdPrev; //high-pass
-  ColumnVector3 averageAcceleration; //moving-average
-
-	void FilterAcceleration();
-
-	void ComputeAngles();
-
-	void ComputePosition();
-	
-	void Integrate(ColumnVector3& Integrand, ColumnVector3& Val, std::deque<ColumnVector3>& ValDot, double deltat, eIntegrateType integration_type);
-	
-	void CalculateUVW(void);
-
-	void UpdateLocationMatrices();
-
-	void UpdateBodyMatrices();
+  eIntegrateType integrator_translational_rate;
+  eIntegrateType integrator_translational_position;
+  
+  std::deque <ColumnVector3> dqUVWidot;
+  std::deque <ColumnVector3> dqInertialVelocity;
+  
+  void ComputeAngles();
+  
+  void ComputePosition();
+  
+  void Integrate(ColumnVector3& Integrand, ColumnVector3& Val, std::deque<ColumnVector3>& ValDot, double deltat, eIntegrateType integration_type);
+  
+  void CalculateUVW(void);
+  
+  void UpdateLocationMatrices();
+  
+  void UpdateBodyMatrices();
 };
