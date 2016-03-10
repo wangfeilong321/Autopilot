@@ -37,7 +37,6 @@
     <ClInclude Include="src\Math\ColumnVector3.h" />
     <ClInclude Include="src\Math\Inertial.h" />
     <ClInclude Include="src\Math\Location.h" />
-    <ClInclude Include="src\Math\MadgwickAHRS.h" />
     <ClInclude Include="src\Math\Matrix33.h" />
     <ClInclude Include="src\Math\PID.h" />
     <ClInclude Include="src\Math\Quaternion.h" />
@@ -55,10 +54,6 @@
     <ClCompile Include="src\Math\ColumnVector3.cpp" />
     <ClCompile Include="src\Math\Inertial.cpp" />
     <ClCompile Include="src\Math\Location.cpp" />
-    <ClCompile Include="src\Math\MadgwickAHRS.c">
-      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</CompileAsWinRT>
-      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">false</CompileAsWinRT>
-    </ClCompile>
     <ClCompile Include="src\Math\Matrix33.cpp" />
     <ClCompile Include="src\Math\PID.cpp" />
     <ClCompile Include="src\Math\Quaternion.cpp" />

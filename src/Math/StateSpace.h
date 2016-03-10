@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Base.h>
-#include <MadgwickAHRS.h>
 #include <Location.h>
 #include <Inertial.h>
 #include <Matrix33.h>
@@ -9,11 +8,7 @@
 #include <ColumnVector3.h>
 
 #include <cmath>
-#include <condition_variable>
-#include <mutex>
 #include <deque>
-#include <chrono>
-#include <fstream>
 
 class StateSpace {
 public:
@@ -97,10 +92,8 @@ private:
   Matrix33 Ti2b;   // ECI to body frame rotation matrix
   Matrix33 Tb2i;   // body to ECI frame rotation matrix
   Matrix33 Ti2l;   // ECI to body frame rotation matrix
-   Matrix33 Tl2i;   // local to inertial frame rotation matrix
-  const Matrix33 Tap2b = Matrix33(1.0,  0.0,  0.0,
-                                  0.0, -1.0,  0.0,
-                                  0.0,  0.0, -1.0 ); //GY-80 to body frame rotation matrix
+  Matrix33 Tl2i;   // local to inertial frame rotation matrix
+  
   Quaternion attitudeLocal;
   Quaternion attitudeECI;
 
@@ -109,6 +102,10 @@ private:
   
   std::deque <ColumnVector3> dqUVWidot;
   std::deque <ColumnVector3> dqInertialVelocity;
+
+	const float SAMPLE_FREQUENCY = 256.0f;         		        // sample frequency in Hz
+	const float BETA = 0.2f;								                  // 2 * proportional gain (Kp) == algorithm gain
+	float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;	        // quaternion of sensor frame relative to auxiliary frame
   
   void ComputeAngles();
   
@@ -121,4 +118,9 @@ private:
   void UpdateLocationMatrices();
   
   void UpdateBodyMatrices();
+
+	void madgwickAHRSupdate();
+	void madgwickAHRSupdateIMU();
+	
+	float invSqrt(float x);
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Interface.h>
+#include <memory>
 #include <StateSpace.h>
 #include <PID.h>
 

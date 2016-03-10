@@ -82,7 +82,7 @@ void SensorBoard::Connect() {
 	bool ifOkGyroScale = writeCommand(Gyro, L3G4200D_CTRL_REG4, Gscale << 4);         // set gyro full scale
 	bool ifOkEnableHPF = writeCommand(Gyro, L3G4200D_CTRL_REG5, 0x00);                // Disable FIFO
 
-	bool ifOkEnableRate = writeCommand(Magnet, HMC5883L_CONFIG_A, Mrate << 2);
+	bool ifOkEnableRate = writeCommand(Magnet, HMC5883L_CONFIG_A, Mrate << 2); // set rate 
 	bool ifOkEnableGain = writeCommand(Magnet, HMC5883L_CONFIG_B, 0x00);       // set gain (bits[7:5]) to maximum resolution of 0.73 mG/LSB
 	bool ifOkEnableMode = writeCommand(Magnet, HMC5883L_MODE, 0x80);           // enable continuous data mode
 
@@ -93,7 +93,7 @@ void SensorBoard::Connect() {
 	writeCommand(Magnet, HMC5883L_MODE, 0x80);       // enable continuous data mode
 	Sleep(150);                                      // wait 150 ms
 
-	uint8_t rawData[6] = { 0, 0, 0, 0, 0, 0 };                      // x/y/z gyro register data stored here
+	uint8_t rawData[6] = { 0, 0, 0, 0, 0, 0 };                      // x/z/y magnet register data stored here
 	readBytes(Magnet, HMC5883L_OUT_X_H, 6, &rawData[0]);            // Read the six raw data registers sequentially into data array
 	int16_t selfTest[3] = { 0, 0, 0 };
 	selfTest[0] = ((int16_t)rawData[0] << 8) | rawData[1];          // Turn the MSB and LSB into a signed 16-bit value
@@ -132,7 +132,7 @@ bool SensorBoard::Run() {
 	
 	bool IfReadAccelOk = readAccelData(AccelData);
 		
-	ax = AccelData[0] * aRes;  // get actual g value, this depends on scale being set
+	ax = AccelData[0] * aRes;  // get actual a value, this depends on scale being set
 	ay = AccelData[1] * aRes;
 	az = AccelData[2] * aRes;
 
@@ -144,8 +144,8 @@ bool SensorBoard::Run() {
 
 	bool IfReadMagnetOk = readMagnetData(MagnetData);
 
-	mRes = 0.73f; 
-	// Conversion to milliGauss, 0.73 mG/LSB in hihgest resolution mode
+	mRes = 2.56f; 
+	// Conversion to milliGauss, 2.56 mG/LSB for the value of 5 (101)in the register B resolution mode
 	// So far, magnetometer bias is calculated and subtracted here manually, should construct an algorithm to do it automatically
 	// like the gyro and accelerometer biases
 	magbias[0] = -30.;  // User environmental x-axis correction in milliGauss
