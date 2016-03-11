@@ -48,7 +48,7 @@ void StateSpace::initializeDerivatives() {
 
 bool StateSpace::Run() {
   ComputeAngles();
-  //ComputePosition();
+  ComputePosition();
   return true;
 }
 

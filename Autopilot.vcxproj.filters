@@ -3,33 +3,33 @@
   <ItemGroup>
     <ClInclude Include="src\Base.h" />
     <ClInclude Include="src\Math\PID.h" />
-    <ClInclude Include="src\InputOutput\Interface.h" />
     <ClInclude Include="src\InputOutput\SensorBoard.h" />
     <ClInclude Include="src\InputOutput\EngineBoard.h" />
-    <ClInclude Include="src\InputOutput\Controller.h" />
     <ClInclude Include="src\InputOutput\SocketBoard.h" />
     <ClInclude Include="src\Math\StateSpace.h" />
-    <ClInclude Include="src\InputOutput\Channel.h" />
     <ClInclude Include="src\Math\ColumnVector3.h" />
     <ClInclude Include="src\Math\Matrix33.h" />
     <ClInclude Include="src\Math\Location.h" />
     <ClInclude Include="src\Math\Quaternion.h" />
     <ClInclude Include="src\Math\Inertial.h" />
+    <ClInclude Include="src\Controller.h" />
+    <ClInclude Include="src\Interface.h" />
+    <ClInclude Include="src\Math\Channel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Math\PID.cpp" />
-    <ClCompile Include="src\InputOutput\Interface.cpp" />
     <ClCompile Include="src\InputOutput\SensorBoard.cpp" />
     <ClCompile Include="src\InputOutput\EngineBoard.cpp" />
-    <ClCompile Include="src\InputOutput\Controller.cpp" />
     <ClCompile Include="src\InputOutput\SocketBoard.cpp" />
-    <ClCompile Include="src\InputOutput\Channel.cpp" />
     <ClCompile Include="src\Math\ColumnVector3.cpp" />
     <ClCompile Include="src\Math\Matrix33.cpp" />
     <ClCompile Include="src\Math\Location.cpp" />
     <ClCompile Include="src\Math\Quaternion.cpp" />
     <ClCompile Include="src\Math\Inertial.cpp" />
     <ClCompile Include="src\Math\StateSpace.cpp" />
+    <ClCompile Include="src\Controller.cpp" />
+    <ClCompile Include="src\Interface.cpp" />
+    <ClCompile Include="src\Math\Channel.cpp" />
   </ItemGroup>
 </Project>
