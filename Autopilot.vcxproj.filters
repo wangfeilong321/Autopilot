@@ -4,7 +4,6 @@
     <ClInclude Include="src\Base.h" />
     <ClInclude Include="src\Math\PID.h" />
     <ClInclude Include="src\InputOutput\Interface.h" />
-    <ClInclude Include="src\Utilities\Timer.h" />
     <ClInclude Include="src\InputOutput\SensorBoard.h" />
     <ClInclude Include="src\InputOutput\EngineBoard.h" />
     <ClInclude Include="src\InputOutput\Controller.h" />

@@ -187,118 +187,118 @@ public:
       @param delta delta to the Earth fixed frame (ECEF) rotation offset about the axis with
                  respect to the Inertial (ECI) frame in radians. */
 	void IncrementEarthPositionAngle(double delta);
-
+  
   /** Get the longitude.
       @return the longitude in rad of the location represented with this
       class instance. The returned values are in the range between
       -pi <= lon <= pi. Longitude is positive east and negative west. */
 	double GetLongitude() const;
-
+  
   /** Get the longitude.
       @return the longitude in deg of the location represented with this
       class instance. The returned values are in the range between
       -180 <= lon <= 180.  Longitude is positive east and negative west. */
 	double GetLongitudeDeg() const;
-
+  
   /** Get the sine of Longitude. */
 	double GetSinLongitude() const;
-
+  
   /** Get the cosine of Longitude. */
 	double GetCosLongitude() const;
-
+  
   /** Get the latitude.
       @return the latitude in rad of the location represented with this
       class instance. The returned values are in the range between
       -pi/2 <= lon <= pi/2. Latitude is positive north and negative south. */
 	double GetLatitude() const;
-
+  
   /** Get the geodetic latitude.
       @return the geodetic latitude in rad of the location represented with this
       class instance. The returned values are in the range between
       -pi/2 <= lon <= pi/2. Latitude is positive north and negative south. */
 	double GetGeodLatitudeRad(void) const;
-
+  
   /** Get the latitude.
       @return the latitude in deg of the location represented with this
       class instance. The returned value is in the range between
       -90 <= lon <= 90. Latitude is positive north and negative south. */
 	double GetLatitudeDeg() const;
-
+  
   /** Get the geodetic latitude in degrees.
       @return the geodetic latitude in degrees of the location represented by
       this class instance. The returned value is in the range between
       -90 <= lon <= 90. Latitude is positive north and negative south. */
 	double GetGeodLatitudeDeg(void) const;
-
+  
   /** Gets the geodetic altitude in feet. */
 	double GetGeodAltitude(void) const;
-
+  
   /** Get the sine of Latitude. */
 	double GetSinLatitude() const;
-
+  
   /** Get the cosine of Latitude. */
 	double GetCosLatitude() const;
 
   /** Get the cosine of Latitude. */
 	double GetTanLatitude() const;
-
+  
   /** Return the Earth Position Angle.
       This is the relative orientation of the ECEF frame with respect to the
       Inertial frame.
       @return the Earth fixed frame (ECEF) rotation offset about the axis with
               respect to the Inertial (ECI) frame in radians. */
 	double GetEPA() const;
-
+  
   /** Get the distance from the center of the earth.
       @return the distance of the location represented with this class
       instance to the center of the earth in ft. The radius value is
       always positive. */
   //double GetRadius() const { return mECLoc.Magnitude(); } // may not work with FlightGear
 	double GetRadius() const;
-
+  
 	/** Get the local sea level radius
 		@return the sea level radius at the location in feet.
 		@see SetGroundCallback */
 	double GetSeaLevelRadius(void) const;
-
+  
   /** Transform matrix from local horizontal to earth centered frame.
       @return a const reference to the rotation matrix of the transform from
       the local horizontal frame to the earth centered frame. */
 	const Matrix33& GetTl2ec(void) const;
-
+  
   /** Transform matrix from the earth centered to local horizontal frame.
       @return a const reference to the rotation matrix of the transform from
       the earth centered frame to the local horizontal frame. */
 	const Matrix33& GetTec2l(void) const;
-
+  
   /** Transform matrix from inertial to earth centered frame.
       @return a const reference to the rotation matrix of the transform from
       the inertial frame to the earth centered frame (ECI to ECEF).
       @see SetEarthPositionAngle
       @see IncrementEarthPositionAngle */
 	const Matrix33& GetTi2ec(void) const;
-
+  
   /** Transform matrix from the earth centered to inertial frame.
       @return a const reference to the rotation matrix of the transform from
       the earth centered frame to the inertial frame (ECEF to ECI).
       @see SetEarthPositionAngle
       @see IncrementEarthPositionAngle */
 	const Matrix33& GetTec2i(void) const;
-
+  
   /** Transform matrix from the inertial to local horizontal frame.
       @return a const reference to the rotation matrix of the transform from
       the inertial frame to the local horizontal frame.
       @see SetEarthPositionAngle
       @see IncrementEarthPositionAngle */
 	const Matrix33& GetTi2l(void) const;
-
+  
   /** Transform matrix from local horizontal to inertial frame.
       @return a const reference to the rotation matrix of the transform from
       the local horizontal frame to the inertial frame.
       @see SetEarthPositionAngle
       @see IncrementEarthPositionAngle */
 	const Matrix33& GetTl2i(void) const;
-
+  
   /** Conversion from Local frame coordinates to a location in the
       earth centered and fixed frame.
       This function calculates the Location of an object which position
@@ -306,7 +306,7 @@ public:
       @param lvec Vector in the local horizontal coordinate frame
       @return The location in the earth centered and fixed frame */
 	Location LocalToLocation(const ColumnVector3& lvec) const;
-
+  
   /** Conversion from a location in the earth centered and fixed frame
       to local horizontal frame coordinates.
       This function calculates the relative position between the vehicle and
@@ -314,23 +314,21 @@ public:
       @param ecvec Vector in the earth centered and fixed frame
       @return The vector in the local horizontal coordinate frame */
 	ColumnVector3 LocationToLocal(const ColumnVector3& ecvec) const;
-
-  // For time-stepping, locations have vector properties...
-
+  
   /** Read access the entries of the vector.
       @param idx the component index.
       Return the value of the matrix entry at the given index.
       Indices are counted starting with 1.
       Note that the index given in the argument is unchecked. */
 	double operator()(unsigned int idx) const;
-
+  
   /** Write access the entries of the vector.
       @param idx the component index.
       @return a reference to the vector entry at the given index.
       Indices are counted starting with 1.
       Note that the index given in the argument is unchecked. */
 	double& operator()(unsigned int idx);
-
+  
   /** Read access the entries of the vector.
       @param idx the component index.
       @return the value of the matrix entry at the given index.
@@ -340,7 +338,7 @@ public:
       used internally to access the elements in a more convenient way.
       Note that the index given in the argument is unchecked. */
 	double Entry(unsigned int idx) const;
-
+  
   /** Write access the entries of the vector.
       @param idx the component index.
       @return a reference to the vector entry at the given index.
@@ -350,7 +348,7 @@ public:
       used internally to access the elements in a more convenient way.
       Note that the index given in the argument is unchecked. */
 	double& Entry(unsigned int idx);
-
+  
   /** Sets this location via the supplied vector.
       The location can be set by an Earth-centered, Earth-fixed (ECEF) frame
       position vector. The cache is marked as invalid, so any future requests
@@ -363,58 +361,58 @@ public:
       @param v A location object reference.
       @return a reference to the Location object. */
   const Location& operator=(const Location& l);
-
+  
   /** This operator returns true if the ECEF location vectors for the two
       location objects are equal. */
 	bool operator==(const Location& l) const;
-
+  
   /** This operator returns true if the ECEF location vectors for the two
       location objects are not equal. */
 	bool operator!=(const Location& l) const;
-
+  
   /** This operator adds the ECEF position vectors.
       The cartesian coordinates of the supplied vector (right side) are added to
       the ECEF position vector on the left side of the equality, and a reference
       to this object is returned. */
 	const Location& operator+=(const Location &l);
-
+  
   /** This operator substracts the ECEF position vectors.
       The cartesian coordinates of the supplied vector (right side) are
       substracted from the ECEF position vector on the left side of the
       equality, and a reference to this object is returned. */
 	const Location& operator-=(const Location &l);
-
+  
   /** This operator scales the ECEF position vector.
       The cartesian coordinates of the ECEF position vector on the left side of
       the equality are scaled by the supplied value (right side), and a
       reference to this object is returned. */
 	const Location& operator*=(double scalar);
-
+  
   /** This operator scales the ECEF position vector.
       The cartesian coordinates of the ECEF position vector on the left side of
       the equality are scaled by the inverse of the supplied value (right side),
       and a reference to this object is returned. */
 	const Location& operator/=(double scalar);
-
+  
   /** This operator adds two ECEF position vectors.
       A new object is returned that defines a position which is the sum of the
       cartesian coordinates of the two positions provided. */
 	Location operator+(const Location& l) const;
-
+  
   /** This operator substracts two ECEF position vectors.
       A new object is returned that defines a position which is the difference
       of the cartesian coordinates of the two positions provided. */
 	Location operator-(const Location& l) const;
-
+  
   /** This operator scales an ECEF position vector.
       A new object is returned that defines a position made of the cartesian
       coordinates of the provided ECEF position scaled by the supplied scalar
       value. */
 	Location operator*(double scalar) const;
-
+  
   /** Cast to a simple 3d vector */
 	operator const ColumnVector3&() const;
-
+  
 	/** Get the geodetic distance between the current location and a given
 			location. This corresponds to the shortest distance between the two
 			locations. Earth curvature is taken into account.
@@ -422,7 +420,7 @@ public:
 			@param target_latitude the target latitude
 			@return The geodetic distance between the two locations */
 	double GetDistanceTo(double target_longitude, double target_latitude) const;
-
+  
 	/** Get the heading that should be followed from the current location to
 			a given location along the shortest path. Earth curvature is
 			taken into account.
@@ -431,19 +429,19 @@ public:
 			@return The heading that should be followed to reach the targeted
 			location along the shortest path */
 	double GetHeadingTo(double target_longitude, double target_latitude) const;
-
+  
 private:
   /** Computation of derived values.
       This function re-computes the derived values like lat/lon and
       transformation matrices. It does this unconditionally. */
   void ComputeDerivedUnconditional(void) const;
-
+  
   /** Computation of derived values.
       This function checks if the derived values like lat/lon and
       transformation matrices are already computed. If so, it
       returns. If they need to be computed this is done here. */
 	void ComputeDerived(void) const;
-
+  
   /** The coordinates in the earth centered frame. This is the master copy.
       The coordinate frame has its center in the middle of the earth.
       Its x-axis points from the center of the earth towards a
@@ -454,14 +452,14 @@ private:
       geographic north pole.
       @see W. C. Durham "Aircraft Dynamics & Control", section 2.2 */
   ColumnVector3 mECLoc;
-
+  
   /** The cached lon/lat/radius values. */
   mutable double mLon;
   mutable double mLat;
   mutable double mRadius;
   mutable double mGeodLat;
   mutable double GeodeticAltitude;
-
+  
   /** The cached rotation matrices from and to the associated frames. */
   mutable Matrix33 mTl2ec;
   mutable Matrix33 mTec2l;
@@ -469,16 +467,16 @@ private:
   mutable Matrix33 mTec2i;
   mutable Matrix33 mTi2l;
   mutable Matrix33 mTl2i;
-
+  
   double epa;
-
+  
   /* Terms for geodetic latitude calculation. Values are from WGS84 model */
   double a;  // WGS84 semimajor axis length in feet
   double e2; // Earth eccentricity squared
   double c;
   double ec;
   double ec2;
-
+  
   /** A data validity flag.
       This class implements caching of the derived values like the
       orthogonal rotation matrices or the lon/lat/radius values. For caching we
@@ -486,8 +484,8 @@ private:
       The C++ keyword "mutable" tells the compiler that the data member is
       allowed to change during a const member function. */
   mutable bool mCacheValid;
-
-	const double sign(const double num) const { return num >= 0.0 ? 1.0 : -1.0; }
+  
+  const double sign(const double num) const { return num >= 0.0 ? 1.0 : -1.0; }
 };
 
 /** Scalar multiplication.

@@ -9,7 +9,7 @@ using namespace Windows::Devices::Gpio;
 
 class EngineBoard : public Interface {
 public:
-	EngineBoard(const std::shared_ptr<StateSpace>& ISS);
+  EngineBoard(const std::shared_ptr<StateSpace>& ISS);
 	virtual ~EngineBoard() = default;
 	
 	virtual void Connect();
