@@ -14,16 +14,16 @@ public:
   double omega(void) const;
   const ColumnVector3& GetOmegaPlanet() const;
 
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	// Calculates G acceleration vector based on radius from the Earth center
-	double GetGAccel(double r) const;
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // Calculates G acceleration vector based on radius from the Earth center
+  double GetGAccel(double r) const;
 
-	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	//
-	// Calculate the WGS84 gravitation value in ECEF frame. Pass in the ECEF position
-	// via the position parameter. The J2Gravity value returned is in ECEF frame,
-	// and therefore may need to be expressed (transformed) in another frame,
-	// depending on how it is used. See Stevens and Lewis eqn. 1.4-16.
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  //
+  // Calculate the WGS84 gravitation value in ECEF frame. Pass in the ECEF position
+  // via the position parameter. The J2Gravity value returned is in ECEF frame,
+  // and therefore may need to be expressed (transformed) in another frame,
+  // depending on how it is used. See Stevens and Lewis eqn. 1.4-16.
   ColumnVector3 GetGravityJ2(const Location& location) const;
 
   double GetRefRadius(void) const;

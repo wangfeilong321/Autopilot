@@ -36,7 +36,7 @@ class Quaternion {
 public:
   /** Default initializer.
       Default initializer, initializes the class with the identity rotation.  */
-	Quaternion();
+  Quaternion();
 
   /** Copy constructor.
       Copy constructor, initializes the quaternion.
@@ -60,7 +60,7 @@ public:
       is given in the first argument.
       @param idx Index of the euler angle to initialize
       @param angle The euler angle in radians  */
-	Quaternion(int idx, double angle);
+  Quaternion(int idx, double angle);
 
   /** Initializer by a rotation axis and an angle.
       Initialize the quaternion to represent the rotation around a given
@@ -68,7 +68,7 @@ public:
       @param angle The angle in radians
       @param axis  The rotation axis
    */
-	Quaternion(double angle, const ColumnVector3& axis);
+  Quaternion(double angle, const ColumnVector3& axis);
 
   /** Initializer by matrix.
       Initialize the quaternion with the matrix representing a transform from one frame
@@ -77,7 +77,7 @@ public:
   Quaternion(const Matrix33& m);
 
   /// Destructor.
-	~Quaternion();
+  ~Quaternion();
 
   /** Quaternion derivative for given angular rates.
       Computes the quaternion derivative which results from the given
@@ -91,18 +91,18 @@ public:
   /** Transformation matrix.
       @return a reference to the transformation/rotation matrix
       corresponding to this quaternion rotation.  */
-	const Matrix33& GetT(void) const;
+  const Matrix33& GetT(void) const;
 
   /** Backward transformation matrix.
       @return a reference to the inverse transformation/rotation matrix
       corresponding to this quaternion rotation.  */
-	const Matrix33& GetTInv(void) const;
+  const Matrix33& GetTInv(void) const;
 
   /** Retrieves the Euler angles.
       @return a reference to the triad of Euler angles corresponding
       to this quaternion rotation.
       units radians  */
-	const ColumnVector3& GetEuler(void) const;
+  const ColumnVector3& GetEuler(void) const;
 
   /** Retrieves the Euler angles.
       @param i the Euler angle index.
@@ -110,38 +110,38 @@ public:
       @return a reference to the i-th euler angles corresponding
       to this quaternion rotation.
    */
-	double GetEuler(int i) const;
+  double GetEuler(int i) const;
 
   /** Retrieves the Euler angles.
       @param i the Euler angle index.
       @return a reference to the i-th euler angles corresponding
       to this quaternion rotation.
       units degrees */
-	double GetEulerDeg(int i) const;
+  double GetEulerDeg(int i) const;
 
   /** Retrieves the Euler angle vector.
       @return an Euler angle column vector corresponding
       to this quaternion rotation.
       units degrees */
-	ColumnVector3 const GetEulerDeg(void) const;
+  ColumnVector3 const GetEulerDeg(void) const;
 
   /** Retrieves sine of the given euler angle.
       @return the sine of the Euler angle theta (pitch attitude) corresponding
       to this quaternion rotation.  */
-	double GetSinEuler(int i) const;
+  double GetSinEuler(int i) const;
 
   /** Retrieves cosine of the given euler angle.
       @return the sine of the Euler angle theta (pitch attitude) corresponding
       to this quaternion rotation.  */
-	double GetCosEuler(int i) const;
+  double GetCosEuler(int i) const;
 
   /** Read access the entries of the vector.
-	    @param idx the component index.
-			Return the value of the matrix entry at the given index.
+      @param idx the component index.
+      Return the value of the matrix entry at the given index.
       Indices are counted starting with 1.
-			Note that the index given in the argument is unchecked.
+      Note that the index given in the argument is unchecked.
    */
-	double operator()(unsigned int idx) const;
+  double operator()(unsigned int idx) const;
 
   /** Write access the entries of the vector.
       @param idx the component index.
@@ -149,7 +149,7 @@ public:
       Indices are counted starting with 1.
       Note that the index given in the argument is unchecked.
    */
-	double& operator()(unsigned int idx);
+  double& operator()(unsigned int idx);
 
   /** Read access the entries of the vector.
       @param idx the component index.
@@ -160,7 +160,7 @@ public:
       used internally to access the elements in a more convenient way.
       Note that the index given in the argument is unchecked.
   */
-	double Entry(unsigned int idx) const;
+  double Entry(unsigned int idx) const;
 
   /** Write access the entries of the vector.
       @param idx the component index.
@@ -171,94 +171,94 @@ public:
       used internally to access the elements in a more convenient way.
       Note that the index given in the argument is unchecked.
   */
-	double& Entry(unsigned int idx);
+  double& Entry(unsigned int idx);
 
   /** Assignment operator "=".
       Assign the value of q to the current object. Cached values are
       conserved.
       @param q reference to an Quaternion instance
       @return reference to a quaternion object  */
-	const Quaternion& operator=(const Quaternion& q);
+  const Quaternion& operator=(const Quaternion& q);
 
   /// Conversion from Quat to Matrix
-	operator Matrix33() const;
+  operator Matrix33() const;
 
   /** Comparison operator "==".
       @param q a quaternion reference
       @return true if both quaternions represent the same rotation.  */
-	bool operator==(const Quaternion& q) const;
+  bool operator==(const Quaternion& q) const;
 
   /** Comparison operator "!=".
       @param q a quaternion reference
       @return true if both quaternions do not represent the same rotation.  */
-	bool operator!=(const Quaternion& q) const;
+  bool operator!=(const Quaternion& q) const;
 
-	/** Arithmetic operator "+=".
-	@param q a quaternion reference.
-	@return a quaternion reference representing Q, where Q = Q + q. */
-	const Quaternion& operator+=(const Quaternion& q);
+  /** Arithmetic operator "+=".
+  @param q a quaternion reference.
+  @return a quaternion reference representing Q, where Q = Q + q. */
+  const Quaternion& operator+=(const Quaternion& q);
 
   /** Arithmetic operator "-=".
       @param q a quaternion reference.
       @return a quaternion reference representing Q, where Q = Q - q. */
-	const Quaternion& operator-=(const Quaternion& q);
+  const Quaternion& operator-=(const Quaternion& q);
 
   /** Arithmetic operator "*=".
       @param scalar a multiplicative value.
       @return a quaternion reference representing Q, where Q = Q * scalar. */
-	const Quaternion& operator*=(double scalar);
+  const Quaternion& operator*=(double scalar);
 
   /** Arithmetic operator "/=".
       @param scalar a divisor value.
       @return a quaternion reference representing Q, where Q = Q / scalar. */
-	const Quaternion& operator/=(double scalar);
+  const Quaternion& operator/=(double scalar);
 
   /** Arithmetic operator "+".
       @param q a quaternion to be summed.
       @return a quaternion representing Q, where Q = Q + q. */
-	Quaternion operator+(const Quaternion& q) const;
+  Quaternion operator+(const Quaternion& q) const;
 
   /** Arithmetic operator "-".
       @param q a quaternion to be subtracted.
       @return a quaternion representing Q, where Q = Q - q. */
-	Quaternion operator-(const Quaternion& q) const;
+  Quaternion operator-(const Quaternion& q) const;
 
   /** Arithmetic operator "*".
       Multiplication of two quaternions is like performing successive rotations.
       @param q a quaternion to be multiplied.
       @return a quaternion representing Q, where Q = Q * q. */
-	Quaternion operator*(const Quaternion& q) const;
+  Quaternion operator*(const Quaternion& q) const;
 
   /** Arithmetic operator "*=".
       Multiplication of two quaternions is like performing successive rotations.
       @param q a quaternion to be multiplied.
       @return a quaternion reference representing Q, where Q = Q * q. */
-	const Quaternion& operator*=(const Quaternion& q);
+  const Quaternion& operator*=(const Quaternion& q);
 
   /** Inverse of the quaternion.
       Compute and return the inverse of the quaternion so that the orientation
       represented with *this multiplied with the returned value is equal to
       the identity orientation.
   */
-	Quaternion Inverse(void) const;
+  Quaternion Inverse(void) const;
 
   /** Conjugate of the quaternion.
       Compute and return the conjugate of the quaternion. This one is equal
       to the inverse iff the quaternion is normalized.
   */
-	Quaternion Conjugate(void) const;
+  Quaternion Conjugate(void) const;
 
   friend Quaternion operator*(double, const Quaternion&);
 
   /** Length of the vector.
       Compute and return the euclidean norm of this vector.
   */
-	double Magnitude(void) const;
+  double Magnitude(void) const;
 
   /** Square of the length of the vector.
       Compute and return the square of the euclidean norm of this vector.
   */
-	double SqrMagnitude(void) const;
+  double SqrMagnitude(void) const;
 
   /** Normalize.
       Normalize the vector to have the Magnitude() == 1.0. If the vector
@@ -268,7 +268,7 @@ public:
 
   /** Zero quaternion vector. Does not represent any orientation.
       Useful for initialization of increments */
-	static Quaternion zero(void);
+  static Quaternion zero(void);
 
   std::string Dump(const std::string& delimiter) const;
 
@@ -276,7 +276,7 @@ public:
 
 private:
   /** Copying by assigning the vector valued components.  */
-	Quaternion(double q1, double q2, double q3, double q4);
+  Quaternion(double q1, double q2, double q3, double q4);
 
   /** Computation of derived values.
       This function recomputes the derived values like euler angles and
@@ -289,9 +289,9 @@ private:
       returns. If they need to be computed the real worker routine
       Quaternion::ComputeDerivedUnconditional(void) const
       is called. */
-	void ComputeDerived(void) const;
+  void ComputeDerived(void) const;
 
-	void InitializeFromEulerAngles(double phi, double tht, double psi);
+  void InitializeFromEulerAngles(double phi, double tht, double psi);
 
   /** The quaternion values itself. This is the master copy. */
   double data[4];

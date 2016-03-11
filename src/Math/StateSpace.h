@@ -103,9 +103,9 @@ private:
   std::deque <ColumnVector3> dqUVWidot;
   std::deque <ColumnVector3> dqInertialVelocity;
 
-	const float SAMPLE_FREQUENCY = 256.0f;         		        // sample frequency in Hz
-	const float BETA = 0.2f;								                  // 2 * proportional gain (Kp) == algorithm gain
-	float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;	        // quaternion of sensor frame relative to auxiliary frame
+  const float SAMPLE_FREQUENCY = 256.0f;                     // sample frequency in Hz
+  const float BETA = 0.2f;                                  // 2 * proportional gain (Kp) == algorithm gain
+  float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;          // quaternion of sensor frame relative to auxiliary frame
   
   void ComputeAngles();
   
@@ -119,8 +119,8 @@ private:
   
   void UpdateBodyMatrices();
 
-	void madgwickAHRSupdate();
-	void madgwickAHRSupdateIMU();
-	
-	float invSqrt(float x);
+  void madgwickAHRSupdate();
+  void madgwickAHRSupdateIMU();
+  
+  float invSqrt(float x);
 };

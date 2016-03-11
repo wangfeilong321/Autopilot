@@ -14,8 +14,8 @@ using std::endl;
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Quaternion::Quaternion() : mCacheValid(false) {
-	data[0] = 1.0;
-	data[1] = data[2] = data[3] = 0.0;
+  data[0] = 1.0;
+  data[1] = data[2] = data[3] = 0.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -52,47 +52,47 @@ Quaternion::Quaternion(ColumnVector3 vOrient): mCacheValid(false) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Quaternion::Quaternion(int idx, double angle) : mCacheValid(false) {
-	double angle2 = 0.5*angle;
+  double angle2 = 0.5*angle;
 
-	double Sangle2 = sin(angle2);
-	double Cangle2 = cos(angle2);
+  double Sangle2 = sin(angle2);
+  double Cangle2 = cos(angle2);
 
-	if (idx == ePhi) {
-		data[0] = Cangle2;
-		data[1] = Sangle2;
-		data[2] = 0.0;
-		data[3] = 0.0;
+  if (idx == ePhi) {
+    data[0] = Cangle2;
+    data[1] = Sangle2;
+    data[2] = 0.0;
+    data[3] = 0.0;
 
-	}
-	else if (idx == eTht) {
-		data[0] = Cangle2;
-		data[1] = 0.0;
-		data[2] = Sangle2;
-		data[3] = 0.0;
+  }
+  else if (idx == eTht) {
+    data[0] = Cangle2;
+    data[1] = 0.0;
+    data[2] = Sangle2;
+    data[3] = 0.0;
 
-	}
-	else {
-		data[0] = Cangle2;
-		data[1] = 0.0;
-		data[2] = 0.0;
-		data[3] = Sangle2;
+  }
+  else {
+    data[0] = Cangle2;
+    data[1] = 0.0;
+    data[2] = 0.0;
+    data[3] = Sangle2;
 
-	}
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Quaternion::Quaternion(double angle, const ColumnVector3& axis) : mCacheValid(false) {
-	double angle2 = 0.5 * angle;
+  double angle2 = 0.5 * angle;
 
-	double length = axis.Magnitude();
-	double Sangle2 = sin(angle2) / length;
-	double Cangle2 = cos(angle2);
+  double length = axis.Magnitude();
+  double Sangle2 = sin(angle2) / length;
+  double Cangle2 = cos(angle2);
 
-	data[0] = Cangle2;
-	data[1] = Sangle2 * axis(1);
-	data[2] = Sangle2 * axis(2);
-	data[3] = Sangle2 * axis(3);
+  data[0] = Cangle2;
+  data[1] = Sangle2 * axis(1);
+  data[2] = Sangle2 * axis(2);
+  data[3] = Sangle2 * axis(3);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -134,43 +134,43 @@ const Matrix33& Quaternion::GetTInv(void) const { ComputeDerived(); return mTInv
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const ColumnVector3& Quaternion::GetEuler(void) const {
-	ComputeDerived();
-	return mEulerAngles;
+  ComputeDerived();
+  return mEulerAngles;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Quaternion::GetEuler(int i) const {
-	ComputeDerived();
-	return mEulerAngles(i);
+  ComputeDerived();
+  return mEulerAngles(i);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Quaternion::GetEulerDeg(int i) const {
-	ComputeDerived();
-	return radtodeg*mEulerAngles(i);
+  ComputeDerived();
+  return radtodeg*mEulerAngles(i);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ColumnVector3 const Quaternion::GetEulerDeg(void) const {
-	ComputeDerived();
-	return radtodeg*mEulerAngles;
+  ComputeDerived();
+  return radtodeg*mEulerAngles;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Quaternion::GetSinEuler(int i) const {
-	ComputeDerived();
-	return mEulerSines(i);
+  ComputeDerived();
+  return mEulerSines(i);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Quaternion::GetCosEuler(int i) const {
-	ComputeDerived();
-	return mEulerCosines(i);
+  ComputeDerived();
+  return mEulerCosines(i);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -188,29 +188,29 @@ double Quaternion::Entry(unsigned int idx) const { return data[idx - 1]; }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double& Quaternion::Entry(unsigned int idx) {
-	mCacheValid = false;
-	return data[idx - 1];
+  mCacheValid = false;
+  return data[idx - 1];
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Quaternion& Quaternion::operator=(const Quaternion& q) {
-	// Copy the master values ...
-	data[0] = q.data[0];
-	data[1] = q.data[1];
-	data[2] = q.data[2];
-	data[3] = q.data[3];
-	ComputeDerived();
-	// .. and copy the derived values if they are valid
-	mCacheValid = q.mCacheValid;
-	if (mCacheValid) {
-		mT = q.mT;
-		mTInv = q.mTInv;
-		mEulerAngles = q.mEulerAngles;
-		mEulerSines = q.mEulerSines;
-		mEulerCosines = q.mEulerCosines;
-	}
-	return *this;
+  // Copy the master values ...
+  data[0] = q.data[0];
+  data[1] = q.data[1];
+  data[2] = q.data[2];
+  data[3] = q.data[3];
+  ComputeDerived();
+  // .. and copy the derived values if they are valid
+  mCacheValid = q.mCacheValid;
+  if (mCacheValid) {
+    mT = q.mT;
+    mTInv = q.mTInv;
+    mEulerAngles = q.mEulerAngles;
+    mEulerSines = q.mEulerSines;
+    mEulerCosines = q.mEulerCosines;
+  }
+  return *this;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -220,8 +220,8 @@ Quaternion::operator Matrix33() const { return GetT(); }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool Quaternion::operator==(const Quaternion& q) const {
-	return data[0] == q.data[0] && data[1] == q.data[1]
-		&& data[2] == q.data[2] && data[3] == q.data[3];
+  return data[0] == q.data[0] && data[1] == q.data[1]
+    && data[2] == q.data[2] && data[3] == q.data[3];
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -231,94 +231,94 @@ bool Quaternion::operator!=(const Quaternion& q) const { return !operator==(q); 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Quaternion& Quaternion::operator+=(const Quaternion& q) {
-	// Copy the master values ...
-	data[0] += q.data[0];
-	data[1] += q.data[1];
-	data[2] += q.data[2];
-	data[3] += q.data[3];
-	mCacheValid = false;
-	return *this;
+  // Copy the master values ...
+  data[0] += q.data[0];
+  data[1] += q.data[1];
+  data[2] += q.data[2];
+  data[3] += q.data[3];
+  mCacheValid = false;
+  return *this;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Quaternion& Quaternion::operator-=(const Quaternion& q) {
-	// Copy the master values ...
-	data[0] -= q.data[0];
-	data[1] -= q.data[1];
-	data[2] -= q.data[2];
-	data[3] -= q.data[3];
-	mCacheValid = false;
-	return *this;
+  // Copy the master values ...
+  data[0] -= q.data[0];
+  data[1] -= q.data[1];
+  data[2] -= q.data[2];
+  data[3] -= q.data[3];
+  mCacheValid = false;
+  return *this;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Quaternion& Quaternion::operator*=(double scalar) {
-	data[0] *= scalar;
-	data[1] *= scalar;
-	data[2] *= scalar;
-	data[3] *= scalar;
-	mCacheValid = false;
-	return *this;
+  data[0] *= scalar;
+  data[1] *= scalar;
+  data[2] *= scalar;
+  data[3] *= scalar;
+  mCacheValid = false;
+  return *this;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Quaternion& Quaternion::operator/=(double scalar) {
-	return operator*=(1.0 / scalar);
+  return operator*=(1.0 / scalar);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Quaternion Quaternion::operator+(const Quaternion& q) const {
-	return Quaternion(data[0] + q.data[0], data[1] + q.data[1], data[2] + q.data[2], data[3] + q.data[3]);
+  return Quaternion(data[0] + q.data[0], data[1] + q.data[1], data[2] + q.data[2], data[3] + q.data[3]);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Quaternion Quaternion::operator-(const Quaternion& q) const {
-	return Quaternion(data[0] - q.data[0], data[1] - q.data[1], data[2] - q.data[2], data[3] - q.data[3]);
+  return Quaternion(data[0] - q.data[0], data[1] - q.data[1], data[2] - q.data[2], data[3] - q.data[3]);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Quaternion Quaternion::operator*(const Quaternion& q) const {
-	return Quaternion(data[0] * q.data[0] - data[1] * q.data[1] - data[2] * q.data[2] - data[3] * q.data[3],
-		data[0] * q.data[1] + data[1] * q.data[0] + data[2] * q.data[3] - data[3] * q.data[2],
-		data[0] * q.data[2] - data[1] * q.data[3] + data[2] * q.data[0] + data[3] * q.data[1],
-		data[0] * q.data[3] + data[1] * q.data[2] - data[2] * q.data[1] + data[3] * q.data[0]);
+  return Quaternion(data[0] * q.data[0] - data[1] * q.data[1] - data[2] * q.data[2] - data[3] * q.data[3],
+    data[0] * q.data[1] + data[1] * q.data[0] + data[2] * q.data[3] - data[3] * q.data[2],
+    data[0] * q.data[2] - data[1] * q.data[3] + data[2] * q.data[0] + data[3] * q.data[1],
+    data[0] * q.data[3] + data[1] * q.data[2] - data[2] * q.data[1] + data[3] * q.data[0]);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Quaternion& Quaternion::operator*=(const Quaternion& q) {
-	double q0 = data[0] * q.data[0] - data[1] * q.data[1] - data[2] * q.data[2] - data[3] * q.data[3];
-	double q1 = data[0] * q.data[1] + data[1] * q.data[0] + data[2] * q.data[3] - data[3] * q.data[2];
-	double q2 = data[0] * q.data[2] - data[1] * q.data[3] + data[2] * q.data[0] + data[3] * q.data[1];
-	double q3 = data[0] * q.data[3] + data[1] * q.data[2] - data[2] * q.data[1] + data[3] * q.data[0];
-	data[0] = q0;
-	data[1] = q1;
-	data[2] = q2;
-	data[3] = q3;
-	mCacheValid = false;
-	return *this;
+  double q0 = data[0] * q.data[0] - data[1] * q.data[1] - data[2] * q.data[2] - data[3] * q.data[3];
+  double q1 = data[0] * q.data[1] + data[1] * q.data[0] + data[2] * q.data[3] - data[3] * q.data[2];
+  double q2 = data[0] * q.data[2] - data[1] * q.data[3] + data[2] * q.data[0] + data[3] * q.data[1];
+  double q3 = data[0] * q.data[3] + data[1] * q.data[2] - data[2] * q.data[1] + data[3] * q.data[0];
+  data[0] = q0;
+  data[1] = q1;
+  data[2] = q2;
+  data[3] = q3;
+  mCacheValid = false;
+  return *this;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Quaternion Quaternion::Inverse(void) const {
-	double norm = SqrMagnitude();
-	if (norm == 0.0)
-		return *this;
-	double rNorm = 1.0 / norm;
-	return Quaternion(data[0] * rNorm, -data[1] * rNorm, -data[2] * rNorm, -data[3] * rNorm);
+  double norm = SqrMagnitude();
+  if (norm == 0.0)
+    return *this;
+  double rNorm = 1.0 / norm;
+  return Quaternion(data[0] * rNorm, -data[1] * rNorm, -data[2] * rNorm, -data[3] * rNorm);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Quaternion Quaternion::Conjugate(void) const {
-	return Quaternion(data[0], -data[1], -data[2], -data[3]);
+  return Quaternion(data[0], -data[1], -data[2], -data[3]);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -328,7 +328,7 @@ double Quaternion::Magnitude(void) const { return sqrt(SqrMagnitude()); }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Quaternion::SqrMagnitude(void) const {
-	return data[0] * data[0] + data[1] * data[1]	+ data[2] * data[2] + data[3] * data[3];
+  return data[0] * data[0] + data[1] * data[1]  + data[2] * data[2] + data[3] * data[3];
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -353,14 +353,14 @@ Quaternion Quaternion::zero(void) { return Quaternion(0.0, 0.0, 0.0, 0.0); }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Quaternion::Quaternion(double q1, double q2, double q3, double q4) : mCacheValid(false) {
-	data[0] = q1; data[1] = q2; data[2] = q3; data[3] = q4;
+  data[0] = q1; data[1] = q2; data[2] = q3; data[3] = q4;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void Quaternion::ComputeDerived(void) const {
-	if (!mCacheValid)
-		ComputeDerivedUnconditional();
+  if (!mCacheValid)
+    ComputeDerivedUnconditional();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -417,33 +417,33 @@ void Quaternion::ComputeDerivedUnconditional(void) const {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void Quaternion::InitializeFromEulerAngles(double phi, double tht, double psi) {
-	mEulerAngles(ePhi) = phi;
-	mEulerAngles(eTht) = tht;
-	mEulerAngles(ePsi) = psi;
+  mEulerAngles(ePhi) = phi;
+  mEulerAngles(eTht) = tht;
+  mEulerAngles(ePsi) = psi;
 
-	double thtd2 = 0.5*tht;
-	double psid2 = 0.5*psi;
-	double phid2 = 0.5*phi;
+  double thtd2 = 0.5*tht;
+  double psid2 = 0.5*psi;
+  double phid2 = 0.5*phi;
 
-	double Sthtd2 = sin(thtd2);
-	double Spsid2 = sin(psid2);
-	double Sphid2 = sin(phid2);
+  double Sthtd2 = sin(thtd2);
+  double Spsid2 = sin(psid2);
+  double Sphid2 = sin(phid2);
 
-	double Cthtd2 = cos(thtd2);
-	double Cpsid2 = cos(psid2);
-	double Cphid2 = cos(phid2);
+  double Cthtd2 = cos(thtd2);
+  double Cpsid2 = cos(psid2);
+  double Cphid2 = cos(phid2);
 
-	double Cphid2Cthtd2 = Cphid2*Cthtd2;
-	double Cphid2Sthtd2 = Cphid2*Sthtd2;
-	double Sphid2Sthtd2 = Sphid2*Sthtd2;
-	double Sphid2Cthtd2 = Sphid2*Cthtd2;
+  double Cphid2Cthtd2 = Cphid2*Cthtd2;
+  double Cphid2Sthtd2 = Cphid2*Sthtd2;
+  double Sphid2Sthtd2 = Sphid2*Sthtd2;
+  double Sphid2Cthtd2 = Sphid2*Cthtd2;
 
-	data[0] = Cphid2Cthtd2*Cpsid2 + Sphid2Sthtd2*Spsid2;
-	data[1] = Sphid2Cthtd2*Cpsid2 - Cphid2Sthtd2*Spsid2;
-	data[2] = Cphid2Sthtd2*Cpsid2 + Sphid2Cthtd2*Spsid2;
-	data[3] = Cphid2Cthtd2*Spsid2 - Sphid2Sthtd2*Cpsid2;
+  data[0] = Cphid2Cthtd2*Cpsid2 + Sphid2Sthtd2*Spsid2;
+  data[1] = Sphid2Cthtd2*Cpsid2 - Cphid2Sthtd2*Spsid2;
+  data[2] = Cphid2Sthtd2*Cpsid2 + Sphid2Cthtd2*Spsid2;
+  data[3] = Cphid2Cthtd2*Spsid2 - Sphid2Sthtd2*Cpsid2;
 
-	Normalize();
+  Normalize();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

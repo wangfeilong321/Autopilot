@@ -5,7 +5,7 @@
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location::Location(void) : mECLoc(1.0, 0.0, 0.0), mCacheValid(false) {
-	e2 = c = 0.0;
+  e2 = c = 0.0;
   a = ec = ec2 = 1.0;
   epa = 0.0;
 
@@ -23,7 +23,7 @@ Location::Location(void) : mECLoc(1.0, 0.0, 0.0), mCacheValid(false) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location::Location(double lon, double lat, double radius) : mCacheValid(false) {
-	e2 = c = 0.0;
+  e2 = c = 0.0;
   a = ec = ec2 = 1.0;
   epa = 0.0;
 
@@ -49,7 +49,7 @@ Location::Location(double lon, double lat, double radius) : mCacheValid(false) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location::Location(const ColumnVector3& lv) : mECLoc(lv), mCacheValid(false) {
-	e2 = c = 0.0;
+  e2 = c = 0.0;
   a = ec = ec2 = 1.0;
   epa = 0.0;
 
@@ -232,7 +232,7 @@ void Location::SetEarthPositionAngle(double EPA) { epa = EPA; mCacheValid = fals
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void Location::SetAltitudeASL(double altitudeASL) {
-	SetRadius(GetSeaLevelRadius() + altitudeASL);
+  SetRadius(GetSeaLevelRadius() + altitudeASL);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -286,12 +286,12 @@ double Location::GetCosLatitude() const { ComputeDerived(); return mTec2l(1, 3);
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double Location::GetTanLatitude() const {
-	ComputeDerived();
-	double cLat = mTec2l(1, 3);
-	if (cLat == 0.0)
-		return 0.0;
-	else
-		return -mTec2l(3, 3) / cLat;
+  ComputeDerived();
+  double cLat = mTec2l(1, 3);
+  if (cLat == 0.0)
+    return 0.0;
+  else
+    return -mTec2l(3, 3) / cLat;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -303,9 +303,9 @@ double Location::GetEPA() const { return epa; }
 double Location::GetRadius() const { ComputeDerived(); return mRadius; }
 
 double Location::GetSeaLevelRadius() const {
-	ComputeDerived(); 
-	Inertial i;
-	return i.GetRefRadius();
+  ComputeDerived(); 
+  Inertial i;
+  return i.GetRefRadius();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -347,24 +347,24 @@ double Location::Entry(unsigned int idx) const { return mECLoc.Entry(idx); }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double& Location::Entry(unsigned int idx) {
-	mCacheValid = false; return mECLoc.Entry(idx);
+  mCacheValid = false; return mECLoc.Entry(idx);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Location& Location::operator=(const ColumnVector3& v) {
-	mECLoc(eX) = v(eX);
-	mECLoc(eY) = v(eY);
-	mECLoc(eZ) = v(eZ);
-	mCacheValid = false;
-	//ComputeDerived();
-	return *this;
+  mECLoc(eX) = v(eX);
+  mECLoc(eY) = v(eY);
+  mECLoc(eZ) = v(eZ);
+  mCacheValid = false;
+  //ComputeDerived();
+  return *this;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool Location::operator==(const Location& l) const {
-	return mECLoc == l.mECLoc;
+  return mECLoc == l.mECLoc;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -374,67 +374,67 @@ bool Location::operator!=(const Location& l) const { return !operator==(l); }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Location& Location::operator+=(const Location &l) {
-	mCacheValid = false;
-	mECLoc += l.mECLoc;
-	return *this;
+  mCacheValid = false;
+  mECLoc += l.mECLoc;
+  return *this;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Location& Location::operator-=(const Location &l) {
-	mCacheValid = false;
-	mECLoc -= l.mECLoc;
-	return *this;
+  mCacheValid = false;
+  mECLoc -= l.mECLoc;
+  return *this;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Location& Location::operator*=(double scalar) {
-	mCacheValid = false;
-	mECLoc *= scalar;
-	return *this;
+  mCacheValid = false;
+  mECLoc *= scalar;
+  return *this;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const Location& Location::operator/=(double scalar) {
-	return operator*=(1.0 / scalar);
+  return operator*=(1.0 / scalar);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location Location::operator+(const Location& l) const {
-	return Location(mECLoc + l.mECLoc);
+  return Location(mECLoc + l.mECLoc);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location Location::operator-(const Location& l) const {
-	return Location(mECLoc - l.mECLoc);
+  return Location(mECLoc - l.mECLoc);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location Location::operator*(double scalar) const {
-	return Location(scalar*mECLoc);
+  return Location(scalar*mECLoc);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location::operator const ColumnVector3&() const {
-	return mECLoc;
+  return mECLoc;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Location Location::LocalToLocation(const ColumnVector3& lvec) const {
-	ComputeDerived(); return mTl2ec*lvec + mECLoc;
+  ComputeDerived(); return mTl2ec*lvec + mECLoc;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ColumnVector3 Location::LocationToLocal(const ColumnVector3& ecvec) const {
-	ComputeDerived(); return mTec2l*(ecvec - mECLoc);
+  ComputeDerived(); return mTec2l*(ecvec - mECLoc);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -543,8 +543,8 @@ void Location::ComputeDerivedUnconditional(void) const {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void Location::ComputeDerived(void) const {
-	if (!mCacheValid)
-		ComputeDerivedUnconditional();
+  if (!mCacheValid)
+    ComputeDerivedUnconditional();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
