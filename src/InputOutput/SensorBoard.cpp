@@ -17,6 +17,10 @@ SensorBoard::SensorBoard(const std::shared_ptr<StateSpace>& ISS) : IState(ISS), 
   if ( !Magnet )
     return;
   
+  Baro = MakeDevice(BMP085_ADDRESS, friendlyName);
+  if ( !Baro )
+    return;
+  
   // Possible gyro scales (and their register bit settings) are:
   // 250 DPS (00), 500 DPS (01), 1000 DPS (10), and 2000 DPS  (11). 
   switch (Gscale) {
@@ -58,10 +62,13 @@ void SensorBoard::Connect() {
   uint8_t e = readByte(Magnet, HMC5883L_IDA);  // Read WHO_AM_I register A for HMC5883L
   uint8_t f = readByte(Magnet, HMC5883L_IDB);  // Read WHO_AM_I register B for HMC5883L
   uint8_t g = readByte(Magnet, HMC5883L_IDC);  // Read WHO_AM_I register C for HMC5883L
+  uint8_t h = readByte(Baro, 0xAA);  // Read WHO_AM_I register A for BMP085L
+  uint8_t i = readByte(Baro, 0xAB);  // Read WHO_AM_I register B for BMP085L
+  uint8_t j = readByte(Baro, 0xAC);  // Read WHO_AM_I register C for BMP085L
 
   bool ifWhoAmI = false;
 
-  if (c == 0xE5 && d == 0xD3 && e == 0x48 && f == 0x34 && g == 0x33) {
+  if (c == 0xE5 && d == 0xD3 && e == 0x48 && f == 0x34 && g == 0x33 && h != 0xFF && h != 0x00) {
     ifWhoAmI = true;
   }
 
@@ -104,6 +111,20 @@ void SensorBoard::Connect() {
   if (selfTest[0] < 575 && selfTest[0] > 243 && selfTest[1] < 575 && selfTest[1] > 243 && selfTest[2] < 575 && selfTest[2] > 243) {
     ifOkSelfTest = true;
   }
+  
+  const int16_t ac1 = readByte(Baro, 0xAA) << 8 | readByte(Baro, 0xAB);
+  const int16_t ac2 = readByte(Baro, 0xAC) << 8 | readByte(Baro, 0xAD);
+  const int16_t ac3 = readByte(Baro, 0xAE) << 8 | readByte(Baro, 0xAF);
+  const uint16_t ac4 = readByte(Baro, 0xB0) << 8 | readByte(Baro, 0xB1);
+  const uint16_t ac5 = readByte(Baro, 0xB2) << 8 | readByte(Baro, 0xB3);
+  const uint16_t ac6 = readByte(Baro, 0xB4) << 8 | readByte(Baro, 0xB5);
+  const int16_t b1 = readByte(Baro, 0xB6) << 8 | readByte(Baro, 0xB7);
+  const int16_t b2 = readByte(Baro, 0xB8) << 8 | readByte(Baro, 0xB9);
+  const int16_t mb = readByte(Baro, 0xBA) << 8 | readByte(Baro, 0xBB);
+  const int16_t mc = readByte(Baro, 0xBC) << 8 | readByte(Baro, 0xBD);
+  const int16_t md = readByte(Baro, 0xBE) << 8 | readByte(Baro, 0xBF);
+  
+  IState->setBMPCalibrationData(ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, OSS);
 
   ifConnected =
     ifWhoAmI          &&
@@ -158,9 +179,16 @@ bool SensorBoard::Run() {
   mx = MagnetData[0] * mRes - magbias[0];
   my = MagnetData[1] * mRes - magbias[1];
   mz = MagnetData[2] * mRes - magbias[2];
-
-  if (IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk) {
-    IState->setSensorData(ax, ay, az, gx, gy, gz, mx, my, mz);
+  
+  // Read raw temperature data
+  bool ifReadTempOk = readTempData();
+  
+  //Read raw pressure data
+  bool ifReadBaroOk = readBaroData();
+  
+  if (IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk && ifReadTempOk && ifReadBaroOk) {
+    IState->setMARGData(ax, ay, az, gx, gy, gz, mx, my, mz);
+    IState->setBMPData(ut, up);
     return true;
   }
 
@@ -191,34 +219,60 @@ I2cDevice^ SensorBoard::MakeDevice(int slaveAddress, _In_opt_ String^ friendlyNa
   return _device;
 }
 
-bool SensorBoard::readAccelData(int16_t * Destination) {
+bool SensorBoard::readAccelData(int16_t* destination) {
   uint8_t data[6] = { 0, 0, 0, 0, 0, 0 };
-  bool IfReadOk = readBytes(Accel, ADXL345_DATAX0, 6, data);
-
-  Destination[0] = ((int16_t)data[1] << 8) | data[0];  // Turn the MSB and LSB into a signed 16-bit value
-  Destination[1] = ((int16_t)data[3] << 8) | data[2];
-  Destination[2] = ((int16_t)data[5] << 8) | data[4];
-  return IfReadOk;
+  if(readBytes(Accel, ADXL345_DATAX0, 6, data)) {
+    destination[0] = ((int16_t)data[1] << 8) | data[0];  // Turn the MSB and LSB into a signed 16-bit value
+    destination[1] = ((int16_t)data[3] << 8) | data[2];
+    destination[2] = ((int16_t)data[5] << 8) | data[4];
+    return true;
+  }
+  return false;
 }
 
-bool SensorBoard::readGyroData(int16_t * Destination) {
+bool SensorBoard::readGyroData(int16_t* destination) {
   uint8_t data[6] = { 0, 0, 0, 0, 0, 0 };
-  bool IfReadOk = readBytes(Gyro, L3G4200D_OUT_X_L | 0x80, 6, data);
-
-  Destination[0] = ((int16_t)data[1] << 8) | data[0];  // Turn the MSB and LSB into a signed 16-bit value
-  Destination[1] = ((int16_t)data[3] << 8) | data[2];
-  Destination[2] = ((int16_t)data[5] << 8) | data[4];
-  return IfReadOk;
+  if(readBytes(Gyro, L3G4200D_OUT_X_L | 0x80, 6, data)) {
+    destination[0] = ((int16_t)data[1] << 8) | data[0];  // Turn the MSB and LSB into a signed 16-bit value
+    destination[1] = ((int16_t)data[3] << 8) | data[2];
+    destination[2] = ((int16_t)data[5] << 8) | data[4];
+    return true;
+  }
+  return false;
 }
 
-bool SensorBoard::readMagnetData(int16_t * destination) {
-  uint8_t data[6];                                    // x/y/z gyro register data stored here
-  bool IfReadOk = readBytes(Magnet, HMC5883L_OUT_X_H, 6, data);        // Read the six raw data registers sequentially into data array
-  
-  destination[0] = ((int16_t)data[0] << 8) | data[1]; // Turn the MSB and LSB into a signed 16-bit value
-  destination[1] = ((int16_t)data[4] << 8) | data[5];
-  destination[2] = ((int16_t)data[2] << 8) | data[3];
-  return IfReadOk;
+bool SensorBoard::readMagnetData(int16_t* destination) {
+  uint8_t data[6];
+  if(readBytes(Magnet, HMC5883L_OUT_X_H, 6, data)) { 
+    destination[0] = ((int16_t)data[0] << 8) | data[1]; // Turn the MSB and LSB into a signed 16-bit value
+    destination[1] = ((int16_t)data[4] << 8) | data[5];
+    destination[2] = ((int16_t)data[2] << 8) | data[3];
+    return true;
+  }
+  return false;
+}
+
+bool SensorBoard::readTempData() {
+  writeCommand(Baro, 0xF4, 0x2E); // start temperature measurement
+  Sleep(5);
+  // read raw temperature measurement
+  uint8_t data[2];
+  if (readBytes(Baro, 0xF6, 2, data)) {
+    ut = (int16_t)(((int16_t)data[0] << 8) | data[1]);
+    return true;
+  }
+  else return false;
+}
+
+bool SensorBoard::readBaroData() {
+  writeCommand(Baro, 0xF4, 0x34 | OSS << 6); // Start pressure measurement
+  Sleep(29);
+  // read raw pressure measurement of 19 bits
+  uint8_t data[3];
+  if(readBytes(Baro, 0xF6, 3, data)) {
+    up = (((long)data[0] << 16) | ((long)data[1] << 8) | data[2]) >> (8 - OSS);
+  } else return false;
+  return true;
 }
 
 bool SensorBoard::readBytes(I2cDevice^ Device, uint8_t Register, uint8_t numBytesToRead, uint8_t * DestBuffer) {

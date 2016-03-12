@@ -18,7 +18,11 @@ public:
   
   bool Run();
   
-  void setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);
+  void setMARGData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);
+  
+  void setBMPCalibrationData(int16_t ac1, int16_t ac2, int16_t ac3, uint16_t ac4, uint16_t ac5, uint16_t ac6, int16_t b1, int16_t b2, int16_t mb, int16_t mc, int16_t md, uint8_t OSS);
+  
+  void setBMPData(int16_t ut, long up);
   
   void setAileron(float aileron);
   
@@ -80,7 +84,17 @@ private:
   float roll, pitch, yaw;
   float aileronCmd, elevatorCmd, rudderCmd, throttleCmd;
   int rpm0, rpm1, rpm2, rpm3;
-
+  
+  // These are constants used to calulate the temperature and pressure from the BMP-085 sensor
+  uint8_t OSSD;
+  int16_t ac1d, ac2d, ac3d, b1d, b2d, mbd, mcd, mdd;
+  uint16_t ac4d, ac5d, ac6d;
+  long b5;
+  int16_t utd;
+  long upd;
+  
+  float temperature, pressure;
+  
   Matrix33 Tec2b;  // ECEF to body frame rotational matrix
   Matrix33 Tb2ec;  // body to ECEF frame rotational matrix 
   Matrix33 Tl2b;   // local to body frame matrix copy for immediate local use
@@ -103,9 +117,13 @@ private:
   std::deque <ColumnVector3> dqUVWidot;
   std::deque <ColumnVector3> dqInertialVelocity;
 
-  const float SAMPLE_FREQUENCY = 256.0f;                     // sample frequency in Hz
-  const float BETA = 0.2f;                                  // 2 * proportional gain (Kp) == algorithm gain
+  const float SAMPLE_FREQUENCY = 512.0f;                     // sample frequency in Hz
+  const float BETA = 0.2f;                                   // 2 * proportional gain (Kp) == algorithm gain
   float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;          // quaternion of sensor frame relative to auxiliary frame
+  
+  void ComputeTemperature();
+  
+  void ComputePressure();
   
   void ComputeAngles();
   

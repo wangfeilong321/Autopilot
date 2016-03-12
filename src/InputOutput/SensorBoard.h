@@ -39,15 +39,18 @@ private:
   uint8_t readByte(I2cDevice^ Device, uint8_t Register);
   bool writeCommand(I2cDevice^ Device, uint8_t Register, uint8_t Command);
 
-  bool readAccelData(int16_t * destination);
-  bool readGyroData(int16_t * destination);
-  bool readMagnetData(int16_t * destination);
+  bool readAccelData(int16_t* destination);
+  bool readGyroData(int16_t* destination);
+  bool readMagnetData(int16_t* destination);
+  bool readTempData();
+  bool readBaroData();
   
 private:
   I2cDevice^ Accel;
   I2cDevice^ Gyro;
   I2cDevice^ Magnet;
-
+  I2cDevice^ Baro;
+  
   std::shared_ptr<StateSpace> IState;
 
   bool ifConnected;
@@ -61,19 +64,19 @@ private:
   
   const byte WHO_AM_I_ADXL345        = 0x00;   // Should return 0xE5
   const byte ADXL345_THRESH_TAP      = 0x1D;   // Tap threshold
-  const byte ADXL345_OFSX             = 0x1E;   // X-axis offset
-  const byte ADXL345_OFSY             = 0x1F;   // Y-axis offset
-  const byte ADXL345_OFSZ             = 0x20;   // Z-axis offset
+  const byte ADXL345_OFSX            = 0x1E;   // X-axis offset
+  const byte ADXL345_OFSY            = 0x1F;   // Y-axis offset
+  const byte ADXL345_OFSZ            = 0x20;   // Z-axis offset
   const byte ADXL345_DUR             = 0x21;   // Tap duration
-  const byte ADXL345_LATENT           = 0x22;   // Tap latency
-  const byte ADXL345_WINDOW           = 0x23;   // Tap window
+  const byte ADXL345_LATENT          = 0x22;   // Tap latency
+  const byte ADXL345_WINDOW          = 0x23;   // Tap window
   const byte ADXL345_THRESH_ACT      = 0x24;   // Activity threshold
   const byte ADXL345_THRESH_INACT    = 0x25;   // Inactivity threshold
   const byte ADXL345_TIME_INACT      = 0x26;   // Inactivity time
   const byte ADXL345_ACT_INACT_CTL   = 0x27;   // Axis enable control for activity/inactivity detection
   const byte ADXL345_THRESH_FF       = 0x28;   // Free-fall threshold
   const byte ADXL345_TIME_FF         = 0x29;   // Free-fall time
-  const byte ADXL345_TAP_AXES         = 0x2A;   // Axis control for single/double tap
+  const byte ADXL345_TAP_AXES        = 0x2A;   // Axis control for single/double tap
   const byte ADXL345_ACT_TAP_STATUS  = 0x2B;   // Source of single/double tap
   const byte ADXL345_BW_RATE         = 0x2C;   // Data rate and power mode control
   const byte ADXL345_POWER_CTL       = 0x2D;   // Power-saving features control
@@ -103,7 +106,7 @@ private:
   const byte L3G4200D_OUT_X_L        = 0x28;
   const byte L3G4200D_OUT_X_H        = 0x29;
   const byte L3G4200D_OUT_Y_L        = 0x2A;
-  const byte L3G4200D_OUT_Y_H         = 0x2B;
+  const byte L3G4200D_OUT_Y_H        = 0x2B;
   const byte L3G4200D_OUT_Z_L        = 0x2C;
   const byte L3G4200D_OUT_Z_H        = 0x2D;
   const byte L3G4200D_FIFO_CTRL_REG  = 0x2E;
@@ -133,7 +136,9 @@ private:
   const byte HMC5883L_IDA       = 0x0A;  // should return 0x48
   const byte HMC5883L_IDB       = 0x0B;  // should return 0x34
   const byte HMC5883L_IDC       = 0x0C;  // should return 0x33
-    
+  
+  const byte BMP085_ADDRESS = 0x77; // I2C address of BMP085
+  
   enum Ascale {
     AFS_2G = 0,
     AFS_4G,
@@ -195,16 +200,29 @@ private:
     MRT_30,       // 30 Hz
     MRT_75,       // 75 Hz ODR    
   };
-
+  
+  enum OSS {  // BMP-085 sampling rate
+    OSS_0 = 0,  // 4.5 ms conversion time
+    OSS_1,      // 7.5
+    OSS_2,      // 13.5
+    OSS_3       // 25.5
+  };
+  
   uint8_t Ascale = AFS_2G;
   uint8_t Arate = ARTBW_200_100; // 200 Hz ODR, 100 Hz bandwidth
-  uint8_t Gscale = GFS_250DPS;
+  uint8_t Gscale = GFS_250DPS;    
   uint8_t Grate = GRTBW_100_25;  // 100 Hz ODR,  25 Hz bandwidth
   uint8_t Mrate = MRT_75;        //  75 Hz ODR 
+  uint8_t OSS = OSS_3;           // maximum pressure resolution
+  
+  int16_t ut;
+  long up;
+  
   float aRes, gRes, mRes;        // scale resolutions per LSB for the sensors
   
   int16_t AccelData[3];
   int16_t GyroData[3];
   int16_t MagnetData[3];
+  
   float magbias[3];
 };

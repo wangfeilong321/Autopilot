@@ -47,15 +47,37 @@ void StateSpace::initializeDerivatives() {
 }
 
 bool StateSpace::Run() {
+  ComputeTemperature();
+  ComputePressure();
   ComputeAngles();
   ComputePosition();
   return true;
 }
 
-void StateSpace::setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz) {
+void StateSpace::setMARGData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz) {
   axd = ax; ayd = ay; azd = az;
   gxd = gx*degtorad; gyd = gy*degtorad; gzd = gz*degtorad;
   mxd = mx; myd = my; mzd = mz;
+}
+
+void StateSpace::setBMPCalibrationData(int16_t ac1, int16_t ac2, int16_t ac3, uint16_t ac4, uint16_t ac5, uint16_t ac6, int16_t b1, int16_t b2, int16_t mb, int16_t mc, int16_t md, uint8_t OSS) {
+  ac1d = ac1;
+  ac2d = ac2;
+  ac3d = ac3;
+  ac4d = ac4;
+  ac5d = ac5;
+  ac6d = ac6;
+  b1d = b1;
+  b2d = b2;
+  mbd = mb;
+  mcd = mc;
+  mdd = md;
+  OSSD = OSS;
+}
+
+void StateSpace::setBMPData(int16_t ut, long up) {
+  utd = ut;
+  upd = up;
 }
 
 void StateSpace::setAileron(float aileron) { aileronCmd = aileron; }
@@ -148,6 +170,39 @@ void StateSpace::ComputePosition() {
 
   // Compute vehicle velocity wrt ECEF frame, expressed in Local horizontal frame.
   vVel = Tb2l * vUVW;
+}
+
+void StateSpace::ComputePressure() {
+  long b6 = b5 - 4000;
+  // Calculate B3
+  long x1 = (b2d * (b6 * b6) >> 12) >> 11;
+  long x2 = (ac2d * b6) >> 11;
+  long x3 = x1 + x2;
+  long b3 = (((((long)ac1d) * 4 + x3) << OSSD) + 2) >> 2;
+  // Calculate B4
+  x1 = (ac3d * b6) >> 13;
+  x2 = (b1d * ((b6 * b6) >> 12)) >> 16;
+  x3 = ((x1 + x2) + 2) >> 2;
+  unsigned long b4 = (ac4d * (unsigned long)(x3 + 32768)) >> 15;
+
+  unsigned long b7 = ((unsigned long)(upd - b3) * (50000 >> OSSD));
+  long p = 0;
+  if (b7 < 0x80000000)
+    p = (b7 << 1) / b4;
+  else
+    p = (b7 / b4) << 1;
+
+  x1 = (p >> 8) * (p >> 8);
+  x1 = (x1 * 3038) >> 16;
+  x2 = (-7357 * p) >> 16;
+  pressure += (x1 + x2 + 3791) >> 4;
+}
+
+void StateSpace::ComputeTemperature() {
+  long x1 = (((long)utd - (long)ac6d)*(long)ac5d) >> 15;
+  long x2 = ((long)mcd << 11) / (x1 + mdd);
+  b5 = x1 + x2;
+  temperature = static_cast<float>(((b5 + 8) >> 4));
 }
 
 void StateSpace::Integrate(ColumnVector3& Integrand, ColumnVector3& Val, std::deque<ColumnVector3>& ValDot, double deltat, eIntegrateType integration_type) {
