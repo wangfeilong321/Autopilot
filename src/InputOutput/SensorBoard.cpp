@@ -125,7 +125,7 @@ void SensorBoard::Connect() {
   const int16_t md = readByte(Baro, 0xBE) << 8 | readByte(Baro, 0xBF);
   
   IState->setBMPCalibrationData(ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, OSS);
-
+  
   ifConnected =
     ifWhoAmI          &&
     ifOkPowerControl1 &&
@@ -187,8 +187,7 @@ bool SensorBoard::Run() {
   bool ifReadBaroOk = readBaroData();
   
   if (IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk && ifReadTempOk && ifReadBaroOk) {
-    IState->setMARGData(ax, ay, az, gx, gy, gz, mx, my, mz);
-    IState->setBMPData(ut, up);
+    IState->setSensorData(ax, ay, az, gx, gy, gz, mx, my, mz, ut, up);
     return true;
   }
 

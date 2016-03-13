@@ -18,11 +18,9 @@ public:
   
   bool Run();
   
-  void setMARGData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz);
+  void setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, int16_t ut, long up);
   
   void setBMPCalibrationData(int16_t ac1, int16_t ac2, int16_t ac3, uint16_t ac4, uint16_t ac5, uint16_t ac6, int16_t b1, int16_t b2, int16_t mb, int16_t mc, int16_t md, uint8_t OSS);
-  
-  void setBMPData(int16_t ut, long up);
   
   void setAileron(float aileron);
   
@@ -68,6 +66,10 @@ public:
   
   float getThrottle();
   
+  float getTemperature();
+  
+  float getPressure();
+    
 private:
   Location vLocation;
   Inertial vInertial;
@@ -117,8 +119,8 @@ private:
   std::deque <ColumnVector3> dqUVWidot;
   std::deque <ColumnVector3> dqInertialVelocity;
 
-  const float SAMPLE_FREQUENCY = 512.0f;                     // sample frequency in Hz
-  const float BETA = 0.2f;                                   // 2 * proportional gain (Kp) == algorithm gain
+  const float SAMPLE_FREQUENCY = 256.0f;                     // sample frequency in Hz
+  const float BETA = 0.1f;                                   // 2 * proportional gain (Kp) == algorithm gain
   float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;          // quaternion of sensor frame relative to auxiliary frame
   
   void ComputeTemperature();

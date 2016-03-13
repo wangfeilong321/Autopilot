@@ -54,10 +54,12 @@ bool StateSpace::Run() {
   return true;
 }
 
-void StateSpace::setMARGData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz) {
+void StateSpace::setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, int16_t ut, long up) {
   axd = ax; ayd = ay; azd = az;
   gxd = gx*degtorad; gyd = gy*degtorad; gzd = gz*degtorad;
   mxd = mx; myd = my; mzd = mz;
+  utd = ut;
+  upd = up;
 }
 
 void StateSpace::setBMPCalibrationData(int16_t ac1, int16_t ac2, int16_t ac3, uint16_t ac4, uint16_t ac5, uint16_t ac6, int16_t b1, int16_t b2, int16_t mb, int16_t mc, int16_t md, uint8_t OSS) {
@@ -73,11 +75,6 @@ void StateSpace::setBMPCalibrationData(int16_t ac1, int16_t ac2, int16_t ac3, ui
   mcd = mc;
   mdd = md;
   OSSD = OSS;
-}
-
-void StateSpace::setBMPData(int16_t ut, long up) {
-  utd = ut;
-  upd = up;
 }
 
 void StateSpace::setAileron(float aileron) { aileronCmd = aileron; }
@@ -123,6 +120,10 @@ float StateSpace::getElevator() { return elevatorCmd; }
 float StateSpace::getRudder() { return rudderCmd; }
 
 float StateSpace::getThrottle() { return throttleCmd; }
+
+float StateSpace::getTemperature() { return temperature; }
+
+float StateSpace::getPressure() { return pressure; }
 
 void StateSpace::ComputeAngles() {
   madgwickAHRSupdate();
@@ -202,7 +203,7 @@ void StateSpace::ComputeTemperature() {
   long x1 = (((long)utd - (long)ac6d)*(long)ac5d) >> 15;
   long x2 = ((long)mcd << 11) / (x1 + mdd);
   b5 = x1 + x2;
-  temperature = static_cast<float>(((b5 + 8) >> 4));
+  temperature = static_cast<float>(((b5 + 8) >> 4)) * 0.1f; //Temperature in degrees Celsius. 
 }
 
 void StateSpace::Integrate(ColumnVector3& Integrand, ColumnVector3& Val, std::deque<ColumnVector3>& ValDot, double deltat, eIntegrateType integration_type) {

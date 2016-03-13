@@ -76,7 +76,7 @@ void SocketBoard::doRead() {
 }
 
 void SocketBoard::doWrite() {
-  writer->WriteUInt32(11 * sizeof(DOUBLE)); //data size in bytes
+  writer->WriteUInt32(13 * sizeof(DOUBLE)); //data size in bytes
   writer->WriteDouble(IState->getRoll());  //Roll
   writer->WriteDouble(IState->getPitch()); //Pitch
   writer->WriteDouble(IState->getYaw());   //Yaw
@@ -84,6 +84,8 @@ void SocketBoard::doWrite() {
   writer->WriteDouble(IState->getY());     // Y ECEF
   writer->WriteDouble(IState->getZ());     // Z ECEF
   writer->WriteDouble(0.0); //vCas
+  writer->WriteDouble(IState->getTemperature()); //Temperature (grad Celsius)
+  writer->WriteDouble(IState->getPressure());    //Pressure (hPa)
   writer->WriteDouble(IState->getEng0Rpm());
   writer->WriteDouble(IState->getEng1Rpm());
   writer->WriteDouble(IState->getEng2Rpm());
