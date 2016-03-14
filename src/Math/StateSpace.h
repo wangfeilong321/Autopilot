@@ -18,9 +18,9 @@ public:
   
   bool Run();
   
-  void setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, int16_t ut, long up);
+  void setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, long ut, long up);
   
-  void setBMPCalibrationData(int16_t ac1, int16_t ac2, int16_t ac3, uint16_t ac4, uint16_t ac5, uint16_t ac6, int16_t b1, int16_t b2, int16_t mb, int16_t mc, int16_t md, uint8_t OSS);
+  void setBMPCalibrationData(int16_t ac1, int16_t ac2, int16_t ac3, uint16_t ac4, uint16_t ac5, uint16_t ac6, int16_t b1, int16_t b2, int16_t mb, int16_t mc, int16_t md, int16_t OSS);
   
   void setAileron(float aileron);
   
@@ -88,13 +88,11 @@ private:
   int rpm0, rpm1, rpm2, rpm3;
   
   // These are constants used to calulate the temperature and pressure from the BMP-085 sensor
-  uint8_t OSSD;
+  int16_t OSSD;
   int16_t ac1d, ac2d, ac3d, b1d, b2d, mbd, mcd, mdd;
   uint16_t ac4d, ac5d, ac6d;
-  long b5;
-  int16_t utd;
-  long upd;
-  
+  long b5d;
+  long utd, upd;
   float temperature, pressure;
   
   Matrix33 Tec2b;  // ECEF to body frame rotational matrix

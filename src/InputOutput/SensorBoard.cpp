@@ -62,13 +62,10 @@ void SensorBoard::Connect() {
   uint8_t e = readByte(Magnet, HMC5883L_IDA);  // Read WHO_AM_I register A for HMC5883L
   uint8_t f = readByte(Magnet, HMC5883L_IDB);  // Read WHO_AM_I register B for HMC5883L
   uint8_t g = readByte(Magnet, HMC5883L_IDC);  // Read WHO_AM_I register C for HMC5883L
-  uint8_t h = readByte(Baro, 0xAA);  // Read WHO_AM_I register A for BMP085L
-  uint8_t i = readByte(Baro, 0xAB);  // Read WHO_AM_I register B for BMP085L
-  uint8_t j = readByte(Baro, 0xAC);  // Read WHO_AM_I register C for BMP085L
-
+ 
   bool ifWhoAmI = false;
 
-  if (c == 0xE5 && d == 0xD3 && e == 0x48 && f == 0x34 && g == 0x33 && h != 0xFF && h != 0x00) {
+  if (c == 0xE5 && d == 0xD3 && e == 0x48 && f == 0x34 && g == 0x33) {
     ifWhoAmI = true;
   }
 
@@ -112,19 +109,27 @@ void SensorBoard::Connect() {
     ifOkSelfTest = true;
   }
   
-  const int16_t ac1 = readByte(Baro, 0xAA) << 8 | readByte(Baro, 0xAB);
-  const int16_t ac2 = readByte(Baro, 0xAC) << 8 | readByte(Baro, 0xAD);
-  const int16_t ac3 = readByte(Baro, 0xAE) << 8 | readByte(Baro, 0xAF);
-  const uint16_t ac4 = readByte(Baro, 0xB0) << 8 | readByte(Baro, 0xB1);
-  const uint16_t ac5 = readByte(Baro, 0xB2) << 8 | readByte(Baro, 0xB3);
-  const uint16_t ac6 = readByte(Baro, 0xB4) << 8 | readByte(Baro, 0xB5);
-  const int16_t b1 = readByte(Baro, 0xB6) << 8 | readByte(Baro, 0xB7);
-  const int16_t b2 = readByte(Baro, 0xB8) << 8 | readByte(Baro, 0xB9);
-  const int16_t mb = readByte(Baro, 0xBA) << 8 | readByte(Baro, 0xBB);
-  const int16_t mc = readByte(Baro, 0xBC) << 8 | readByte(Baro, 0xBD);
-  const int16_t md = readByte(Baro, 0xBE) << 8 | readByte(Baro, 0xBF);
-  
-  IState->setBMPCalibrationData(ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, OSS);
+  //Create async task for reading/writing operations on BMP085
+  create_task([this](){
+
+    const int16_t ac1 = readByte(Baro, 0xAA) << 8 | readByte(Baro, 0xAB);
+    const int16_t ac2 = readByte(Baro, 0xAC) << 8 | readByte(Baro, 0xAD);
+    const int16_t ac3 = readByte(Baro, 0xAE) << 8 | readByte(Baro, 0xAF);
+    const uint16_t ac4 = readByte(Baro, 0xB0) << 8 | readByte(Baro, 0xB1);
+    const uint16_t ac5 = readByte(Baro, 0xB2) << 8 | readByte(Baro, 0xB3);
+    const uint16_t ac6 = readByte(Baro, 0xB4) << 8 | readByte(Baro, 0xB5);
+    const int16_t b1 = readByte(Baro, 0xB6) << 8 | readByte(Baro, 0xB7);
+    const int16_t b2 = readByte(Baro, 0xB8) << 8 | readByte(Baro, 0xB9);
+    const int16_t mb = readByte(Baro, 0xBA) << 8 | readByte(Baro, 0xBB);
+    const int16_t mc = readByte(Baro, 0xBC) << 8 | readByte(Baro, 0xBD);
+    const int16_t md = readByte(Baro, 0xBE) << 8 | readByte(Baro, 0xBF);
+
+    IState->setBMPCalibrationData(ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, OSS);
+    
+    // Read raw temperature data
+    // Read raw pressure data
+    while(readTempData() && readBaroData());
+  }); 
   
   ifConnected =
     ifWhoAmI          &&
@@ -179,14 +184,8 @@ bool SensorBoard::Run() {
   mx = MagnetData[0] * mRes - magbias[0];
   my = MagnetData[1] * mRes - magbias[1];
   mz = MagnetData[2] * mRes - magbias[2];
-  
-  // Read raw temperature data
-  bool ifReadTempOk = readTempData();
-  
-  //Read raw pressure data
-  bool ifReadBaroOk = readBaroData();
-  
-  if (IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk && ifReadTempOk && ifReadBaroOk) {
+   
+  if (IfReadAccelOk && IfReadGyroOk && IfReadMagnetOk) {
     IState->setSensorData(ax, ay, az, gx, gy, gz, mx, my, mz, ut, up);
     return true;
   }
@@ -257,7 +256,7 @@ bool SensorBoard::readTempData() {
   // read raw temperature measurement
   uint8_t data[2];
   if (readBytes(Baro, 0xF6, 2, data)) {
-    ut = (int16_t)(((int16_t)data[0] << 8) | data[1]);
+    ut = static_cast<long>(((int16_t)data[0] << 8) | data[1]);
     return true;
   }
   else return false;
@@ -269,7 +268,7 @@ bool SensorBoard::readBaroData() {
   // read raw pressure measurement of 19 bits
   uint8_t data[3];
   if(readBytes(Baro, 0xF6, 3, data)) {
-    up = (((long)data[0] << 16) | ((long)data[1] << 8) | data[2]) >> (8 - OSS);
+    up = static_cast<long>((((int16_t)data[0] << 16) | ((int16_t)data[1] << 8) | data[2]) >> (8 - OSS));
   } else return false;
   return true;
 }

@@ -13,6 +13,20 @@ StateSpace::StateSpace() :
   axd(0.0), ayd(0.0), azd(0.0),
   gxd(0.0), gyd(0.0), gzd(0.0),
   mxd(0.0), myd(0.0), mzd(0.0),
+  OSSD(0),
+  ac1d(0), 
+  ac2d(0), 
+  ac3d(0), 
+  b1d(0), 
+  b2d(0),
+  mbd(0), 
+  mcd(0),
+  mdd(0),
+  b5d(0),
+  utd(0),
+  upd(0),
+  pressure(0.0),
+  temperature(0.0),
   rpm0(MIN_THROTTLE), rpm1(MIN_THROTTLE), rpm2(MIN_THROTTLE), rpm3(MIN_THROTTLE) {
 
   //Set integrators
@@ -54,7 +68,7 @@ bool StateSpace::Run() {
   return true;
 }
 
-void StateSpace::setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, int16_t ut, long up) {
+void StateSpace::setSensorData(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz, long ut, long up) {
   axd = ax; ayd = ay; azd = az;
   gxd = gx*degtorad; gyd = gy*degtorad; gzd = gz*degtorad;
   mxd = mx; myd = my; mzd = mz;
@@ -62,7 +76,7 @@ void StateSpace::setSensorData(float ax, float ay, float az, float gx, float gy,
   upd = up;
 }
 
-void StateSpace::setBMPCalibrationData(int16_t ac1, int16_t ac2, int16_t ac3, uint16_t ac4, uint16_t ac5, uint16_t ac6, int16_t b1, int16_t b2, int16_t mb, int16_t mc, int16_t md, uint8_t OSS) {
+void StateSpace::setBMPCalibrationData(int16_t ac1, int16_t ac2, int16_t ac3, uint16_t ac4, uint16_t ac5, uint16_t ac6, int16_t b1, int16_t b2, int16_t mb, int16_t mc, int16_t md, int16_t OSS) {
   ac1d = ac1;
   ac2d = ac2;
   ac3d = ac3;
@@ -174,7 +188,7 @@ void StateSpace::ComputePosition() {
 }
 
 void StateSpace::ComputePressure() {
-  long b6 = b5 - 4000;
+  long b6 = b5d - 4000;
   // Calculate B3
   long x1 = (b2d * (b6 * b6) >> 12) >> 11;
   long x2 = (ac2d * b6) >> 11;
@@ -196,14 +210,15 @@ void StateSpace::ComputePressure() {
   x1 = (p >> 8) * (p >> 8);
   x1 = (x1 * 3038) >> 16;
   x2 = (-7357 * p) >> 16;
-  pressure += (x1 + x2 + 3791) >> 4;
+  p += (x1 + x2 + 3791) >> 4;
+  pressure = p * 0.01f; //Pressure in hPa
 }
 
 void StateSpace::ComputeTemperature() {
   long x1 = (((long)utd - (long)ac6d)*(long)ac5d) >> 15;
   long x2 = ((long)mcd << 11) / (x1 + mdd);
-  b5 = x1 + x2;
-  temperature = static_cast<float>(((b5 + 8) >> 4)) * 0.1f; //Temperature in degrees Celsius. 
+  b5d = x1 + x2;
+  temperature = static_cast<float>(((b5d + 8) >> 4)) * 0.1f; //Temperature in degrees Celsius. 
 }
 
 void StateSpace::Integrate(ColumnVector3& Integrand, ColumnVector3& Val, std::deque<ColumnVector3>& ValDot, double deltat, eIntegrateType integration_type) {

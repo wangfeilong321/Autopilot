@@ -13,6 +13,8 @@ using namespace Platform;
 using namespace Windows::Foundation;
 using namespace Windows::Devices::I2c;
 using namespace Windows::Devices::Enumeration;
+using namespace Windows::System::Threading;
+using namespace Concurrency;
 
 class SensorBoard : public Interface {
 public:
@@ -215,8 +217,8 @@ private:
   uint8_t Mrate = MRT_75;        //  75 Hz ODR 
   uint8_t OSS = OSS_3;           // maximum pressure resolution
   
-  int16_t ut;
-  long up;
+  long ut = 0;
+  long up = 0;
   
   float aRes, gRes, mRes;        // scale resolutions per LSB for the sensors
   
