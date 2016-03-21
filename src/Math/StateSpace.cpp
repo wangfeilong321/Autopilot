@@ -35,7 +35,7 @@ StateSpace::StateSpace() :
   
   //Set initial geodetic position for the aircraft
   vLocation.SetEllipse(vInertial.GetSemiMajor(), vInertial.GetSemiMinor());
-  vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 17)*meterstofeet);
+  vLocation.SetPositionGeodetic(-71.0602777*degtorad, 42.35832777*degtorad, (38.047786 + 20)*meterstofeet);
   vLocation.SetEarthPositionAngle(0.0);
   //Set initial conditions for calculation
   initializeDerivatives();
