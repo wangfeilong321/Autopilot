@@ -63,6 +63,7 @@ void StateSpace::initializeDerivatives() {
 bool StateSpace::Run() {
   ComputeTemperature();
   ComputePressure();
+  ComputeAltitude();
   ComputeAngles();
   ComputePosition();
   return true;
@@ -138,6 +139,8 @@ float StateSpace::getThrottle() { return throttleCmd; }
 float StateSpace::getTemperature() { return temperature; }
 
 float StateSpace::getPressure() { return pressure; }
+
+float StateSpace::getAltitude() { return altitude; }
 
 void StateSpace::ComputeAngles() {
   madgwickAHRSupdate();
@@ -219,6 +222,10 @@ void StateSpace::ComputeTemperature() {
   long x2 = ((long)mcd << 11) / (x1 + mdd);
   b5d = x1 + x2;
   temperature = static_cast<float>(((b5d + 8) >> 4)) * 0.1f; //Temperature in degrees Celsius. 
+}
+
+void StateSpace::ComputeAltitude() {
+  altitude = 44330.0f*(1.0f - powf((pressure / 101325.0f), (1.0f / 5.255f))); // Calculate altitude in meters
 }
 
 void StateSpace::Integrate(ColumnVector3& Integrand, ColumnVector3& Val, std::deque<ColumnVector3>& ValDot, double deltat, eIntegrateType integration_type) {

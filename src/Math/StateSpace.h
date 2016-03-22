@@ -69,6 +69,8 @@ public:
   float getTemperature();
   
   float getPressure();
+  
+  float getAltitude();
     
 private:
   Location vLocation;
@@ -93,7 +95,7 @@ private:
   uint16_t ac4d, ac5d, ac6d;
   long b5d;
   long utd, upd;
-  float temperature, pressure;
+  float temperature, pressure, altitude;
   
   Matrix33 Tec2b;  // ECEF to body frame rotational matrix
   Matrix33 Tb2ec;  // body to ECEF frame rotational matrix 
@@ -124,6 +126,8 @@ private:
   void ComputeTemperature();
   
   void ComputePressure();
+
+  void ComputeAltitude();
   
   void ComputeAngles();
   
