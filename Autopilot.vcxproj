@@ -47,7 +47,6 @@
     <ClCompile Include="src\InputOutput\EngineBoard.cpp" />
     <ClCompile Include="src\InputOutput\SensorBoard.cpp" />
     <ClCompile Include="src\InputOutput\SocketBoard.cpp" />
-    <ClCompile Include="src\Interface.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Math\Channel.cpp" />
     <ClCompile Include="src\Math\ColumnVector3.cpp" />

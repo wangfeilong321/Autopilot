@@ -2,8 +2,8 @@
 
 class Interface {
 public:
-  Interface();
-  virtual ~Interface();
+  Interface() = default;
+  virtual ~Interface() = default;
 
   virtual void Connect() = 0;
   virtual bool Connected() = 0;

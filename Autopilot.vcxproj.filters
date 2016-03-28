@@ -29,7 +29,6 @@
     <ClCompile Include="src\Math\Inertial.cpp" />
     <ClCompile Include="src\Math\StateSpace.cpp" />
     <ClCompile Include="src\Controller.cpp" />
-    <ClCompile Include="src\Interface.cpp" />
     <ClCompile Include="src\Math\Channel.cpp" />
   </ItemGroup>
 </Project>
